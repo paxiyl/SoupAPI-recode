@@ -108,6 +108,29 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | Custom aspect ratio | Forge exposes no hook for the projection's aspect; `FOVUpdateEvent` only carries field of view, and this port deliberately uses no bytecode surgery |
 | Cursor shape changes | LWJGL 2 has no standard-cursor API, and Pojav is touch-driven |
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
+| Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
+
+## Discord rich presence and native loading
+
+The first Pojav run crashed on the client tick with
+`UnsatisfiedLinkError: dlopen failed: library "libdiscord-rpc.so" not found`. Two things
+were wrong, both inherited from the original source:
+
+1. The JNA binding was written the usual way — `DiscordRPC INSTANCE = Native.loadLibrary(...)`
+   as a field on the interface — which puts the library load in the interface's static
+   initialiser. The first touch of the type throws, and because a failed initialiser poisons
+   the class, every touch afterwards throws `NoClassDefFoundError`. The load now lives in
+   `DiscordNative`, which attempts it once, catches `Throwable`, caches the outcome and
+   returns `null` when the native is unavailable. The attempt is skipped outright on Android,
+   where no build of the native exists and there is no Discord IPC socket to talk to anyway.
+   The jar ships `linux-x86-64` and `win32-x86-64` natives, so rich presence works on desktop
+   Linux and Windows; macOS and any aarch64 host get the graceful disable.
+2. A Forge event handler that throws crashes the game, so a single module could end the
+   session. `ForgeEventBridge` now runs each module hook through `guard(...)`: the first
+   failure per call site is logged in full, later ones are counted silently, and the rest of
+   the frame carries on. `VirtualMachineError` and `ThreadDeath` are rethrown — those are not
+   a module's to swallow. The module is not disabled on a throw, since a transient failure
+   should not cost the feature for the whole session.
 
 ## Texture assets added by this port
 

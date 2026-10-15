@@ -68,6 +68,36 @@ public final class ForgeEventBridge {
     private ForgeEventBridge() {
     }
 
+    /** Call sites that have already reported a failure, so each one is logged once. */
+    private static final java.util.Set<String> REPORTED =
+            java.util.Collections.synchronizedSet(new java.util.HashSet<String>());
+
+    /**
+     * Runs one module's hook so a failure in it cannot take the client down.
+     *
+     * <p>A Forge event handler that throws crashes the game, which means any single module — a
+     * missing native, a driver quirk on gl4es, a bad entity mid-frame — can end the session. Each
+     * hook is therefore isolated: the first failure per call site is logged in full, later ones are
+     * counted silently, and the rest of the frame carries on. The module is not disabled, since a
+     * transient throw should not cost the feature for the session.
+     *
+     * <p>{@link VirtualMachineError} (out of memory and friends) and {@link ThreadDeath} are
+     * rethrown: those are not a module's to swallow.
+     */
+    private static void guard(String label, Runnable body) {
+        try {
+            body.run();
+        } catch (ThreadDeath | VirtualMachineError fatal) {
+            throw fatal;
+        } catch (Throwable t) {
+            if (REPORTED.add(label)) {
+                me.Padej_.soupapi.compat.SoupLog.error(
+                        "[SoupAPI] " + label + " threw; it is being skipped for this frame. "
+                                + "Further failures here will not be logged.", t);
+            }
+        }
+    }
+
     public static void register() {
         MinecraftForge.EVENT_BUS.register(INSTANCE);
         net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().register(INSTANCE);
@@ -81,23 +111,23 @@ public final class ForgeEventBridge {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
 
-        FontRenderers.ensureLoaded();
-        EntityUtils.updateEntities(mc);
-        OverlayReloadListener.callEvent();
+        guard("fonts", FontRenderers::ensureLoaded);
+        guard("entities", () -> EntityUtils.updateEntities(mc));
+        guard("overlayReload", OverlayReloadListener::callEvent);
 
-        Trails.onTick();
-        JumpCircles.onTick();
-        TargetHud.onTick();
-        RPC.onTick();
-        Translator.onTick();
+        guard("Trails.tick", Trails::onTick);
+        guard("JumpCircles.tick", JumpCircles::onTick);
+        guard("TargetHud.tick", TargetHud::onTick);
+        guard("RPC.tick", RPC::onTick);
+        guard("Translator.tick", Translator::onTick);
 
-        HitParticle.onTick();
-        TotemPopParticles.onTick();
-        JumpParticles.onTick();
-        AmbientParticle.onTick();
+        guard("HitParticle.tick", HitParticle::onTick);
+        guard("TotemPopParticles.tick", TotemPopParticles::onTick);
+        guard("JumpParticles.tick", JumpParticles::onTick);
+        guard("AmbientParticle.tick", AmbientParticle::onTick);
 
-        SoupSettingsShortcut.tick(mc);
-        SoupEvents.fireEndClientTick(mc);
+        guard("settingsShortcut", () -> SoupSettingsShortcut.tick(mc));
+        guard("endClientTick", () -> SoupEvents.fireEndClientTick(mc));
     }
 
     // ---- world rendering -------------------------------------------------------------------
@@ -116,21 +146,21 @@ public final class ForgeEventBridge {
         WorldRenderContext context = SoupEvents.worldContext();
         context.begin(cameraEntity, tickDelta);
 
-        TargetRender.renderTarget(context);
-        HitBubbles.render(context);
-        Halo.render(context);
-        Trails.renderTrail(context);
-        JumpCircles.renderCircles(context);
-        Trajectories.render(context);
+        guard("TargetRender", () -> TargetRender.renderTarget(context));
+        guard("HitBubbles", () -> HitBubbles.render(context));
+        guard("Halo", () -> Halo.render(context));
+        guard("Trails", () -> Trails.renderTrail(context));
+        guard("JumpCircles", () -> JumpCircles.renderCircles(context));
+        guard("Trajectories", () -> Trajectories.render(context));
 
-        JumpParticles.render(context);
-        HitParticle.render(context);
-        TotemPopParticles.render(context);
-        AmbientParticle.render(context);
+        guard("JumpParticles", () -> JumpParticles.render(context));
+        guard("HitParticle", () -> HitParticle.render(context));
+        guard("TotemPopParticles", () -> TotemPopParticles.render(context));
+        guard("AmbientParticle", () -> AmbientParticle.render(context));
 
-        Render3D_Shapes.render(context);
+        guard("Render3D_Shapes", () -> Render3D_Shapes.render(context));
 
-        SoupEvents.WORLD_RENDER_LAST.invoke(context);
+        guard("worldRenderLast", () -> SoupEvents.WORLD_RENDER_LAST.invoke(context));
     }
 
     /**
@@ -160,11 +190,11 @@ public final class ForgeEventBridge {
         SoupEvents.HudRenderContext hud = SoupEvents.hudContext();
         hud.begin(event.partialTicks, context);
 
-        TargetHud.render(context, hud.tickCounter());
-        WatermarkRenderer.render(context);
-        MouseMove.render(context);
+        guard("TargetHud", () -> TargetHud.render(context, hud.tickCounter()));
+        guard("Watermark", () -> WatermarkRenderer.render(context));
+        guard("MouseMove", () -> MouseMove.render(context));
 
-        SoupEvents.HUD_RENDER.invoke(hud);
+        guard("hudRender", () -> SoupEvents.HUD_RENDER.invoke(hud));
     }
 
     /**

@@ -1,13 +1,26 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.SoupLog;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.discord.DiscordEventHandlers;
+import me.Padej_.soupapi.discord.DiscordNative;
 import me.Padej_.soupapi.discord.DiscordRPC;
 import me.Padej_.soupapi.discord.DiscordRichPresence;
 import me.Padej_.soupapi.utils.MC_Tiers;
 
+/**
+ * Discord rich presence.
+ *
+ * <p>Every call into the native goes through {@link DiscordNative}, and every one of them is
+ * guarded: rich presence is the one module whose failure mode is a {@link Throwable} rather than a
+ * visual glitch, and on PojavLauncher it always fails because Android has no discord-rpc native.
+ * A failure disables the module for the session rather than propagating out of the tick handler,
+ * which is what crashed the client before.
+ */
 public class RPC extends ConfigurableModule {
     private static boolean initialized = false;
+    /** Set once the native has thrown; stops the module retrying every tick. */
+    private static boolean failed = false;
     private static final String DEFAULT_ICON = "icon";
     private static long lastUpdate = 0;
     private static String lastState = "";
@@ -15,10 +28,16 @@ public class RPC extends ConfigurableModule {
     private static DiscordRichPresence presence;
 
     public static void init() {
+        DiscordRPC rpc = DiscordNative.get();
+        if (rpc == null) {
+            failed = true;
+            return;
+        }
+
         long startTimestamp = System.currentTimeMillis() / 1000;
 
         DiscordEventHandlers handlers = new DiscordEventHandlers();
-        DiscordRPC.INSTANCE.Discord_Initialize("1363751101794619463", handlers, true, "");
+        rpc.Discord_Initialize("1363751101794619463", handlers, true, "");
 
         presence = new DiscordRichPresence();
         presence.state = getState();
@@ -32,16 +51,30 @@ public class RPC extends ConfigurableModule {
         presence.button_label_1 = "View On Modrinth";
         presence.button_url_1 = "https://modrinth.com/mod/soup-api";
 
-        DiscordRPC.INSTANCE.Discord_UpdatePresence(presence);
+        rpc.Discord_UpdatePresence(presence);
 
         initialized = true;
     }
 
     public static void onTick() {
+        if (failed) return;
+        try {
+            tick();
+        } catch (Throwable t) {
+            // A native that loaded but then misbehaved, or Discord going away mid-session.
+            failed = true;
+            initialized = false;
+            presence = null;
+            SoupLog.error("[RPC] Rich presence failed and has been disabled for this session", t);
+        }
+    }
+
+    private static void tick() {
         boolean enabled = CONFIG.rpcEnabled;
 
         if (enabled && !initialized) {
             init();
+            if (failed) return;
         }
 
         if (!enabled && initialized) {
@@ -49,7 +82,13 @@ public class RPC extends ConfigurableModule {
         }
 
         if (initialized) {
-            DiscordRPC.INSTANCE.Discord_RunCallbacks();
+            DiscordRPC rpc = DiscordNative.get();
+            if (rpc == null) {
+                failed = true;
+                initialized = false;
+                return;
+            }
+            rpc.Discord_RunCallbacks();
 
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastUpdate >= UPDATE_INTERVAL) {
@@ -76,7 +115,7 @@ public class RPC extends ConfigurableModule {
                 }
 
                 if (shouldUpdate) {
-                    DiscordRPC.INSTANCE.Discord_UpdatePresence(presence);
+                    rpc.Discord_UpdatePresence(presence);
                 }
 
                 lastUpdate = currentTime;
@@ -85,7 +124,14 @@ public class RPC extends ConfigurableModule {
     }
 
     public static void shutdown() {
-        DiscordRPC.INSTANCE.Discord_Shutdown();
+        DiscordRPC rpc = DiscordNative.get();
+        if (rpc != null) {
+            try {
+                rpc.Discord_Shutdown();
+            } catch (Throwable t) {
+                SoupLog.warn("[RPC] Discord_Shutdown failed", t);
+            }
+        }
         initialized = false;
         presence = null;
     }
