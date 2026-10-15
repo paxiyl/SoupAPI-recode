@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.ItemStacks;
+
 import me.Padej_.soupapi.compat.BlendFactor;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -10,7 +12,6 @@ import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -35,7 +36,10 @@ public class TargetRender extends ConfigurableModule {
         if (currentTarget != null && client.player.canSee(currentTarget)) {
             if (!currentTarget.isInvisible()) {
                 visibleNow = true;
-            } else if (currentTarget.isGlowing() || (currentTarget instanceof LivingEntity && hasAnyArmor((LivingEntity) currentTarget))) {
+            // 1.21.4 also treated a glowing entity as visible through invisibility. The
+            // Glowing effect and entity flag arrived in 1.9, so on 1.8.9 armour is the only
+            // remaining tell that an invisible entity is there.
+            } else if (currentTarget instanceof LivingEntity && hasAnyArmor((LivingEntity) currentTarget)) {
                 visibleNow = true;
             }
         }
@@ -67,11 +71,17 @@ public class TargetRender extends ConfigurableModule {
         return lastTargetEntity != null;
     }
 
+    /**
+     * 1.8.9 has no {@code EquipmentSlot} enum: armour is indexed 0..3 (feet, legs, chest, head)
+     * through {@code getArmorSlot}, and an empty slot is a null stack rather than an empty one.
+     */
     private static boolean hasAnyArmor(LivingEntity entity) {
-        return !entity.getEquippedStack(EquipmentSlot.HEAD).isEmpty()
-                || !entity.getEquippedStack(EquipmentSlot.CHEST).isEmpty()
-                || !entity.getEquippedStack(EquipmentSlot.LEGS).isEmpty()
-                || !entity.getEquippedStack(EquipmentSlot.FEET).isEmpty();
+        for (int slot = 0; slot < 4; slot++) {
+            if (!ItemStacks.isEmpty(entity.getArmorSlot(slot))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void renderTarget(WorldRenderContext context) {

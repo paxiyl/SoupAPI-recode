@@ -105,8 +105,8 @@ class GlyphMap {
             Font glyphFont = getFontForGlyph(currentChar);
             Rectangle2D stringBounds = glyphFont.getStringBounds(String.valueOf(currentChar), frc);
 
-            int glyphWidth = (int) Math.ceil(stringBounds.width);
-            int glyphHeight = (int) Math.ceil(stringBounds.height);
+            int glyphWidth = (int) Math.ceil(stringBounds.getWidth());
+            int glyphHeight = (int) Math.ceil(stringBounds.getHeight());
             generatedChars++;
             maxX = Math.max(maxX, currentX + glyphWidth);
             maxY = Math.max(maxY, currentY + glyphHeight);

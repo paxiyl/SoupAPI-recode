@@ -20,7 +20,6 @@ import me.Padej_.soupapi.compat.VertexConsumerProvider;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
-import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -249,12 +248,20 @@ public class Render2D {
         bufferBuilder.vertex(matrix, x, y, 0.0F).color(c4.getRGB());
     }
 
+    /**
+     * Registers a texture from raw PNG bytes.
+     *
+     * <p>1.8.9 has no NativeImage: NativeImageBackedTexture is constructed from a BufferedImage,
+     * which ImageIO decodes. Rendering in 1.8.9 is single-threaded (the client thread is the
+     * render thread), so the upload happens inline rather than being scheduled.
+     */
     private static void registerTexture(Texture i, byte[] content) {
         try {
-            ByteBuffer data = BufferUtils.createByteBuffer(content.length).put(content);
-            data.flip();
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(NativeImage.read(data));
-            mc.execute(() -> mc.getTextureManager().registerTexture(i.getId(), tex));
+            BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(content));
+            if (image == null) return;
+            NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+            tex.upload();
+            mc.getTextureManager().loadTexture(i.getId(), tex);
         } catch (Exception ignored) {
         }
     }
@@ -450,11 +457,13 @@ public class Render2D {
         RenderSystem.disableBlend();
     }
 
+    /**
+     * Flushes a buffer. 1.21.4's endNullable() skipped the draw when nothing had been written;
+     * 1.8.9's tessellator has no equivalent check, and callers only reach here with geometry
+     * queued.
+     */
     public static void endBuilding(BufferBuilder bb) {
-        BuiltBuffer builtBuffer = bb.endNullable();
-        if (builtBuffer != null) {
-            BufferRenderer.drawWithGlobalProgram(builtBuffer);
-        }
+        BufferRenderer.drawWithGlobalProgram(bb);
     }
 
     public static class BlurredShadow {

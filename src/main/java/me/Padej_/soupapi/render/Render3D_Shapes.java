@@ -132,7 +132,8 @@ public class Render3D_Shapes {
     }
 
     public static void setSideOutlinePoints(Box box, MatrixStack matrices, BufferBuilder buffer, Color color, Direction dir) {
-        box = box.offset(new Vec3d(box.minX, box.minY, box.minZ).negate());
+        // 1.8.9 Vec3d has no negate(); offset by the inverse components directly.
+        box = box.offset(-box.minX, -box.minY, -box.minZ);
 
         float x1 = (float) box.minX;
         float y1 = (float) box.minY;
@@ -210,7 +211,8 @@ public class Render3D_Shapes {
     }
 
     public static void setOutlinePoints(Box box, MatrixStack matrices, BufferBuilder buffer, Color color) {
-        box = box.offset(new Vec3d(box.minX, box.minY, box.minZ).negate());
+        // 1.8.9 Vec3d has no negate(); offset by the inverse components directly.
+        box = box.offset(-box.minX, -box.minY, -box.minZ);
 
         float x1 = (float) box.minX;
         float y1 = (float) box.minY;
@@ -237,8 +239,8 @@ public class Render3D_Shapes {
         Mat4 model = matrices.peek().getPositionMatrix();
         MatrixStack.Entry entry = matrices.peek();
         Vector3f normalVec = getNormal(x1, y1, z1, x2, y2, z2);
-        buffer.vertex(model, x1, y1, z1).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(entry, normalVec.x(), normalVec.y(), normalVec.z());
-        buffer.vertex(model, x2, y2, z2).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(entry, normalVec.x(), normalVec.y(), normalVec.z());
+        buffer.vertex(model, x1, y1, z1).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(normalVec.x(), normalVec.y(), normalVec.z());
+        buffer.vertex(model, x2, y2, z2).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(normalVec.x(), normalVec.y(), normalVec.z());
     }
 
     public static @NotNull Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {

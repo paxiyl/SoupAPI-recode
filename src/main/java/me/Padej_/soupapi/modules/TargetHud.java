@@ -111,14 +111,19 @@ public class TargetHud extends ConfigurableModule {
         }
 
         // Проверяем, существует ли lastTarget в мире
-        if (lastTarget != null && (lastTarget.removed || !Objects.requireNonNull(mc.world).getEntitiesByClass(LivingEntity.class, lastTarget.getBoundingBox().expand(0.1), e -> e == lastTarget).contains(lastTarget))) {
+        // 1.8.9 has no getEntitiesByClass predicate query and its Box.expand takes three
+        // axes; checking that the entity is still in the world's entity list is both simpler
+        // and exactly what the original test amounted to.
+        if (lastTarget != null && (lastTarget.removed
+                || mc.world == null || !mc.world.entities.contains(lastTarget))) {
             hudTimer = 0; // Сбрасываем таймер, чтобы HUD исчез
             lastTarget = null; // Очищаем lastTarget
         }
 
         if (hudScale > 0 && lastTarget instanceof PlayerEntity) {
             int targetScreenX, targetScreenY;
-            Vec3d screenPos = Vec3d.ZERO; // Инициализируем по умолчанию
+            // 1.8.9 has no Vec3d.ZERO constant.
+            Vec3d screenPos = new Vec3d(0.0, 0.0, 0.0);
 
             // Определяем координаты HUD в зависимости от флага isFollow
             if (CONFIG.targetHudFollow) {
@@ -257,15 +262,15 @@ public class TargetHud extends ConfigurableModule {
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = Maths.lerp(progress, start.getRed(), end.getRed());
-        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
-        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
-        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Math.round(Maths.lerp(progress, start.getRed(), end.getRed()));
+        int g = Math.round(Maths.lerp(progress, start.getGreen(), end.getGreen()));
+        int b = Math.round(Maths.lerp(progress, start.getBlue(), end.getBlue()));
+        int a = Math.round(Maths.lerp(progress, start.getAlpha(), end.getAlpha()));
         return new Color(r, g, b, a);
     }
 
     public static Vec3d worldSpaceToScreenSpace(Vec3d pos) {
-        Camera camera = mc.getEntityRenderManager().camera;
+        Camera camera = Cameras.get();
         int displayHeight = Windows.height();
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);

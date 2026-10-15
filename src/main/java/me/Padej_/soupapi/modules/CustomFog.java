@@ -1,15 +1,30 @@
 package me.Padej_.soupapi.modules;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.SoupModule;
 import me.Padej_.soupapi.settings.impl.BooleanSetting;
 import me.Padej_.soupapi.settings.impl.EnumSetting;
 import me.Padej_.soupapi.settings.impl.SliderSetting;
 import me.Padej_.soupapi.utils.Palette;
-import net.minecraft.client.render.Fog;
-import net.minecraft.client.render.FogShape;
+import org.lwjgl.opengl.GL11;
 
-import java.awt.*;
+import java.awt.Color;
 
+/**
+ * Replaces the world fog with a palette-coloured one.
+ *
+ * <p Restructured for 1.8.9. 1.21.4 modelled fog as an immutable {@code Fog} record returned from
+ * {@code BackgroundRenderer.applyFog}, which the mod simply replaced. 1.8.9 has no such object:
+ * fog is fixed-function GL state, set up across two {@code GameRenderer} methods — {@code
+ * updateFog} picks the colour and {@code renderFog} sets the distance curve. So instead of
+ * building a Fog value, this module exposes the colour and applies the GL state, and
+ * {@code GameRendererFogMixin} calls into it at the end of each of those methods.
+ *
+ * <p>The sphere/cylinder distinction is kept as a choice between GL's {@code GL_EXP2} and
+ * {@code GL_LINEAR} fog modes, which is the closest fixed-function equivalent: 1.21.4's
+ * {@code FogShape.SPHERE} falls off with radial distance while {@code CYLINDER} is effectively
+ * linear in view distance. Both are implemented natively by gl4es.
+ */
 public class CustomFog extends SoupModule {
     public static final BooleanSetting enabled = new BooleanSetting("Enabled", "description", false);
     public static final BooleanSetting thick = new BooleanSetting("Enabled", "description", false);
@@ -22,24 +37,30 @@ public class CustomFog extends SoupModule {
         super("Custom Fog", Category.WORLD);
     }
 
-    public static Fog getCustomFog() {
-        Color c = Palette.getColor(0);
-        float r = c.getRed() / 255f;
-        float g = c.getGreen() / 255f;
-        float b = c.getBlue() / 255f;
-        float a = density.getValue() / 100f;
-
-        return (new Fog(start.getValue(), end.getValue(), getCustomFogShape(), r, g, b, a));
+    /** The configured fog colour, from the active palette. */
+    public static Color getFogColor() {
+        return Palette.getColor(0);
     }
 
-    private static FogShape getCustomFogShape() {
-        switch (shape.getValue()) {
-            case SPHERE:
-                return FogShape.SPHERE;
-            case CYLINDER:
-                return FogShape.CYLINDER;
+    /** Opacity, 0..1, used as the GL fog density in exponential mode. */
+    public static float getDensity() {
+        return density.getValue() / 100f;
+    }
+
+    /**
+     * Applies the fog distance curve. Called at the end of {@code GameRenderer.renderFog}, so it
+     * overrides whatever vanilla just configured.
+     */
+    public static void applyFogState() {
+        if (shape.getValue() == CustomFogShape.SPHERE) {
+            GlStateManager.fogMode(GL11.GL_EXP2);
+            GlStateManager.fogDensity(getDensity() * 0.1f);
+        } else {
+            GlStateManager.fogMode(GL11.GL_LINEAR);
+            GlStateManager.fogStart(start.getValue());
+            GlStateManager.fogEnd(end.getValue());
         }
-        throw new IllegalStateException("Unexpected value: " + shape.getValue());
+        GlStateManager.enableFog();
     }
 
     public enum CustomFogShape {
