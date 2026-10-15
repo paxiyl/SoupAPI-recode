@@ -8,10 +8,10 @@ import net.minecraft.util.ResourceLocation;
 /**
  * Applies the energy-swirl overlay to players.
  *
- * <p>Note: {@code soupapi:textures/i.png} is referenced here but is not present in this
- * repository — it is one of 39 textures the code refers to that were never committed upstream. The
- * renderer is ported faithfully, but until that file is added the overlay will sample the
- * missing-texture placeholder. This was equally true on 1.21.4.
+ * <p>{@code soupapi:textures/i.png} was one of the 39 textures the code referenced but that were
+ * never committed upstream; it is authored for this port. Because the overlay is blended
+ * {@code GL_ONE}/{@code GL_ONE} with the GL texture matrix scrolling, the artwork is emissive on
+ * black (the source alpha is ignored) and tiles seamlessly in both axes.
  */
 public class ChargedPlayerFeatureRenderer
         extends CustomEnergySwirlOverlayFeatureRenderer<AbstractClientPlayer> {

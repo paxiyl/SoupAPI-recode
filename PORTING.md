@@ -109,21 +109,60 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | Cursor shape changes | LWJGL 2 has no standard-cursor API, and Pojav is touch-driven |
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 
-## Missing texture assets (pre-existing, not caused by the port)
+## Texture assets added by this port
 
-**39 textures referenced by the code were never committed to this repository.** They are
-absent from the entire git history, so these features render the missing-texture
-placeholder on 1.21.4 as well as here. They need adding to
+**39 textures the code referenced were never committed to this repository** — they are
+absent from the entire git history, so those features drew the missing-texture
+placeholder on 1.21.4 as well. They have now been authored and added under
 `src/main/resources/assets/soupapi/textures/`:
 
-- `textures/particle/` — `star`, `heart`, `snowflake`, `dollar`, `firefly`, `firefly_alt`,
-  `firefly_glow`, `firefly_alt_glow` and their `_unblack` variants (affects hit particles,
-  jump particles, ambient particles and totem particles)
-- `textures/particle/glyph/` — `abs`, `arrow`, `arrow_line`, `circle`, `cross`, `flower`,
-  `forever`, `line`, `quad`, `star`, `triangle`, `zigzag`
-- `textures/capes/optifine/` — the ten OptiFine cape colours
-- `textures/jump_circles/` — `portal_2`, `soup`, `soup_unblack`
-- `textures/gui/hitbox.png`, `textures/i.png` (the charged-player swirl overlay)
+- `particle/` — `firefly`, `firefly_glow`, `firefly_alt`, `firefly_alt_glow`, and
+  `dollar`, `snowflake`, `heart`, `star` each with its `_unblack` variant (12 files,
+  256x256). Used by hit particles, jump particles, ambient particles, the target-HUD
+  particles and the target-render soul trail.
+- `particle/glyph/` — `abs`, `arrow`, `arrow_line`, `circle`, `cross`, `flower`,
+  `forever`, `line`, `quad`, `star`, `triangle`, `zigzag` (12 files, 256x256).
+- `jump_circles/` — `portal_2` (a HitBubbles style), `soup` and `soup_unblack`
+  (a JumpCircles style), 1024x1024, matching the sizes of the committed siblings.
+- `capes/optifine/` — `standard`, `black`, `blue`, `cyan`, `gray`, `green`, `purple`,
+  `red`, `white`, `yellow` (64x32).
+- `gui/hitbox.png` (512x512, matching the other `gui/` icons) and `i.png` (128x128),
+  the charged-player energy-swirl overlay.
+
+### Conventions these follow
+
+The existing textures use two paired forms, which were determined by pixel analysis of
+the committed `hexagon`/`circle`/`portal` pairs (correlation 1.0000 between a base's
+luminance and its `_unblack` alpha):
+
+- **base** — fully opaque, greyscale art on black. Correct for the additive blend
+  (`SRC_ALPHA`, `ONE`) that every jump-circle, hit-bubble and glyph draw uses, where
+  black contributes nothing.
+- **`_unblack`** — the same art with RGB forced to white and alpha set to the base's
+  luminance. Derived mechanically from each base.
+
+Under additive blending the two are mathematically identical (`rgb*L * a` versus
+`rgb * a*L`), so the choice only matters where a non-additive blend func can be reached.
+Two sets therefore deliberately depart from the "base" form:
+
+- The four `firefly*` sprites are white-with-alpha, because they are also the
+  target-render *soul* texture, and `TargetRenderSoulStyle.setupBlendFunc()` falls back
+  to `defaultBlendFunc()` for any style other than `SMOKE`/`PLASMA` — a black-backed
+  sprite would paint black squares there.
+- `i.png` is emissive artwork on black and tiles seamlessly in both axes, because
+  `CustomEnergySwirlOverlayFeatureRenderer` blends `GL_ONE`/`GL_ONE` (so the source
+  alpha is ignored) while scrolling the GL texture matrix, which wraps.
+
+All of them are power-of-two, which gl4es on Pojav needs for mipmapped sampling.
+
+**Substitution to be aware of:** the ten `capes/optifine/` files are flat colour capes
+named after OptiFine's donor-cape colours, not reproductions of OptiFine's own cape
+artwork (which is not ours to ship). They fill the classic cape UV block and the 1.9
+elytra block, with a slightly darker hem, so they render as clean solid-colour capes.
+
+**Still missing, and not a texture:** `assets/soupapi/sounds/pok.ogg`. `sounds.json`
+declares the `pok` event and `CustomSounds.POK` references it, but the file was never
+committed either; no audio has been fabricated for it, so that one sound stays silent.
 
 ## What has and has not been verified
 
