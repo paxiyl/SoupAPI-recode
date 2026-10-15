@@ -1,99 +1,80 @@
-plugins {
-    id 'fabric-loom' version '1.9-SNAPSHOT'
-    id 'maven-publish'
+// SoupAPI — Minecraft 1.8.9 / Minecraft Forge
+//
+// ForgeGradle 2.1 is the last version that supports 1.8.9 (2.3 requires 1.12+), and it in turn
+// requires Gradle 2.x and a Java 8 JDK. The wrapper is pinned to Gradle 2.14.1 accordingly.
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net" }
+        maven { url = "https://repo.maven.apache.org/maven2" }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '2.1-SNAPSHOT', changing: true
+    }
 }
 
-version = project.mod_version
-group = project.maven_group
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-base {
-    archivesName = project.archives_base_name
+version = "1.3.7-a-1.8.9"
+group = "me.Padej_"
+archivesBaseName = "SoupAPI"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+minecraft {
+    version = "1.8.9-11.15.1.2318-1.8.9"
+    runDir = "run"
+    // MCP "stable_20" is the 1.8.9 stable mapping set.
+    mappings = "stable_20"
 }
 
 repositories {
-    maven {
-        name = 'Legacy Fabric'
-        url = 'https://repo.legacyfabric.net/repository/legacyfabric/'
-    }
-    flatDir {
-        dirs 'libs'
-    }
+    maven { url = "https://maven.minecraftforge.net" }
 }
 
 dependencies {
-    // Minecraft 1.8.9 with Legacy Fabric yarn mappings.
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.legacyfabric:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    // NOTE: Legacy Fabric API is deliberately NOT a dependency.
-    //
-    // The 1.21.4 sources used fabric-api for ClientTickEvents, WorldRenderEvents,
-    // HudRenderCallback and ParticleFactoryRegistry. Legacy Fabric API either does
-    // not ship those modules for 1.8.9 or ships them with different semantics, so
-    // the port drives all of them from its own mixin-backed event bus
-    // (me.Padej_.soupapi.event.SoupEvents). That keeps the mod a single-file install,
-    // which matters a lot on PojavLauncher where every extra mod is another thing to
-    // sideload and another source of version skew.
-
-    // JNA, only used by the Discord Rich Presence integration. Bundled via jar-in-jar
-    // because Legacy Fabric does not provide it. Discord RPC is hard-disabled on
-    // Android/PojavLauncher (no native discord-rpc build exists for it), see RPC.java.
-    include(implementation("net.java.dev.jna:jna:${project.jna_version}"))
+    // JNA, used only by the Discord Rich Presence integration. Shaded in because Forge does not
+    // provide it. RPC is hard-disabled on Android/PojavLauncher, which has no native discord-rpc
+    // build — see modules/RPC.java.
+    compile 'net.java.dev.jna:jna:4.5.2'
 }
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
-    filteringCharset "UTF-8"
+    inputs.property "mcversion", project.minecraft.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-                "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version, 'mcversion': project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
     }
 }
 
-def targetJavaVersion = Integer.parseInt(project.target_java_version)
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    // Emit Java 8 class files: PojavLauncher runs 1.8.9 on a Java 8 runtime.
-    it.options.release.set(targetJavaVersion)
-    // The bootclasspath for --release 8 is synthesised by javac, so no JDK 8 is needed,
-    // but javac still warns about it. Keep the log readable.
-    it.options.compilerArgs << "-Xlint:-options"
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
 
-java {
-    withSourcesJar()
-}
-
+// Shade JNA into the mod jar so it is a single-file install.
 jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+    from {
+        configurations.compile
+                .findAll { it.name.startsWith('jna') }
+                .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/maven/**'
+
+    manifest {
+        attributes 'FMLCorePluginContainsFMLMod': 'false'
     }
 }
 
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-    repositories {
-    }
-}
-
-// Developer helper: dump the compile classpath so individual files can be type-checked
-// with plain javac during the port, without paying for a full Gradle build each time.
-tasks.register('dumpCompileClasspath') {
-    doLast {
-        def f = file("$buildDir/compile-classpath.txt")
-        f.parentFile.mkdirs()
-        f.text = sourceSets.main.compileClasspath.files.collect { it.absolutePath }.join(File.pathSeparator)
-        println "wrote ${f}"
-    }
+// Developer helper: dump the compile classpath so individual files can be type-checked with
+// plain javac during the port, instead of paying for a full ForgeGradle build each time.
+task dumpCompileClasspath << {
+    def f = file("$buildDir/compile-classpath.txt")
+    f.parentFile.mkdirs()
+    f.text = sourceSets.main.compileClasspath.files.collect { it.absolutePath }.join(File.pathSeparator)
+    println "wrote ${f}"
 }
