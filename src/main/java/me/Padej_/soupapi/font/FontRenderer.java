@@ -4,12 +4,6 @@ import me.Padej_.soupapi.compat.ShaderKey;
 import me.Padej_.soupapi.compat.Windows;
 
 import me.Padej_.soupapi.compat.RenderSystem;
-import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
-import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import net.minecraft.client.MinecraftClient;
@@ -33,7 +27,11 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -45,18 +43,25 @@ import java.util.stream.IntStream;
 
 public class FontRenderer extends ConfigurableModule implements Closeable {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
-    private static final Char2IntArrayMap colorCodes = new Char2IntArrayMap() {{
-        put('0', 0x000000);put('1', 0x0000AA);put('2', 0x00AA00);put('3', 0x00AAAA);
-        put('4', 0xAA0000);put('5', 0xAA00AA);put('6', 0xFFAA00);put('7', 0xAAAAAA);
-        put('8', 0x555555);put('9', 0x5555FF);put('A', 0x55FF55);put('B', 0x55FFFF);
-        put('C', 0xFF5555);put('D', 0xFF55FF);put('E', 0xFFFF55);put('F', 0xFFFFFF);
-    }};
+    /** Legacy section-sign colour codes, keyed by the upper-case code character. */
+    private static final Map<Character, Integer> colorCodes = new HashMap<Character, Integer>();
+
+    static {
+        colorCodes.put('0', 0x000000); colorCodes.put('1', 0x0000AA);
+        colorCodes.put('2', 0x00AA00); colorCodes.put('3', 0x00AAAA);
+        colorCodes.put('4', 0xAA0000); colorCodes.put('5', 0xAA00AA);
+        colorCodes.put('6', 0xFFAA00); colorCodes.put('7', 0xAAAAAA);
+        colorCodes.put('8', 0x555555); colorCodes.put('9', 0x5555FF);
+        colorCodes.put('A', 0x55FF55); colorCodes.put('B', 0x55FFFF);
+        colorCodes.put('C', 0xFF5555); colorCodes.put('D', 0xFF55FF);
+        colorCodes.put('E', 0xFFFF55); colorCodes.put('F', 0xFFFFFF);
+    }
 
     private static final ExecutorService ASYNC_WORKER = Executors.newCachedThreadPool();
-    private final Object2ObjectMap<Identifier, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
+    private final Map<Identifier, List<DrawEntry>> GLYPH_PAGE_CACHE = new LinkedHashMap<Identifier, List<DrawEntry>>();
     private final float originalSize;
-    private final ObjectList<GlyphMap> maps = new ObjectArrayList<>();
-    private final Char2ObjectArrayMap<Glyph> allGlyphs = new Char2ObjectArrayMap<>();
+    private final List<GlyphMap> maps = new ArrayList<GlyphMap>();
+    private final Map<Character, Glyph> allGlyphs = new HashMap<Character, Glyph>();
     private final int charsPerPage;
     private final int padding;
     private final String prebakeGlyphs;
@@ -66,12 +71,49 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     private Future<Void> prebakeGlyphsFuture;
     private boolean initialized;
 
+    /**
+     * When true, drawing and measuring are delegated to vanilla's {@code TextRenderer} instead of
+     * an AWT-rasterised atlas.
+     *
+     * <p>1.8.9 needs {@code BufferedImage} and {@code ImageIO} to boot at all, so those are always
+     * present — but {@code java.awt.Font} glyph rasterisation goes through libfontmanager/freetype,
+     * which is a separate native library and is not reliably functional in PojavLauncher's JREs.
+     * Rather than lose all text, the renderer falls back to the bitmap font vanilla already has.
+     * See {@link me.Padej_.soupapi.compat.Caps#canRasteriseAwtFonts()}.
+     */
+    private final boolean useVanillaFallback;
+
     public FontRenderer(Font font, float sizePx, int charactersPerPage, int paddingBetweenCharacters, @Nullable String prebakeCharacters) {
         this.originalSize = sizePx;
         this.charsPerPage = charactersPerPage;
         this.padding = paddingBetweenCharacters;
         this.prebakeGlyphs = prebakeCharacters;
+        this.useVanillaFallback = false;
         init(font, sizePx);
+    }
+
+    /** Constructs a renderer that delegates to vanilla's font; see {@link #useVanillaFallback}. */
+    private FontRenderer(float sizePx) {
+        this.originalSize = sizePx;
+        this.charsPerPage = 0;
+        this.padding = 0;
+        this.prebakeGlyphs = null;
+        this.useVanillaFallback = true;
+        this.initialized = true;
+        this.scaleMul = 1;
+    }
+
+    /**
+     * A renderer backed by vanilla's bitmap font, scaled to approximately {@code sizePx} tall.
+     * Used when AWT cannot rasterise glyphs.
+     */
+    public static FontRenderer vanillaBacked(float sizePx) {
+        return new FontRenderer(sizePx);
+    }
+
+    /** Vanilla's font is 9px tall; scale it towards this renderer's requested size. */
+    private float fallbackScale() {
+        return originalSize / 9f;
     }
 
     public FontRenderer(Font font, float sizePx) {
@@ -144,7 +186,15 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
 
     @Nullable
     private Glyph locateGlyph1(char glyph) {
-        return allGlyphs.computeIfAbsent(glyph, this::locateGlyph0);
+        Character key = Character.valueOf(glyph);
+        Glyph cached = allGlyphs.get(key);
+        if (cached == null) {
+            cached = locateGlyph0(glyph);
+            if (cached != null) {
+                allGlyphs.put(key, cached);
+            }
+        }
+        return cached;
     }
 
     public void drawString(MatrixStack stack, String s, double x, double y, int color) {
@@ -164,6 +214,10 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float b, float a, boolean gradient, int offset) {
+        if (useVanillaFallback) {
+            drawStringVanilla(stack, s, x, y, r, g, b, a, gradient);
+            return;
+        }
         if (prebakeGlyphsFuture != null && !prebakeGlyphsFuture.isDone()) {
             try {
                 prebakeGlyphsFuture.get();
@@ -197,7 +251,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                     inSel = false;
                     char c1 = Character.toUpperCase(c);
                     if (colorCodes.containsKey(c1)) {
-                        int ii = colorCodes.get(c1);
+                        int ii = colorCodes.get(c1).intValue();
                         int[] col = RGBIntToRGB(ii);
                         r2 = col[0] / 255f;
                         g2 = col[1] / 255f;
@@ -232,7 +286,12 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                     if (glyph.value() != ' ') {
                         Identifier i1 = glyph.owner().bindToTexture;
                         DrawEntry entry = new DrawEntry(xOffset, yOffset, r2, g2, b2, glyph);
-                        GLYPH_PAGE_CACHE.computeIfAbsent(i1, integer -> new ObjectArrayList<>()).add(entry);
+                        List<DrawEntry> page = GLYPH_PAGE_CACHE.get(i1);
+                        if (page == null) {
+                            page = new ArrayList<DrawEntry>();
+                            GLYPH_PAGE_CACHE.put(i1, page);
+                        }
+                        page.add(entry);
                     }
                     xOffset += glyph.width();
                 }
@@ -289,6 +348,14 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public float getStringWidth(String text) {
+        if (useVanillaFallback) {
+            float scale = fallbackScale();
+            float widest = 0f;
+            for (String line : stripControlCodes(text).split("\n", -1)) {
+                widest = Math.max(widest, mc.textRenderer.getStringWidth(line) * scale);
+            }
+            return widest;
+        }
         char[] c = stripControlCodes(text).toCharArray();
         float currentLine = 0;
         float maxPreviousLines = 0;
@@ -305,6 +372,10 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public float getStringHeight(String text) {
+        if (useVanillaFallback) {
+            int lines = Math.max(1, stripControlCodes(text).split("\n", -1).length);
+            return mc.textRenderer.fontHeight * fallbackScale() * lines;
+        }
         char[] c = stripControlCodes(text).toCharArray();
         if (c.length == 0) {
             c = new char[]{' '};
@@ -331,8 +402,46 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
 
+    /**
+     * Draws through vanilla's {@code TextRenderer}, scaled to match this renderer's size.
+     *
+     * <p>Colour-code handling differs slightly: vanilla parses the section-sign codes itself, so
+     * the string is passed through intact rather than being split into per-run colours. Gradient
+     * mode collapses to the first palette colour, which is the closest vanilla can express.
+     */
+    private void drawStringVanilla(MatrixStack stack, String s, float x, float y,
+                                   float r, float g, float b, float a, boolean gradient) {
+        int argb;
+        if (gradient) {
+            Color c = new Color(CONFIG.c1);
+            argb = (Math.round(a * 255f) << 24) | (c.getRed() << 16) | (c.getGreen() << 8) | c.getBlue();
+        } else {
+            argb = (Math.round(a * 255f) << 24)
+                    | (Math.round(r * 255f) << 16)
+                    | (Math.round(g * 255f) << 8)
+                    | Math.round(b * 255f);
+        }
+
+        float scale = fallbackScale();
+        stack.push();
+        stack.translate(x, y - 3f, 0f);
+        stack.scale(scale, scale, 1f);
+        stack.applyToGl();
+        try {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            mc.textRenderer.draw(s, 0, 0, argb, false);
+        } finally {
+            stack.undoGl();
+            stack.pop();
+        }
+    }
+
     @Override
     public void close() {
+        if (useVanillaFallback) {
+            return;
+        }
         try {
             if (prebakeGlyphsFuture != null && !prebakeGlyphsFuture.isDone() && !prebakeGlyphsFuture.isCancelled()) {
                 prebakeGlyphsFuture.cancel(true);
@@ -355,7 +464,12 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     private static String randomString() {
-        return IntStream.range(0, 32).mapToObj(operand -> String.valueOf((char) new Random().nextInt('a', 'z' + 1))).collect(Collectors.joining());
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(32);
+        for (int i = 0; i < 32; i++) {
+            sb.append((char) ('a' + random.nextInt(26)));
+        }
+        return sb.toString();
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -458,11 +572,15 @@ static final class DrawEntry {
         return Math.round(n * factor) / factor;
     }
 
+    /**
+     * Flushes a glyph page.
+     *
+     * <p>1.21.4 used {@code endNullable()} to skip the draw when no vertices were written. 1.8.9's
+     * tessellator has no such check, but the caller only reaches here with at least one glyph
+     * queued, so the draw is unconditional.
+     */
     private static void endBuilding(BufferBuilder bb) {
-        BuiltBuffer builtBuffer = bb.endNullable();
-        if (builtBuffer != null) {
-            BufferRenderer.drawWithGlobalProgram(builtBuffer);
-            Render2D.endRender();
-        }
+        BufferRenderer.drawWithGlobalProgram(bb);
+        Render2D.endRender();
     }
 }
