@@ -1,10 +1,8 @@
 package me.Padej_.soupapi.sounds;
 
 import me.Padej_.soupapi.utils.EntityUtils;
-import net.minecraft.sound.SoundEvent;
+import me.Padej_.soupapi.compat.SoundEvent;
 import net.minecraft.util.Identifier;
-
-import java.util.Random;
 
 public class CustomSounds {
     public static SoundEvent ON = SoundEvent.of(new Identifier("soupapi", "on"));

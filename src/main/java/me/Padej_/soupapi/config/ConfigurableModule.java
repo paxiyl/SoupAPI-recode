@@ -1,11 +1,16 @@
 package me.Padej_.soupapi.config;
 
 import me.Padej_.soupapi.main.SoupAPI_Main;
-import me.shedaniel.clothconfig2.api.ConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import me.Padej_.soupapi.compat.Camera;
 
+/**
+ * Base class giving every module static access to the client and the live config.
+ *
+ * <p>{@code CONFIG} is resolved once, at class-init, from the holder registered by
+ * {@link SoupAPI_Main}. That ordering is why the main initialiser registers the config before
+ * anything touches a module.
+ */
 public abstract class ConfigurableModule {
     public static MinecraftClient mc = MinecraftClient.getInstance();
     public static final SoupAPI_Config CONFIG = SoupAPI_Main.configHolder.get();

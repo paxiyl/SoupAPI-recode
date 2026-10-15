@@ -4,8 +4,8 @@ import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.sounds.CustomSounds;
 import me.Padej_.soupapi.event.AttackEntityCallback;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.ActionResult;
+import me.Padej_.soupapi.compat.SoundEvent;
+import me.Padej_.soupapi.compat.Sounds;
 
 import java.util.Random;
 
@@ -16,7 +16,7 @@ public class HitSound extends ConfigurableModule {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
             if ((entity instanceof LivingEntity && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitSoundEnabled) {
                 long now = System.currentTimeMillis();
-                if (now - lastHitTime < 150) return ActionResult.PASS;
+                if (now - lastHitTime < 150) return AttackEntityCallback.Result.PASS;
                 lastHitTime = now;
 
                 if (!CONFIG.hitSoundOnlyCrit) {
@@ -27,7 +27,7 @@ public class HitSound extends ConfigurableModule {
                     }
                 }
             }
-            return ActionResult.PASS;
+            return AttackEntityCallback.Result.PASS;
         });
     }
 
@@ -35,7 +35,7 @@ public class HitSound extends ConfigurableModule {
         Random random = new Random();
         double pitch = 0.9 + (random.nextInt(51) / 100.0);
 
-        mc.player.playSound(getSound(),
+        Sounds.play(getSound(),
                 CONFIG.hitSoundVolume / 100f,
                 CONFIG.hitSoundRandomPitch ? (float) pitch : 1);
     }
