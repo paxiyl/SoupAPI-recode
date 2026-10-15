@@ -24,7 +24,7 @@ import java.awt.Color;
  *       into each vertex colour here, reproducing 1.21.4's behaviour.</li>
  * </ul>
  */
-public final class BufferBuilder {
+public final class BufferBuilder implements VertexConsumer {
 
     private final net.minecraft.client.render.BufferBuilder delegate;
     private VertexFormat format;

@@ -1,17 +1,17 @@
 package me.Padej_.soupapi.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.Identifier;
 
 @Environment(EnvType.CLIENT)

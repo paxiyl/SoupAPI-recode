@@ -1,7 +1,9 @@
 package me.Padej_.soupapi.gui.settings;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.settings.impl.SliderSetting;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.text.Text;
 
 public class SliderComponent extends SettingComponent<Float> {
@@ -21,9 +23,9 @@ public class SliderComponent extends SettingComponent<Float> {
         context.fill(x, y, x + fillWidth, y + height, 0xFF00FF00);
         context.fill(x + fillWidth, y, x + width, y + height, 0xFF555555);
 
-        Text text = Text.translatable(setting.getTranslationKey())
-                .append(Text.literal(": "))
-                .append(Text.literal(String.valueOf(setting.getValue())));
+        Text text = Texts.translatable(setting.getTranslationKey())
+                .append(Texts.literal(": "))
+                .append(Texts.literal(String.valueOf(setting.getValue())));
 
         context.drawText(textRenderer, text, x + 5, y + 5, 0xFFFFFFFF, false);
     }

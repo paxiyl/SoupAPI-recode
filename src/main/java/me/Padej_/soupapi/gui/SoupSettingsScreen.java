@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.gui;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.SoupModule;
 import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.gui.settings.*;
@@ -7,7 +9,7 @@ import me.Padej_.soupapi.modules.*;
 import me.Padej_.soupapi.settings.Setting;
 import me.Padej_.soupapi.settings.impl.*;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
@@ -32,7 +34,7 @@ public class SoupSettingsScreen extends Screen {
     }
 
     public SoupSettingsScreen() {
-        super(Text.translatable("soupapi.screen.soup_settings.title"));
+        super(Texts.translatable("soupapi.screen.soup_settings.title"));
 
         this.modulesByCategory = new EnumMap<>(SoupModule.Category.class);
         for (SoupModule.Category cat : SoupModule.Category.values()) {
@@ -80,7 +82,7 @@ public class SoupSettingsScreen extends Screen {
             int color = selected ? 0xFFAAAAFF : 0xFF888888;
             context.fill(padding, y, padding + colWidth, y + 20, color);
             context.drawText(MinecraftClient.getInstance().textRenderer,
-                    Text.translatable(cat.getTranslationKey()), padding + 5, y + 6, 0xFFFFFFFF, false);
+                    Texts.translatable(cat.getTranslationKey()), padding + 5, y + 6, 0xFFFFFFFF, false);
             y += 25;
         }
 

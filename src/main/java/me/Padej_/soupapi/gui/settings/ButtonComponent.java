@@ -1,7 +1,9 @@
 package me.Padej_.soupapi.gui.settings;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.settings.impl.ButtonSetting;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.text.Text;
 
 public class ButtonComponent extends SettingComponent<Void> {
@@ -13,7 +15,7 @@ public class ButtonComponent extends SettingComponent<Void> {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         context.fill(x, y, x + width, y + height, 0xFF5555FF);
-        context.drawText(textRenderer, Text.translatable(setting.getTranslationKey()), x + 4, y + 4, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Texts.translatable(setting.getTranslationKey()), x + 4, y + 4, 0xFFFFFFFF, false);
     }
 
     @Override

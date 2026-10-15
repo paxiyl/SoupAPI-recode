@@ -4,7 +4,7 @@ import me.Padej_.soupapi.main.SoupAPI_Main;
 import me.shedaniel.clothconfig2.api.ConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.Camera;
+import me.Padej_.soupapi.compat.Camera;
 
 public abstract class ConfigurableModule {
     public static MinecraftClient mc = MinecraftClient.getInstance();

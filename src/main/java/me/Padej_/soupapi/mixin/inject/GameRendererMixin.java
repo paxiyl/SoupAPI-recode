@@ -1,18 +1,18 @@
 package me.Padej_.soupapi.mixin.inject;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.mixin.access.GameRendererAccessor;
 import me.Padej_.soupapi.modules.AspectRatio;
 import me.Padej_.soupapi.modules.TargetHud;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.Camera;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
-import org.joml.Matrix4f;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
+import me.Padej_.soupapi.compat.RotationAxis;
+import me.Padej_.soupapi.compat.Mat4;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -59,7 +59,7 @@ public abstract class GameRendererMixin {
     }
 
     @Inject(method = "getBasicProjectionMatrix", at = @At("TAIL"), cancellable = true)
-    public void getBasicProjectionMatrixHook(float fovDegrees, CallbackInfoReturnable<Matrix4f> cir) {
+    public void getBasicProjectionMatrixHook(float fovDegrees, CallbackInfoReturnable<Mat4> cir) {
         if (!AspectRatio.enabled.getValue()) return;
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getPositionMatrix().identity();
@@ -69,7 +69,7 @@ public abstract class GameRendererMixin {
             matrixStack.scale(zoom, zoom, 1.0f);
         }
         matrixStack.peek().getPositionMatrix().mul(
-                new Matrix4f().setPerspective((float) (fovDegrees * (Math.PI / 180f)),
+                new Mat4().setPerspective((float) (fovDegrees * (Math.PI / 180f)),
                         factor,
                         0.05f,
                         viewDistance * 4.0f)

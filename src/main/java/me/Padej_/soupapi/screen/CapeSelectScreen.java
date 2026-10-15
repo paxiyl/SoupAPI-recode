@@ -1,11 +1,13 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.modules.Capes;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
+import me.Padej_.soupapi.compat.RenderLayer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -22,7 +24,7 @@ public class CapeSelectScreen extends Screen {
     private final String[] categories = {"APRIL", "DEFAULT", "XBOX", "MCD", "CUSTOM", "OPTIFINE", "STAFF"};
 
     public CapeSelectScreen() {
-        super(Text.of("Cape Textures"));
+        super(Texts.literal("Cape Textures"));
     }
 
     @Override
@@ -35,7 +37,7 @@ public class CapeSelectScreen extends Screen {
         for (String category : categories) {
             context.drawText(
                     MinecraftClient.getInstance().textRenderer,
-                    Text.of(category).copy().formatted(Formatting.BOLD),
+                    Texts.literal(category).copy().formatted(Formatting.BOLD),
                     x,
                     categoryY, 0xFFFFFFFF, true
             );

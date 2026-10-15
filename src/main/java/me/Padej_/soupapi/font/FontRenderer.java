@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -10,14 +10,22 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -171,9 +179,9 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
 
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
         BufferBuilder bb;
-        Matrix4f mat = stack.peek().getPositionMatrix();
+        Mat4 mat = stack.peek().getPositionMatrix();
         char[] chars = s.toCharArray();
         float xOffset = 0;
         float yOffset = 0;
@@ -340,7 +348,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
 
     @Contract(value = "-> new", pure = true)
     public static @NotNull Identifier randomIdentifier() {
-        return Identifier.of("soupapi", "temp/" + randomString());
+        return new Identifier("soupapi", "temp/" + randomString());
     }
 
     private static String randomString() {

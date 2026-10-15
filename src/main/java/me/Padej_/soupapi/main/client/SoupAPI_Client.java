@@ -1,6 +1,8 @@
 package me.Padej_.soupapi.main.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.Texts;
+
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.config.SoupAPI_Config;
@@ -19,14 +21,22 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.*;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
-import org.joml.Matrix4f;
+import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.glfw.GLFW;
 
 public class SoupAPI_Client implements ClientModInitializer {
@@ -36,7 +46,7 @@ public class SoupAPI_Client implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(this::doEndClientTick);
         WorldRenderEvents.AFTER_ENTITIES.register(this::doRenderAfterEntities);
         WorldRenderEvents.LAST.register(this::doRenderLast);
-//        HudLayerRegistrationCallback.EVENT.register(layeredDrawer -> layeredDrawer.attachLayerBefore(IdentifiedLayer.STATUS_EFFECTS, Identifier.of("soupapi", "hud"), this::renderHud));
+//        HudLayerRegistrationCallback.EVENT.register(layeredDrawer -> layeredDrawer.attachLayerBefore(IdentifiedLayer.STATUS_EFFECTS, new Identifier("soupapi", "hud"), this::renderHud));
         HudRenderCallback.EVENT.register(this::renderHud);
 
         registerClientSideParticles();
@@ -74,7 +84,7 @@ public class SoupAPI_Client implements ClientModInitializer {
         if (currentScreen instanceof ChatScreen) return;
 //        if (InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_ALT) && InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_BACKSPACE)) {
         if (InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_CONTROL) && InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_ALT)) {
-            if (currentScreen != null && !currentScreen.getTitle().equals(Text.translatable("text.autoconfig.soupapi.title"))) {
+            if (currentScreen != null && !currentScreen.getTitle().equals(Texts.translatable("text.autoconfig.soupapi.title"))) {
                 parent = currentScreen;
             }
             client.setScreen(AutoConfig.getConfigScreen(SoupAPI_Config.class, parent).get());

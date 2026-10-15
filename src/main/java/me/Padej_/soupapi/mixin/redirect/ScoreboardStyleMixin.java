@@ -2,9 +2,9 @@ package me.Padej_.soupapi.mixin.redirect;
 
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.Palette;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderTickCounter;
+import me.Padej_.soupapi.compat.RenderTickCounter;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

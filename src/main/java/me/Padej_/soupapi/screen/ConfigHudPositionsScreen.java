@@ -1,10 +1,12 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.CursorUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -21,7 +23,7 @@ public class ConfigHudPositionsScreen extends Screen {
     private final Frame mouseMoveFrame;
 
     public ConfigHudPositionsScreen() {
-        super(Text.of("SoupAPI config screen"));
+        super(Texts.literal("SoupAPI config screen"));
         int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
         int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
         targetHudFrame = new Frame(

@@ -5,9 +5,8 @@ import me.Padej_.soupapi.sounds.CustomSounds;
 import me.Padej_.soupapi.utils.MC_Tiers;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.Weather;
-import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import me.Padej_.soupapi.config.annotation.Config;
+import me.Padej_.soupapi.config.annotation.ConfigEntry;
 
 @Config(name = "soupapi")
 public class SoupAPI_Config implements ConfigData {

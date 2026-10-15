@@ -1,23 +1,22 @@
 package me.Padej_.soupapi.modules;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.interfaces.TrailEntity;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.EntityUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
+import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -76,7 +75,7 @@ public class Trails extends ConfigurableModule {
         float tickDelta = context.tickCounter().getTickDelta(true);
 
         matrixStack.push();
-        Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+        Mat4 matrix = matrixStack.peek().getPositionMatrix();
 
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
@@ -85,7 +84,7 @@ public class Trails extends ConfigurableModule {
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 

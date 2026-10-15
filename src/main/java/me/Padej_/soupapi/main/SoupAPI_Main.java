@@ -28,6 +28,6 @@ public class SoupAPI_Main implements ModInitializer {
     }
 
     private void registerParticles() {
-        Registry.register(Registries.PARTICLE_TYPE, Identifier.of("soupapi", "star"), STAR);
+        Registry.register(Registries.PARTICLE_TYPE, new Identifier("soupapi", "star"), STAR);
     }
 }

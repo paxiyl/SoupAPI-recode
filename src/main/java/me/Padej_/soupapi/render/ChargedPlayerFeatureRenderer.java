@@ -6,7 +6,7 @@ import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.util.Identifier;
 
 public class ChargedPlayerFeatureRenderer extends CustomEnergySwirlOverlayFeatureRenderer<PlayerEntityRenderState, PlayerEntityModel> {
-    private static final Identifier SKIN = Identifier.of("soupapi", "textures/i.png");
+    private static final Identifier SKIN = new Identifier("soupapi", "textures/i.png");
     private final PlayerEntityModel model;
 
     public ChargedPlayerFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState, PlayerEntityModel> context, PlayerEntityModel model) {

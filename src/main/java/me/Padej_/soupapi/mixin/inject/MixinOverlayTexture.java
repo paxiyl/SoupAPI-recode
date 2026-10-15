@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.mixin.inject;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.interfaces.OverlayReloadListener;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import net.minecraft.client.render.OverlayTexture;

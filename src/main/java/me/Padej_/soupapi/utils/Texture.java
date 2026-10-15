@@ -6,11 +6,11 @@ public class Texture {
     final Identifier id;
 
     public Texture(String path) {
-        id = Identifier.of("maillib", validatePath(path));
+        id = new Identifier("maillib", validatePath(path));
     }
 
     public Texture(Identifier i) {
-        id = Identifier.of(i.getNamespace(), i.getPath());
+        id = new Identifier(i.getNamespace(), i.getPath());
     }
 
     String validatePath(String path) {

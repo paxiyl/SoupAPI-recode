@@ -1,7 +1,9 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -21,7 +23,7 @@ public class KillEffect extends ConfigurableModule {
         if (mc.player == null) return;
 
         // Тестовое сообщение в чат
-        mc.player.sendMessage(Text.of("test"), true);
+        mc.player.sendMessage(Texts.literal("test"), true);
 
         ClientWorld world = (ClientWorld) mc.player.getWorld();
         for (Entity entity : world.getEntities()) {
@@ -36,7 +38,7 @@ public class KillEffect extends ConfigurableModule {
             // Проверяем, что сущность мертва
             if (!entity.isAlive() || liv.getHealth() == 0) {
                 // Отправляем сообщение о смерти сущности в чат
-                mc.player.sendMessage(Text.of("Сущность была убита"), false);
+                mc.player.sendMessage(Texts.literal("Сущность была убита"), false);
 
                 // Проигрываем звук
                 world.playSound(mc.player, entity.getBlockPos(), SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 1.0f, 1.0f);

@@ -1,11 +1,11 @@
 package me.Padej_.soupapi.modules;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render3D;
 import me.Padej_.soupapi.utils.EntityUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import me.Padej_.soupapi.event.WorldRenderContext;
 import net.minecraft.entity.Entity;
 
 public class Halo extends ConfigurableModule {

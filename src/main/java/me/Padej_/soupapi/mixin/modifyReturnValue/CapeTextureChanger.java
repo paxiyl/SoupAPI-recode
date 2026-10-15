@@ -81,7 +81,7 @@ public abstract class CapeTextureChanger extends PlayerEntity {
         String linkValue = Capes.link.getValue();
         if (Capes.useCustom.getValue() && linkValue != null && !linkValue.isEmpty()) {
             String idString = "custom_cape_" + linkValue.hashCode();
-            Identifier textureId = Identifier.of("soupapi", idString);
+            Identifier textureId = new Identifier("soupapi", idString);
 
             // Не возвращаем, если кап не загружен
             if (!Boolean.TRUE.equals(loadedCapes.get(linkValue))) {

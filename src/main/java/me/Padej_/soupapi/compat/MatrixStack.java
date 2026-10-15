@@ -96,6 +96,15 @@ public final class MatrixStack {
         stack.peekLast().getPositionMatrix().mul(matrix);
     }
 
+    public void multiply(Quaternionf rotation) {
+        stack.peekLast().getPositionMatrix().mul(rotation.toMatrix());
+    }
+
+    /** 1.21.4 name for composing a raw matrix onto the top entry. */
+    public void multiplyPositionMatrix(Mat4 matrix) {
+        stack.peekLast().getPositionMatrix().mul(matrix);
+    }
+
     /** Replaces the top entry's matrix wholesale. */
     public void set(Mat4 matrix) {
         stack.peekLast().getPositionMatrix().set(matrix);

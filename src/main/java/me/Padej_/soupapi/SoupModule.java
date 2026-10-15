@@ -1,5 +1,7 @@
 package me.Padej_.soupapi;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.settings.Setting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
@@ -44,7 +46,7 @@ public abstract class SoupModule {
     }
 
     public Text getDisplayName() {
-        return Text.translatable(translationKey);
+        return Texts.translatable(translationKey);
     }
 
     public Category getCategory() {

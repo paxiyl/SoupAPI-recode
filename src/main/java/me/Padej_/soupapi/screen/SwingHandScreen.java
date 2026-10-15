@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.modules.SwingHand;
 import net.minecraft.client.MinecraftClient;
@@ -13,7 +15,7 @@ import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 public class SwingHandScreen extends Screen {
 
     public SwingHandScreen() {
-        super(Text.of("Swing Hand Screen"));
+        super(Texts.literal("Swing Hand Screen"));
     }
 
     @Override
@@ -58,7 +60,7 @@ public class SwingHandScreen extends Screen {
         addSliderX2W(centerX + padding, y, "Speed", 0.0F, 100.0F, () -> SwingHand.speed, v -> SwingHand.speed = (int) v);
         y += rowSpacing + 10; // дополнительный отступ перед кнопкой
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Swing Hand"), button -> {
+        this.addDrawableChild(ButtonWidget.builder(Texts.literal("Swing Hand"), button -> {
             if (mc.player == null) return;
             mc.player.swingHand(mc.player.getActiveHand());
         }).dimensions(centerX - 50, y, 100, 20).build());
@@ -87,10 +89,10 @@ public class SwingHandScreen extends Screen {
     }
 
     private void addSlider(int x, int y, String label, float min, float max, FloatSupplier getter, FloatConsumer setter) {
-        this.addDrawableChild(new SliderWidget(x, y, 100, 20, Text.of(label), (getter.get() - min) / (max - min)) {
+        this.addDrawableChild(new SliderWidget(x, y, 100, 20, Texts.literal(label), (getter.get() - min) / (max - min)) {
             @Override
             protected void updateMessage() {
-                this.setMessage(Text.of(label + ": " + String.format("%.1f", min + this.value * (max - min))));
+                this.setMessage(Texts.literal(label + ": " + String.format("%.1f", min + this.value * (max - min))));
             }
 
             @Override
@@ -101,10 +103,10 @@ public class SwingHandScreen extends Screen {
     }
 
     private void addSliderX2W(int x, int y, String label, float min, float max, FloatSupplier getter, FloatConsumer setter) {
-        this.addDrawableChild(new SliderWidget(x, y, (int) (100 * 1.5f), 20, Text.of(label), (getter.get() - min) / (max - min)) {
+        this.addDrawableChild(new SliderWidget(x, y, (int) (100 * 1.5f), 20, Texts.literal(label), (getter.get() - min) / (max - min)) {
             @Override
             protected void updateMessage() {
-                this.setMessage(Text.of(label + ": " + String.format("%.1f", min + this.value * (max - min))));
+                this.setMessage(Texts.literal(label + ": " + String.format("%.1f", min + this.value * (max - min))));
             }
 
             @Override

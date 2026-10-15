@@ -153,7 +153,7 @@
 //    private static void logMessage(String message) {
 //        if (!debug && !message.startsWith("Detected")) return;
 //        if (mc.player != null) {
-//            mc.player.sendMessage(Text.of("[AntiCheatDetector] " + message), false);
+//            mc.player.sendMessage(Texts.literal("[AntiCheatDetector] " + message), false);
 //        } else {
 //            System.out.println("[AntiCheatDetector] " + message);
 //        }

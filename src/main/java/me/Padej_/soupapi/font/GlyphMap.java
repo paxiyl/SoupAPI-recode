@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import me.Padej_.soupapi.mixin.access.NativeImageAccessor;
 import net.minecraft.client.MinecraftClient;

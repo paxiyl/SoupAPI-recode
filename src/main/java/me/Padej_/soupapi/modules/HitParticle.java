@@ -1,19 +1,21 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.event.AttackEntityCallback;
 import net.minecraft.block.AirBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
@@ -21,7 +23,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import me.Padej_.soupapi.compat.RotationAxis;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -319,7 +321,7 @@ public class HitParticle extends ConfigurableModule {
                 ).getRGB();
 
                 MinecraftClient.getInstance().textRenderer.draw(
-                        Text.of(hpString),
+                        Texts.literal(hpString),
                         0,
                         0,
                         fadedColor,

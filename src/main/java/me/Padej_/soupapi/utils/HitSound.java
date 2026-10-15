@@ -2,7 +2,7 @@ package me.Padej_.soupapi.utils;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.sounds.CustomSounds;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import me.Padej_.soupapi.event.AttackEntityCallback;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.ActionResult;

@@ -5,11 +5,11 @@ import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RotationAxis;
+import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 
 import java.awt.*;

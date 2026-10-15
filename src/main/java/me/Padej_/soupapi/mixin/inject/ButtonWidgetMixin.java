@@ -60,7 +60,7 @@ public abstract class ButtonWidgetMixin extends PressableWidget {
             case "UPDATE_CAPE":
                 {
                     if (CONFIG.customCapesEnabled && CONFIG.customCapesLink != null) {
-                    Identifier textureId = Identifier.of("soupapi", "custom_cape_" + CONFIG.customCapesLink.hashCode());
+                    Identifier textureId = new Identifier("soupapi", "custom_cape_" + CONFIG.customCapesLink.hashCode());
                     if (MinecraftClient.getInstance().getTextureManager().getTexture(textureId) == null) {
                     updateCapeFromUrl(CONFIG.customCapesLink, textureId);
                     }

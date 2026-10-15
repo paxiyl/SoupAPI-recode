@@ -9,7 +9,7 @@ import me.Padej_.soupapi.settings.impl.EnumSetting;
 import me.Padej_.soupapi.settings.impl.SliderSetting;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import me.Padej_.soupapi.event.WorldRenderContext;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;

@@ -1,7 +1,9 @@
 package me.Padej_.soupapi.gui.settings;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.settings.impl.BooleanSetting;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.text.Text;
 
 public class BooleanComponent extends SettingComponent<Boolean> {
@@ -14,7 +16,7 @@ public class BooleanComponent extends SettingComponent<Boolean> {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         boolean value = setting.getValue();
         context.fill(x, y, x + width, y + height, value ? 0xFF00FF00 : 0xFFFF0000);
-        context.drawText(textRenderer, Text.translatable(setting.getTranslationKey()), x + 4, y + 4, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Texts.translatable(setting.getTranslationKey()), x + 4, y + 4, 0xFFFFFFFF, false);
     }
 
     @Override

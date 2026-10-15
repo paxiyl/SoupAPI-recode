@@ -1,7 +1,6 @@
 package me.Padej_.soupapi.render;
 
 import net.minecraft.util.math.MathHelper;
-import org.joml.Math;
 
 import java.awt.*;
 

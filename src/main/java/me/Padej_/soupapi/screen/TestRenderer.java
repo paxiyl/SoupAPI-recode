@@ -1,10 +1,12 @@
 package me.Padej_.soupapi.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.Texts;
+
+import me.Padej_.soupapi.compat.RenderSystem;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
+import me.Padej_.soupapi.compat.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
@@ -28,7 +30,7 @@ public class TestRenderer extends Screen {
     private Identifier avatarTexture;
 
     public TestRenderer() {
-        super(Text.of("test"));
+        super(Texts.literal("test"));
 
         // Инициализация дефолтной текстуры
         loadImageFromUrl("https://raw.githubusercontent.com/github/explore/main/topics/minecraft/minecraft.png");
@@ -110,7 +112,7 @@ public class TestRenderer extends Screen {
 
                 NativeImage image = NativeImage.read(inputStream);
                 NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
-                Identifier id = Identifier.of("soupapi", "avatar_" + UUID.randomUUID());
+                Identifier id = new Identifier("soupapi", "avatar_" + UUID.randomUUID());
                 MinecraftClient.getInstance().getTextureManager().registerTexture(id, texture);
                 this.avatarTexture = id;
 
@@ -131,7 +133,7 @@ public class TestRenderer extends Screen {
                 }
             }
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
-            Identifier id = Identifier.of("soupapi", "avatar_" + UUID.randomUUID());
+            Identifier id = new Identifier("soupapi", "avatar_" + UUID.randomUUID());
             MinecraftClient.getInstance().getTextureManager().registerTexture(id, texture);
             this.avatarTexture = id;
         } catch (Exception e) {

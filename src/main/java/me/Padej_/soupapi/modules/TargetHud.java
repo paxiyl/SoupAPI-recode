@@ -8,17 +8,17 @@ import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.RenderTickCounter;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
+import me.Padej_.soupapi.compat.Mat4;
+import me.Padej_.soupapi.compat.Vector3f;
+import me.Padej_.soupapi.compat.Vector4f;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -40,9 +40,9 @@ public class TargetHud extends ConfigurableModule {
     public static float smoothedScreenY = 0f;
     private static final float smoothingFactor = 0.8f;
 
-    public static final Matrix4f lastProjMat = new Matrix4f();
-    public static final Matrix4f lastModMat = new Matrix4f();
-    public static final Matrix4f lastWorldSpaceMatrix = new Matrix4f();
+    public static final Mat4 lastProjMat = new Mat4();
+    public static final Mat4 lastModMat = new Mat4();
+    public static final Mat4 lastWorldSpaceMatrix = new Mat4();
 
     public static void onTick() {
         if (!CONFIG.targetHudEnabled) return;
@@ -274,8 +274,8 @@ public class TargetHud extends ConfigurableModule {
         double deltaZ = pos.z - camera.getPos().z;
 
         Vector4f transformedCoordinates = new Vector4f((float) deltaX, (float) deltaY, (float) deltaZ, 1.f).mul(lastWorldSpaceMatrix);
-        Matrix4f matrixProj = new Matrix4f(lastProjMat);
-        Matrix4f matrixModel = new Matrix4f(lastModMat);
+        Mat4 matrixProj = new Mat4(lastProjMat);
+        Mat4 matrixModel = new Mat4(lastModMat);
         matrixProj.mul(matrixModel).project(transformedCoordinates.x(), transformedCoordinates.y(), transformedCoordinates.z(), viewport, target);
 
         return new Vec3d(target.x / scale, (displayHeight - target.y) / scale, target.z);

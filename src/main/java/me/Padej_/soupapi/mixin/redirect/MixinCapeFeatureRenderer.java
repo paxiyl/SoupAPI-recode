@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.mixin.redirect;
 
-import net.minecraft.client.render.RenderLayer;
+import me.Padej_.soupapi.compat.RenderLayer;
 import net.minecraft.client.render.entity.feature.CapeFeatureRenderer;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;

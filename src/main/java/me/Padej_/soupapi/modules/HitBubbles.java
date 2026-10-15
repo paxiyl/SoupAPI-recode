@@ -1,22 +1,22 @@
 package me.Padej_.soupapi.modules;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.utils.Timer;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.event.AttackEntityCallback;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.RotationAxis;
+import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;

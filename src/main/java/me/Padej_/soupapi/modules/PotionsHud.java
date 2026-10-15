@@ -11,9 +11,9 @@ import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.Registries;
@@ -37,7 +37,7 @@ public class PotionsHud extends ConfigurableModule {
 
     static {
         ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
-        Identifier enUsId = Identifier.of("lang/en_us.json");
+        Identifier enUsId = new Identifier("lang/en_us.json");
 
         try (InputStream input = resourceManager.getResource(enUsId).get().getInputStream()) {
             String json = new String(input.readAllBytes(), StandardCharsets.UTF_8);

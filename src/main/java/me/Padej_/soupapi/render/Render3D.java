@@ -1,7 +1,7 @@
 package me.Padej_.soupapi.render;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.main.SoupAPI_Main;
 import me.Padej_.soupapi.modules.Halo;
@@ -9,16 +9,23 @@ import me.Padej_.soupapi.modules.TargetRender;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Math;
 import org.joml.*;
 import org.lwjgl.opengl.GL11;
 
@@ -32,7 +39,7 @@ public class Render3D extends ConfigurableModule {
     private static Camera camera = mc.gameRenderer.getCamera();
 
     public static void renderChinaHat(MatrixStack matrices, VertexConsumer vertexConsumer) {
-        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        Mat4 matrix = matrices.peek().getPositionMatrix();
 
         float baseRadius = CONFIG.chinaHatBaseRadius / 100f;
         float height = CONFIG.chinaHatTipHeight / 100f;
@@ -166,13 +173,13 @@ public class Render3D extends ConfigurableModule {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rollAngle));
 
-        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        Mat4 matrix = matrices.peek().getPositionMatrix();
 
         RenderSystem.enableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         RenderSystem.setShaderTexture(0, TexturesManager.getTargetRenderTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
 
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
@@ -221,7 +228,7 @@ public class Render3D extends ConfigurableModule {
         matrices.push();
         matrices.translate(newPos.getX(), newPos.getY(), newPos.getZ());
 
-        Matrix4f baseMatrix = matrices.peek().getPositionMatrix();
+        Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
         Color shaderColor = TargetHudRenderer.bottomLeft;
         RenderSystem.setShaderColor(
@@ -235,7 +242,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -262,7 +269,7 @@ public class Render3D extends ConfigurableModule {
                     billboardRot.rotateX(Math.toRadians(camera.getPitch()));
                     particleMatrix.multiply(billboardRot);
 
-                    Matrix4f matrix = particleMatrix.peek().getPositionMatrix();
+                    Mat4 matrix = particleMatrix.peek().getPositionMatrix();
 
                     float scale = Math.max((endSize + offset * (startSize - endSize)) * scaleModifier, 0.15f * scaleModifier);
 
@@ -303,7 +310,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.disableDepthTest();
         matrices.translate(newPos.getX(), newPos.getY() + 1, newPos.getZ());
 
-        Matrix4f baseMatrix = matrices.peek().getPositionMatrix();
+        Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
         Color shaderColor = TargetHudRenderer.bottomRight;
         RenderSystem.setShaderColor(
@@ -317,7 +324,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -346,7 +353,7 @@ public class Render3D extends ConfigurableModule {
 
                     particleMatrix.multiply(billboardRot);
 
-                    Matrix4f matrix = particleMatrix.peek().getPositionMatrix();
+                    Mat4 matrix = particleMatrix.peek().getPositionMatrix();
                     int argb = 0xFFFFFFFF;
 
                     float scale = Math.max((endSize + offset * (startSize - endSize)) * scaleModifier, 0.15f * scaleModifier);
@@ -393,7 +400,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
 
-        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Mat4 matrix = stack.peek().getPositionMatrix();
 
         // Рендеринг всех трёх спиралей
         renderSpiral(matrix, spirals[0], 0.0f, heightOffset, animationSpeed, alphaDivider);  // Первая спираль
@@ -420,8 +427,8 @@ public class Render3D extends ConfigurableModule {
     }
 
     // Метод для рендеринга одной спирали
-    private static void renderSpiral(Matrix4f matrix, ArrayList<Vec3d> vecs, float progressOffset, float heightOffset, float animationSpeed, float alphaDivider) {
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+    private static void renderSpiral(Mat4 matrix, ArrayList<Vec3d> vecs, float progressOffset, float heightOffset, float animationSpeed, float alphaDivider) {
+        RenderSystem.setShader(ShaderKey.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
         int size = vecs.size();
@@ -515,7 +522,7 @@ public class Render3D extends ConfigurableModule {
         stack.push();
         stack.translate(x, y, z);
 
-        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Mat4 matrix = stack.peek().getPositionMatrix();
 
         renderRing(matrix, ring, heightOffset, movingUp);
 
@@ -538,7 +545,7 @@ public class Render3D extends ConfigurableModule {
         return ring;
     }
 
-    private static void renderRing(Matrix4f matrix, ArrayList<Vec3d> ring, float heightOffset, boolean movingUp) {
+    private static void renderRing(Mat4 matrix, ArrayList<Vec3d> ring, float heightOffset, boolean movingUp) {
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -546,7 +553,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
         int size = ring.size();

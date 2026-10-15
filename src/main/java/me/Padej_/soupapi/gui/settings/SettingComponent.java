@@ -3,7 +3,7 @@ package me.Padej_.soupapi.gui.settings;
 import me.Padej_.soupapi.settings.Setting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 
 public abstract class SettingComponent<T> {
     protected final Setting<T> setting;

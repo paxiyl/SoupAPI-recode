@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.inject;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.screen.CapeSelectScreen;
 import me.shedaniel.clothconfig2.api.ConfigScreen;
@@ -44,7 +46,7 @@ public abstract class ScreenMixin {
         if (!isSoupAPI_Screen()) return;
 
         int buttonWidth = 50;
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Apply"),
+        this.addDrawableChild(ButtonWidget.builder(Texts.literal("Apply"),
                         (ButtonWidget button) -> {
                             ((ConfigScreen) this).saveAll(false);
                             ConfigurableModule.saveConfig();
@@ -56,6 +58,6 @@ public abstract class ScreenMixin {
 
     @Unique
     private boolean isSoupAPI_Screen() {
-        return this.title.equals(Text.translatable("text.autoconfig.soupapi.title"));
+        return this.title.equals(Texts.translatable("text.autoconfig.soupapi.title"));
     }
 }

@@ -2,12 +2,12 @@ package me.Padej_.soupapi.mixin.inject;
 
 import me.Padej_.soupapi.modules.CustomFog;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.player.ClientPlayerEntity;
 import net.minecraft.client.render.BackgroundRenderer;
-import net.minecraft.client.render.Camera;
+import me.Padej_.soupapi.compat.Camera;
 import net.minecraft.client.render.Fog;
 import net.minecraft.entity.effect.StatusEffects;
-import org.joml.Vector4f;
+import me.Padej_.soupapi.compat.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

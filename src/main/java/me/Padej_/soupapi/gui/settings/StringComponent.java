@@ -1,9 +1,11 @@
 package me.Padej_.soupapi.gui.settings;
 
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.settings.impl.StringSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
+import me.Padej_.soupapi.compat.DrawContext;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
@@ -17,7 +19,7 @@ public class StringComponent extends SettingComponent<String> {
         MinecraftClient mc = MinecraftClient.getInstance();
         this.textRenderer = mc.textRenderer;
 
-        this.textField = new TextFieldWidget(textRenderer, x, y, width, height, Text.literal(setting.getName()));
+        this.textField = new TextFieldWidget(textRenderer, x, y, width, height, Texts.literal(setting.getName()));
         this.textField.setMaxLength(1024);
         this.textField.setText(setting.getValue());
         this.textField.setEditable(true);
@@ -27,7 +29,7 @@ public class StringComponent extends SettingComponent<String> {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         int labelHeight = textRenderer.fontHeight;
-        context.drawText(textRenderer, Text.translatable(setting.getTranslationKey()), x, y, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Texts.translatable(setting.getTranslationKey()), x, y, 0xFFFFFFFF, false);
 
         textField.setX(x);
         textField.setY(y + labelHeight + 2); // 2 пикселя паддинга между названием и полем

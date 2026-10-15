@@ -1,10 +1,10 @@
 package me.Padej_.soupapi.particle;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
