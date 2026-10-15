@@ -4,12 +4,12 @@ import me.Padej_.soupapi.compat.BlendFactor;
 import me.Padej_.soupapi.compat.ShaderKey;
 import me.Padej_.soupapi.compat.Windows;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.utils.GaussianFilter;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.Texture;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.BufferBuilder;
 import me.Padej_.soupapi.compat.BufferRenderer;
 import me.Padej_.soupapi.compat.Tessellator;
@@ -20,10 +20,10 @@ import me.Padej_.soupapi.compat.VertexConsumerProvider;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.MathHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.BufferUtils;
@@ -39,12 +39,12 @@ import java.util.HashMap;
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
 public class Render2D {
-    private final static MinecraftClient mc = MinecraftClient.getInstance();
+    private final static Minecraft mc = Minecraft.getMinecraft();
     public static HashMap<Integer, BlurredShadow> shadowCache = new HashMap<>();
     public static HashMap<Integer, BlurredShadow> shadowCache1 = new HashMap<>();
 
 
-    public static void renderMiscTexture(MatrixStack matrices, Identifier textureId, float scale) {
+    public static void renderMiscTexture(MatrixStack matrices, ResourceLocation textureId, float scale) {
         int screenWidth = Windows.scaledWidth();
         int screenHeight = Windows.scaledHeight();
 
@@ -134,7 +134,7 @@ public class Render2D {
         buff.vertex(matrix, (float) x0, (float) y0, (float) z).texture((u) / (float) textureWidth, (v + 0.0F) / (float) textureHeight).color(c4.getRGB());
     }
 
-    public static void renderTexture(MatrixStack matrices, Identifier identifier, double x0, double y0, double width, double height, float u, float v, double regionWidth, double regionHeight, double textureWidth, double textureHeight) {
+    public static void renderTexture(MatrixStack matrices, ResourceLocation identifier, double x0, double y0, double width, double height, float u, float v, double regionWidth, double regionHeight, double textureWidth, double textureHeight) {
         double x1 = x0 + width;
         double y1 = y0 + height;
         double z = 0;
@@ -251,7 +251,7 @@ public class Render2D {
     /**
      * Registers a texture from raw PNG bytes.
      *
-     * <p>1.8.9 has no NativeImage: NativeImageBackedTexture is constructed from a BufferedImage,
+     * <p>1.8.9 has no NativeImage: DynamicTexture is constructed from a BufferedImage,
      * which ImageIO decodes. Rendering in 1.8.9 is single-threaded (the client thread is the
      * render thread), so the upload happens inline rather than being scheduled.
      */
@@ -259,7 +259,7 @@ public class Render2D {
         try {
             BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(content));
             if (image == null) return;
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+            DynamicTexture tex = new DynamicTexture(image);
             tex.upload();
             mc.getTextureManager().loadTexture(i.getId(), tex);
         } catch (Exception ignored) {
@@ -307,8 +307,8 @@ public class Render2D {
         setupRender();
         RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShader(ShaderKey.POSITION_TEX);
-        if (TargetHUD_N.target instanceof PlayerEntity) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayerEntity) TargetHUD_N.target).getSkinId());
+        if (TargetHUD_N.target instanceof EntityPlayer) {
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) TargetHUD_N.target).getSkinId());
         }
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         buffer.vertex(matrix, (float) x0, (float) y1, (float) z).texture((u) / (float) textureWidth, (v + (float) regionHeight) / (float) textureHeight);
@@ -440,7 +440,7 @@ public class Render2D {
         endRender();
     }
 
-    public static void drawGlyphs(MatrixStack matrices, Identifier texture, Color c, float scale) {
+    public static void drawGlyphs(MatrixStack matrices, ResourceLocation texture, Color c, float scale) {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);

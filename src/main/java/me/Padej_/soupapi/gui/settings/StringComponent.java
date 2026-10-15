@@ -3,14 +3,14 @@ package me.Padej_.soupapi.gui.settings;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.Texts;
 import me.Padej_.soupapi.settings.impl.StringSetting;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiTextField;
 
 /**
  * A text entry for a {@link StringSetting}.
  *
- * <p>1.8.9's {@link TextFieldWidget} differs from the 1.21.4 one in several ways this works around:
+ * <p>1.8.9's {@link GuiTextField} differs from the 1.21.4 one in several ways this works around:
  *
  * <ul>
  *   <li>It takes a widget id and no label, and its width and height are fixed at construction with
@@ -25,16 +25,16 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
  */
 public class StringComponent extends SettingComponent<String> {
 
-    private final TextFieldWidget textField;
-    private final TextRenderer textRenderer;
+    private final GuiTextField textField;
+    private final FontRenderer textRenderer;
     private String lastText;
 
     public StringComponent(StringSetting setting, int x, int y, int width, int height) {
         super(setting, x, y, width, height);
-        MinecraftClient mc = MinecraftClient.getInstance();
-        this.textRenderer = mc.textRenderer;
+        Minecraft mc = Minecraft.getMinecraft();
+        this.textRenderer = mc.fontRendererObj;
 
-        this.textField = new TextFieldWidget(0, textRenderer, x, y, width, height);
+        this.textField = new GuiTextField(0, textRenderer, x, y, width, height);
         this.textField.setMaxLength(1024);
         this.textField.setText(setting.getValue() == null ? "" : setting.getValue());
         this.textField.setEditable(true);
@@ -43,7 +43,7 @@ public class StringComponent extends SettingComponent<String> {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int labelHeight = textRenderer.fontHeight;
+        int labelHeight = textRenderer.FONT_HEIGHT;
         context.drawText(textRenderer, Texts.translatable(setting.getTranslationKey()),
                 x, y, 0xFFFFFFFF, false);
 

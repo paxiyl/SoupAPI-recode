@@ -4,16 +4,16 @@ import me.Padej_.soupapi.compat.ItemStacks;
 
 import me.Padej_.soupapi.compat.BlendFactor;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render3D;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class TargetRender extends ConfigurableModule {
 
@@ -21,25 +21,25 @@ public class TargetRender extends ConfigurableModule {
     private static long lastTargetUpdateTime = 0;
 
     private static boolean updateOrKeepTarget() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || !CONFIG.targetRenderEnabled) return false;
+        Minecraft client = Minecraft.getMinecraft();
+        if (client.thePlayer == null || !CONFIG.targetRenderEnabled) return false;
 
         long currentTime = System.currentTimeMillis();
         Entity currentTarget = EntityUtils.getTargetEntity();
 
         // Проверка: если включён флаг — только игроки
-        if (CONFIG.targetRenderOnlyPlayers && !(currentTarget instanceof PlayerEntity)) {
+        if (CONFIG.targetRenderOnlyPlayers && !(currentTarget instanceof EntityPlayer)) {
             currentTarget = null;
         }
 
         boolean visibleNow = false;
-        if (currentTarget != null && client.player.canSee(currentTarget)) {
+        if (currentTarget != null && client.thePlayer.canEntityBeSeen(currentTarget)) {
             if (!currentTarget.isInvisible()) {
                 visibleNow = true;
             // 1.21.4 also treated a glowing entity as visible through invisibility. The
             // Glowing effect and entity flag arrived in 1.9, so on 1.8.9 armour is the only
             // remaining tell that an invisible entity is there.
-            } else if (currentTarget instanceof LivingEntity && hasAnyArmor((LivingEntity) currentTarget)) {
+            } else if (currentTarget instanceof EntityLivingBase && hasAnyArmor((EntityLivingBase) currentTarget)) {
                 visibleNow = true;
             }
         }
@@ -53,16 +53,16 @@ public class TargetRender extends ConfigurableModule {
 
         if (lastTargetEntity != null) {
             if (currentTime - lastTargetUpdateTime > CONFIG.targetRenderLiveTime * 1000L
-                    || lastTargetEntity.removed) {
+                    || lastTargetEntity.isDead) {
                 lastTargetEntity = null;
                 return false;
             }
 
-            if (!client.player.canSee(lastTargetEntity)) {
+            if (!client.thePlayer.canEntityBeSeen(lastTargetEntity)) {
                 return false;
             }
 
-            if (CONFIG.targetRenderOnlyPlayers && !(lastTargetEntity instanceof PlayerEntity)) {
+            if (CONFIG.targetRenderOnlyPlayers && !(lastTargetEntity instanceof EntityPlayer)) {
                 lastTargetEntity = null;
                 return false;
             }
@@ -75,9 +75,9 @@ public class TargetRender extends ConfigurableModule {
      * 1.8.9 has no {@code EquipmentSlot} enum: armour is indexed 0..3 (feet, legs, chest, head)
      * through {@code getArmorSlot}, and an empty slot is a null stack rather than an empty one.
      */
-    private static boolean hasAnyArmor(LivingEntity entity) {
+    private static boolean hasAnyArmor(EntityLivingBase entity) {
         for (int slot = 0; slot < 4; slot++) {
-            if (!ItemStacks.isEmpty(entity.getArmorSlot(slot))) {
+            if (!ItemStacks.isEmpty(entity.getCurrentArmor(slot))) {
                 return true;
             }
         }

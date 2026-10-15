@@ -1,9 +1,9 @@
 package me.Padej_.soupapi.compat;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 /**
  * Replacement for {@code net.minecraft.client.render.Camera} as 1.21.4 exposed it.
@@ -29,8 +29,8 @@ public final class Camera {
 
     public Entity getFocusedEntity() {
         if (focused == null) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            focused = mc.getCameraEntity() != null ? mc.getCameraEntity() : mc.player;
+            Minecraft mc = Minecraft.getMinecraft();
+            focused = mc.getRenderViewEntity() != null ? mc.getRenderViewEntity() : mc.thePlayer;
         }
         return focused;
     }
@@ -40,33 +40,33 @@ public final class Camera {
     }
 
     /** The interpolated eye position of the camera entity. */
-    public Vec3d getPos() {
+    public Vec3 getPos() {
         Entity e = getFocusedEntity();
         if (e == null) {
-            return new Vec3d(0.0, 0.0, 0.0);
+            return new Vec3(0.0, 0.0, 0.0);
         }
-        double x = e.prevX + (e.x - e.prevX) * tickDelta;
-        double y = e.prevY + (e.y - e.prevY) * tickDelta;
-        double z = e.prevZ + (e.z - e.prevZ) * tickDelta;
+        double x = e.prevPosX + (e.posX - e.prevPosX) * tickDelta;
+        double y = e.prevPosY + (e.posY - e.prevPosY) * tickDelta;
+        double z = e.prevPosZ + (e.posZ - e.prevPosZ) * tickDelta;
         // 1.8.9 stores the entity origin at the feet; the camera sits at eye height.
-        return new Vec3d(x, y + e.getEyeHeight(), z);
+        return new Vec3(x, y + e.getEyeHeight(), z);
     }
 
     public float getYaw() {
         Entity e = getFocusedEntity();
         if (e == null) return 0f;
-        return e.prevYaw + (e.yaw - e.prevYaw) * tickDelta;
+        return e.prevRotationYaw + (e.rotationYaw - e.prevRotationYaw) * tickDelta;
     }
 
     public float getPitch() {
         Entity e = getFocusedEntity();
         if (e == null) return 0f;
-        return e.prevPitch + (e.pitch - e.prevPitch) * tickDelta;
+        return e.prevRotationPitch + (e.rotationPitch - e.prevRotationPitch) * tickDelta;
     }
 
     /** Horizontal look direction, matching 1.21.4's {@code getHorizontalPlane()} usage. */
-    public Vec3d getHorizontalPlane() {
+    public Vec3 getHorizontalPlane() {
         float yawRad = -MathHelper.wrapDegrees(getYaw()) * ((float) Math.PI / 180f);
-        return new Vec3d(MathHelper.sin(yawRad), 0.0, MathHelper.cos(yawRad));
+        return new Vec3(MathHelper.sin(yawRad), 0.0, MathHelper.cos(yawRad));
     }
 }

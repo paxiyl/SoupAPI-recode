@@ -3,7 +3,7 @@ package me.Padej_.soupapi.render;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.VertexFormat;
 import me.Padej_.soupapi.compat.VertexFormats;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class CustomRenderLayers {
     }
 
     /** Additive, lightmap-lit swirl overlay with scrolling texture coordinates. */
-    public static RenderLayer getCustomEnergySwirl(Identifier texture, float x, float y) {
+    public static RenderLayer getCustomEnergySwirl(ResourceLocation texture, float x, float y) {
         String key = texture + "@" + x + "," + y;
         RenderLayer layer = ENERGY_SWIRL_CACHE.get(key);
         if (layer == null) {

@@ -3,9 +3,11 @@ package me.Padej_.soupapi.compat;
 import java.awt.Color;
 
 /**
- * Replacement for {@code net.minecraft.client.render.BufferBuilder} as the 1.21.4 sources used it.
+ * Replacement for 1.21.4's {@code BufferBuilder}, wrapping MCP 1.8.9's
+ * {@link net.minecraft.client.renderer.WorldRenderer} — which, confusingly, is the vertex buffer
+ * in this version, not the world renderer.
  *
- * <p>Differences from 1.8.9's class of the same name that this smooths over:
+ * <p>Differences this smooths over:
  *
  * <ul>
  *   <li><b>Matrix-aware vertices.</b> 1.21.4 writes {@code vertex(matrix, x, y, z)} and the vertex
@@ -13,12 +15,11 @@ import java.awt.Color;
  *       here on the CPU via {@link Mat4}. See {@link MatrixStack} for why that is preferable to
  *       pushing matrices to GL on Android.</li>
  *   <li><b>Implicit vertex termination.</b> 1.21.4 ends a vertex when the next one starts; 1.8.9
- *       requires an explicit {@code next()}. This class tracks the in-progress vertex and flushes
- *       it at the right moment.</li>
+ *       requires an explicit {@code endVertex()}. This class tracks the in-progress vertex and
+ *       flushes it at the right moment.</li>
  *   <li><b>Attribute order.</b> 1.8.9 expects attributes written in the format's declared order.
  *       Rather than depend on call order, attributes are accumulated and written in the correct
- *       order when the vertex is flushed, so a {@code .color(...).texture(...)} chain works as well
- *       as {@code .texture(...).color(...)}.</li>
+ *       order when the vertex is flushed.</li>
  *   <li><b>Shader colour.</b> 1.8.9 has no shader colour uniform, and {@code glColor} is ignored
  *       once a colour array is bound. {@link RenderSystem#setShaderColor} is therefore multiplied
  *       into each vertex colour here, reproducing 1.21.4's behaviour.</li>
@@ -26,7 +27,7 @@ import java.awt.Color;
  */
 public final class BufferBuilder implements VertexConsumer {
 
-    private final net.minecraft.client.render.BufferBuilder delegate;
+    private final net.minecraft.client.renderer.WorldRenderer delegate;
     private VertexFormat format;
 
     private boolean vertexOpen;
@@ -36,7 +37,7 @@ public final class BufferBuilder implements VertexConsumer {
     private int lightU, lightV;
     private float nx, ny, nz;
 
-    BufferBuilder(net.minecraft.client.render.BufferBuilder delegate) {
+    BufferBuilder(net.minecraft.client.renderer.WorldRenderer delegate) {
         this.delegate = delegate;
     }
 
@@ -64,20 +65,20 @@ public final class BufferBuilder implements VertexConsumer {
     /** Writes the pending vertex to the underlying builder in the format's element order. */
     private void flushVertex() {
         if (!vertexOpen) return;
-        delegate.vertex(px, py, pz);
+        delegate.pos(px, py, pz);
         if (format.hasTexture) {
-            delegate.texture(u, v);
+            delegate.tex(u, v);
         }
         if (format.hasColor) {
             delegate.color(r, g, b, a);
         }
         if (format.hasLight) {
-            delegate.texture2(lightU, lightV);
+            delegate.lightmap(lightU, lightV);
         }
         if (format.hasNormal) {
-            delegate.normal(nx, ny, nz);
+            delegate.putNormal(nx, ny, nz);
         }
-        delegate.next();
+        delegate.endVertex();
         vertexOpen = false;
         resetAttributes();
     }
@@ -201,10 +202,6 @@ public final class BufferBuilder implements VertexConsumer {
     public BufferBuilder end() {
         flushVertex();
         return this;
-    }
-
-    net.minecraft.client.render.BufferBuilder delegate() {
-        return delegate;
     }
 
     private static int clamp255(int value) {

@@ -25,7 +25,7 @@ import java.util.Locale;
  *       so those are always present, but {@code java.awt.Font} + {@code Graphics2D} glyph rendering
  *       depends on libfontmanager/freetype being present and working in the JRE, which is not
  *       guaranteed on Pojav. {@link #canRasteriseAwtFonts()} probes it once and the font renderer
- *       falls back to vanilla's {@code TextRenderer} if it fails.</li>
+ *       falls back to vanilla's {@code FontRenderer} if it fails.</li>
  *   <li><b>Line width.</b> gl4es clamps {@code glLineWidth} to 1.0, so outlines drawn as GL lines
  *       come out hairline-thin. Shapes that need a visible stroke are drawn as triangle strips
  *       instead when {@link #thickLinesSupported()} is false.</li>

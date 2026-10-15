@@ -1,7 +1,7 @@
 package me.Padej_.soupapi.compat;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -28,7 +28,7 @@ public final class RenderLayer {
     private final String name;
     private final VertexFormat.DrawMode drawMode;
     private final VertexFormat format;
-    private final Identifier texture;
+    private final ResourceLocation texture;
     private final Transparency transparency;
     private final boolean culling;
     private final boolean depthTest;
@@ -139,7 +139,7 @@ public final class RenderLayer {
         private final String name;
         private final VertexFormat.DrawMode drawMode;
         private final VertexFormat format;
-        private Identifier texture;
+        private ResourceLocation texture;
         private Transparency transparency = Transparency.NONE;
         private boolean culling = true;
         private boolean depthTest = true;
@@ -154,7 +154,7 @@ public final class RenderLayer {
             this.format = format;
         }
 
-        public Builder texture(Identifier texture) {
+        public Builder texture(ResourceLocation texture) {
             this.texture = texture;
             return this;
         }

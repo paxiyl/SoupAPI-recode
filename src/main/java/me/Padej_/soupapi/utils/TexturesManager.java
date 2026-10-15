@@ -1,93 +1,93 @@
 package me.Padej_.soupapi.utils;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.Random;
 
 public class TexturesManager extends ConfigurableModule {
     private static final Random random = new Random();
 
-    private static final Identifier CIRCLE = new Identifier("soupapi", "textures/jump_circles/circle.png");
-    private static final Identifier CIRCLE_BOLD = new Identifier("soupapi", "textures/jump_circles/circle_bold.png");
-    private static final Identifier HEXAGON = new Identifier("soupapi", "textures/jump_circles/hexagon.png");
-    public static final Identifier PORTAL = new Identifier("soupapi", "textures/jump_circles/portal.png");
-    public static final Identifier SOUP = new Identifier("soupapi", "textures/jump_circles/soup.png");
-    public static final Identifier PORTAL_2 = new Identifier("soupapi", "textures/jump_circles/portal_2.png");
+    private static final ResourceLocation CIRCLE = new ResourceLocation("soupapi", "textures/jump_circles/circle.png");
+    private static final ResourceLocation CIRCLE_BOLD = new ResourceLocation("soupapi", "textures/jump_circles/circle_bold.png");
+    private static final ResourceLocation HEXAGON = new ResourceLocation("soupapi", "textures/jump_circles/hexagon.png");
+    public static final ResourceLocation PORTAL = new ResourceLocation("soupapi", "textures/jump_circles/portal.png");
+    public static final ResourceLocation SOUP = new ResourceLocation("soupapi", "textures/jump_circles/soup.png");
+    public static final ResourceLocation PORTAL_2 = new ResourceLocation("soupapi", "textures/jump_circles/portal_2.png");
 
-    private static final Identifier CIRCLE_UNBLACK = new Identifier("soupapi", "textures/jump_circles/circle_unblack.png");
-    private static final Identifier CIRCLE_BOLD_UNBLACK = new Identifier("soupapi", "textures/jump_circles/circle_bold_unblack.png");
-    private static final Identifier HEXAGON_UNBLACK = new Identifier("soupapi", "textures/jump_circles/hexagon_unblack.png");
-    private static final Identifier PORTAL_UNBLACK = new Identifier("soupapi", "textures/jump_circles/portal_unblack.png");
-    private static final Identifier SOUP_UNBLACK = new Identifier("soupapi", "textures/jump_circles/soup_unblack.png");
+    private static final ResourceLocation CIRCLE_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_unblack.png");
+    private static final ResourceLocation CIRCLE_BOLD_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_bold_unblack.png");
+    private static final ResourceLocation HEXAGON_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/hexagon_unblack.png");
+    private static final ResourceLocation PORTAL_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/portal_unblack.png");
+    private static final ResourceLocation SOUP_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/soup_unblack.png");
 
-    public static final Identifier LEGACY = new Identifier("soupapi", "textures/target_render/legacy.png");
-    private static final Identifier SCIFI = new Identifier("soupapi", "textures/target_render/scifi.png");
-    private static final Identifier SIMPLE = new Identifier("soupapi", "textures/target_render/simple.png");
-    private static final Identifier BO = new Identifier("soupapi", "textures/target_render/bo.png");
-    private static final Identifier MARKER = new Identifier("soupapi", "textures/target_render/marker.png");
-    private static final Identifier SKULL = new Identifier("soupapi", "textures/target_render/skull.png");
-    public static final Identifier AMOGUS = new Identifier("soupapi", "textures/target_render/amongus.png");
-    private static final Identifier VEGAS = new Identifier("soupapi", "textures/target_render/vegas.png");
-    private static final Identifier JEKA = new Identifier("soupapi", "textures/target_render/jeka.png");
+    public static final ResourceLocation LEGACY = new ResourceLocation("soupapi", "textures/target_render/legacy.png");
+    private static final ResourceLocation SCIFI = new ResourceLocation("soupapi", "textures/target_render/scifi.png");
+    private static final ResourceLocation SIMPLE = new ResourceLocation("soupapi", "textures/target_render/simple.png");
+    private static final ResourceLocation BO = new ResourceLocation("soupapi", "textures/target_render/bo.png");
+    private static final ResourceLocation MARKER = new ResourceLocation("soupapi", "textures/target_render/marker.png");
+    private static final ResourceLocation SKULL = new ResourceLocation("soupapi", "textures/target_render/skull.png");
+    public static final ResourceLocation AMOGUS = new ResourceLocation("soupapi", "textures/target_render/amongus.png");
+    private static final ResourceLocation VEGAS = new ResourceLocation("soupapi", "textures/target_render/vegas.png");
+    private static final ResourceLocation JEKA = new ResourceLocation("soupapi", "textures/target_render/jeka.png");
 
-    public static final Identifier FIREFLY = new Identifier("soupapi", "textures/particle/firefly.png");
-    public static final Identifier FIREFLY_GLOW = new Identifier("soupapi", "textures/particle/firefly_glow.png");
-    public static final Identifier FIREFLY_ALT = new Identifier("soupapi", "textures/particle/firefly_alt.png");
-    public static final Identifier FIREFLY_ALT_GLOW = new Identifier("soupapi", "textures/particle/firefly_alt_glow.png");
-    public static final Identifier DOLLAR = new Identifier("soupapi", "textures/particle/dollar.png");
-    public static final Identifier DOLLAR_UNBLACK = new Identifier("soupapi", "textures/particle/dollar_unblack.png");
-    public static final Identifier SNOWFLAKE = new Identifier("soupapi", "textures/particle/snowflake.png");
-    public static final Identifier SNOWFLAKE_UNBLACK = new Identifier("soupapi", "textures/particle/snowflake_unblack.png");
-    public static final Identifier HEART = new Identifier("soupapi", "textures/particle/heart.png");
-    public static final Identifier HEART_UNBLACK = new Identifier("soupapi", "textures/particle/heart_unblack.png");
-    public static final Identifier STAR = new Identifier("soupapi", "textures/particle/star.png");
-    public static final Identifier STAR_UNBLACK = new Identifier("soupapi", "textures/particle/star_unblack.png");
+    public static final ResourceLocation FIREFLY = new ResourceLocation("soupapi", "textures/particle/firefly.png");
+    public static final ResourceLocation FIREFLY_GLOW = new ResourceLocation("soupapi", "textures/particle/firefly_glow.png");
+    public static final ResourceLocation FIREFLY_ALT = new ResourceLocation("soupapi", "textures/particle/firefly_alt.png");
+    public static final ResourceLocation FIREFLY_ALT_GLOW = new ResourceLocation("soupapi", "textures/particle/firefly_alt_glow.png");
+    public static final ResourceLocation DOLLAR = new ResourceLocation("soupapi", "textures/particle/dollar.png");
+    public static final ResourceLocation DOLLAR_UNBLACK = new ResourceLocation("soupapi", "textures/particle/dollar_unblack.png");
+    public static final ResourceLocation SNOWFLAKE = new ResourceLocation("soupapi", "textures/particle/snowflake.png");
+    public static final ResourceLocation SNOWFLAKE_UNBLACK = new ResourceLocation("soupapi", "textures/particle/snowflake_unblack.png");
+    public static final ResourceLocation HEART = new ResourceLocation("soupapi", "textures/particle/heart.png");
+    public static final ResourceLocation HEART_UNBLACK = new ResourceLocation("soupapi", "textures/particle/heart_unblack.png");
+    public static final ResourceLocation STAR = new ResourceLocation("soupapi", "textures/particle/star.png");
+    public static final ResourceLocation STAR_UNBLACK = new ResourceLocation("soupapi", "textures/particle/star_unblack.png");
 
     /**
      * GLYPHS
      **/
-    public static final Identifier GLYPH_ABS = new Identifier("soupapi", "textures/particle/glyph/abs.png");
-    public static final Identifier GLYPH_ARROW = new Identifier("soupapi", "textures/particle/glyph/arrow.png");
-    public static final Identifier GLYPH_ARROW_LINE = new Identifier("soupapi", "textures/particle/glyph/arrow_line.png");
-    public static final Identifier GLYPH_CIRCLE = new Identifier("soupapi", "textures/particle/glyph/circle.png");
-    public static final Identifier GLYPH_CROSS = new Identifier("soupapi", "textures/particle/glyph/cross.png");
-    public static final Identifier GLYPH_FLOWER = new Identifier("soupapi", "textures/particle/glyph/flower.png");
-    public static final Identifier GLYPH_FOREVER = new Identifier("soupapi", "textures/particle/glyph/forever.png");
-    public static final Identifier GLYPH_LINE = new Identifier("soupapi", "textures/particle/glyph/line.png");
-    public static final Identifier GLYPH_QUAD = new Identifier("soupapi", "textures/particle/glyph/quad.png");
-    public static final Identifier GLYPH_STAR = new Identifier("soupapi", "textures/particle/glyph/star.png");
-    public static final Identifier GLYPH_TRIANGLE = new Identifier("soupapi", "textures/particle/glyph/triangle.png");
-    public static final Identifier GLYPH_ZIGZAG = new Identifier("soupapi", "textures/particle/glyph/zigzag.png");
+    public static final ResourceLocation GLYPH_ABS = new ResourceLocation("soupapi", "textures/particle/glyph/abs.png");
+    public static final ResourceLocation GLYPH_ARROW = new ResourceLocation("soupapi", "textures/particle/glyph/arrow.png");
+    public static final ResourceLocation GLYPH_ARROW_LINE = new ResourceLocation("soupapi", "textures/particle/glyph/arrow_line.png");
+    public static final ResourceLocation GLYPH_CIRCLE = new ResourceLocation("soupapi", "textures/particle/glyph/circle.png");
+    public static final ResourceLocation GLYPH_CROSS = new ResourceLocation("soupapi", "textures/particle/glyph/cross.png");
+    public static final ResourceLocation GLYPH_FLOWER = new ResourceLocation("soupapi", "textures/particle/glyph/flower.png");
+    public static final ResourceLocation GLYPH_FOREVER = new ResourceLocation("soupapi", "textures/particle/glyph/forever.png");
+    public static final ResourceLocation GLYPH_LINE = new ResourceLocation("soupapi", "textures/particle/glyph/line.png");
+    public static final ResourceLocation GLYPH_QUAD = new ResourceLocation("soupapi", "textures/particle/glyph/quad.png");
+    public static final ResourceLocation GLYPH_STAR = new ResourceLocation("soupapi", "textures/particle/glyph/star.png");
+    public static final ResourceLocation GLYPH_TRIANGLE = new ResourceLocation("soupapi", "textures/particle/glyph/triangle.png");
+    public static final ResourceLocation GLYPH_ZIGZAG = new ResourceLocation("soupapi", "textures/particle/glyph/zigzag.png");
 
-    public static final Identifier ANON_SKIN = new Identifier("soupapi", "textures/skin/anon_skin.png");
+    public static final ResourceLocation ANON_SKIN = new ResourceLocation("soupapi", "textures/skin/anon_skin.png");
 
-    public static final Identifier GUI_BUBBLE = new Identifier("soupapi", "textures/gui/bubble.png");
-    public static final Identifier GUI_HAM = new Identifier("soupapi", "textures/gui/ham.png");
-    public static final Identifier GUI_HEART = new Identifier("soupapi", "textures/gui/heart.png");
-    public static final Identifier GUI_SHIELD = new Identifier("soupapi", "textures/gui/shield.png");
-    public static final Identifier GUI_POTION = new Identifier("soupapi", "textures/gui/potion.png");
-    public static final Identifier GUI_HITBOX = new Identifier("soupapi", "textures/gui/hitbox.png");
+    public static final ResourceLocation GUI_BUBBLE = new ResourceLocation("soupapi", "textures/gui/bubble.png");
+    public static final ResourceLocation GUI_HAM = new ResourceLocation("soupapi", "textures/gui/ham.png");
+    public static final ResourceLocation GUI_HEART = new ResourceLocation("soupapi", "textures/gui/heart.png");
+    public static final ResourceLocation GUI_SHIELD = new ResourceLocation("soupapi", "textures/gui/shield.png");
+    public static final ResourceLocation GUI_POTION = new ResourceLocation("soupapi", "textures/gui/potion.png");
+    public static final ResourceLocation GUI_HITBOX = new ResourceLocation("soupapi", "textures/gui/hitbox.png");
 
-    public static final Identifier MC_TIERS_LOGO = new Identifier("soupapi", "textures/gui/mctiers/mctiers.png");
-    public static final Identifier ROOKIE = new Identifier("soupapi", "textures/gui/mctiers/rookie.png");
-    public static final Identifier LTMS = new Identifier("soupapi", "textures/gui/mctiers/2v2.png");
-    public static final Identifier AXE = new Identifier("soupapi", "textures/gui/mctiers/axe.png");
-    public static final Identifier MACE = new Identifier("soupapi", "textures/gui/mctiers/mace.png");
-    public static final Identifier NETHOP = new Identifier("soupapi", "textures/gui/mctiers/nethop.png");
-    public static final Identifier POT = new Identifier("soupapi", "textures/gui/mctiers/pot.png");
-    public static final Identifier SMP = new Identifier("soupapi", "textures/gui/mctiers/smp.png");
-    public static final Identifier SWORD = new Identifier("soupapi", "textures/gui/mctiers/sword.png");
-    public static final Identifier UHC = new Identifier("soupapi", "textures/gui/mctiers/uhc.png");
-    public static final Identifier VANILLA = new Identifier("soupapi", "textures/gui/mctiers/vanilla.png");
+    public static final ResourceLocation MC_TIERS_LOGO = new ResourceLocation("soupapi", "textures/gui/mctiers/mctiers.png");
+    public static final ResourceLocation ROOKIE = new ResourceLocation("soupapi", "textures/gui/mctiers/rookie.png");
+    public static final ResourceLocation LTMS = new ResourceLocation("soupapi", "textures/gui/mctiers/2v2.png");
+    public static final ResourceLocation AXE = new ResourceLocation("soupapi", "textures/gui/mctiers/axe.png");
+    public static final ResourceLocation MACE = new ResourceLocation("soupapi", "textures/gui/mctiers/mace.png");
+    public static final ResourceLocation NETHOP = new ResourceLocation("soupapi", "textures/gui/mctiers/nethop.png");
+    public static final ResourceLocation POT = new ResourceLocation("soupapi", "textures/gui/mctiers/pot.png");
+    public static final ResourceLocation SMP = new ResourceLocation("soupapi", "textures/gui/mctiers/smp.png");
+    public static final ResourceLocation SWORD = new ResourceLocation("soupapi", "textures/gui/mctiers/sword.png");
+    public static final ResourceLocation UHC = new ResourceLocation("soupapi", "textures/gui/mctiers/uhc.png");
+    public static final ResourceLocation VANILLA = new ResourceLocation("soupapi", "textures/gui/mctiers/vanilla.png");
 
-    public static final Identifier[] GLYPH_TEXTURES = new Identifier[] {
+    public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
             GLYPH_ABS, GLYPH_LINE, GLYPH_ARROW, GLYPH_ARROW_LINE,
             GLYPH_CIRCLE, GLYPH_CROSS, GLYPH_FLOWER, GLYPH_FOREVER,
             GLYPH_QUAD, GLYPH_STAR, GLYPH_TRIANGLE, GLYPH_ZIGZAG,
     };
 
-    public static Identifier getJumpCircle() {
+    public static ResourceLocation getJumpCircle() {
         switch (CONFIG.jumpCirclesStyle) {
             case CIRCLE:
                 return CIRCLE;
@@ -103,7 +103,7 @@ public class TexturesManager extends ConfigurableModule {
         throw new IllegalStateException("Unexpected value: " + CONFIG.jumpCirclesStyle);
     }
 
-    public static Identifier getTargetRenderTexture() {
+    public static ResourceLocation getTargetRenderTexture() {
         switch (CONFIG.targetRenderLegacyTexture) {
             case LEGACY:
                 return LEGACY;
@@ -127,7 +127,7 @@ public class TexturesManager extends ConfigurableModule {
         throw new IllegalStateException("Unexpected value: " + CONFIG.targetRenderLegacyTexture);
     }
 
-    public static Identifier getHitBubbleTexture() {
+    public static ResourceLocation getHitBubbleTexture() {
         switch (CONFIG.hitBubblesStyle) {
             case CIRCLE:
                 return CIRCLE;
@@ -143,7 +143,7 @@ public class TexturesManager extends ConfigurableModule {
         throw new IllegalStateException("Unexpected value: " + CONFIG.hitBubblesStyle);
     }
 
-    public static Identifier getMC_TiersGameModeTexture() {
+    public static ResourceLocation getMC_TiersGameModeTexture() {
         switch (CONFIG.mctiersGameMode) {
             case LTMs:
                 return LTMS;
@@ -167,12 +167,12 @@ public class TexturesManager extends ConfigurableModule {
         throw new IllegalStateException("Unexpected value: " + CONFIG.mctiersGameMode);
     }
 
-    public static Identifier getRandomGlyphParticle() {
+    public static ResourceLocation getRandomGlyphParticle() {
         int index = random.nextInt(GLYPH_TEXTURES.length);
         return GLYPH_TEXTURES[index];
     }
 
-    public static Identifier getSoulTexture() {
+    public static ResourceLocation getSoulTexture() {
         switch (CONFIG.targetRenderSoulTexture) {
             case FIREFLY:
                 return FIREFLY;

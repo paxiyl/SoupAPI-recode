@@ -29,9 +29,9 @@ import me.Padej_.soupapi.render.WatermarkRenderer;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.HitSound;
 import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -79,7 +79,7 @@ public class SoupAPI_Client implements ClientModInitializer {
         MouseMove.render(drawContext);
     }
 
-    private void doEndClientTick(MinecraftClient client) {
+    private void doEndClientTick(Minecraft client) {
         FontRenderers.ensureLoaded();
         EntityUtils.updateEntities(client);
         OverlayReloadListener.callEvent();
@@ -104,9 +104,9 @@ public class SoupAPI_Client implements ClientModInitializer {
      * <p>Edge-triggered: the 1.21.4 version re-opened the screen on every tick the combination was
      * held, which also meant it called {@code setScreen} twice in a row.
      */
-    private void handleSettingsShortcut(MinecraftClient client) {
-        Screen currentScreen = client.currentScreen;
-        if (currentScreen instanceof ChatScreen) return;
+    private void handleSettingsShortcut(Minecraft client) {
+        GuiScreen currentScreen = client.currentScreen;
+        if (currentScreen instanceof GuiChat) return;
 
         boolean held;
         try {
@@ -118,7 +118,7 @@ public class SoupAPI_Client implements ClientModInitializer {
         }
 
         if (held && !settingsShortcutHeld && !(currentScreen instanceof SoupSettingsScreen)) {
-            client.setScreen(new SoupSettingsScreen());
+            client.displayGuiScreen(new SoupSettingsScreen());
         }
         settingsShortcutHeld = held;
     }

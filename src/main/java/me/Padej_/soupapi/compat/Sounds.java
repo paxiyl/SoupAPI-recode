@@ -1,18 +1,19 @@
 package me.Padej_.soupapi.compat;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 
 /**
  * Plays the mod's own sounds on 1.8.9.
  *
- * <p>1.21.4's {@code PlayerEntity.playSound(SoundEvent, volume, pitch)} is a client-and-server API
- * backed by the sound registry. 1.8.9 has neither, so sounds go straight to the client sound
- * manager as a positioned instance, which is what vanilla 1.8.9 does for UI and feedback sounds.
+ * <p>1.21.4's {@code PlayerEntity.playSound(SoundEvent, volume, pitch)} is backed by the sound
+ * registry. 1.8.9 has neither, so sounds go straight to the client sound handler as a positioned
+ * record, which is what vanilla 1.8.9 does for UI and feedback sounds.
  *
- * <p>The sound is placed at the listener's own position so that volume is not attenuated by
- * distance — matching how the 1.21.4 code played hit sounds on the local player.
+ * <p>{@code PositionedSoundRecord.create(ResourceLocation, pitch)} is a master-channel,
+ * non-attenuated sound — exactly the behaviour the hit sound wants — but it gives no volume
+ * control, so the positional constructor is used at the listener's own position instead, which
+ * keeps volume configurable without distance attenuation.
  */
 public final class Sounds {
 
@@ -20,15 +21,16 @@ public final class Sounds {
     }
 
     public static void play(SoundEvent sound, float volume, float pitch) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc == null || mc.getSoundManager() == null) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || mc.getSoundHandler() == null) return;
 
-        Entity listener = mc.player != null ? mc.player : mc.getCameraEntity();
-        double x = listener != null ? listener.x : 0.0;
-        double y = listener != null ? listener.y : 0.0;
-        double z = listener != null ? listener.z : 0.0;
+        net.minecraft.entity.Entity listener =
+                mc.thePlayer != null ? mc.thePlayer : mc.getRenderViewEntity();
+        float x = listener != null ? (float) listener.posX : 0f;
+        float y = listener != null ? (float) listener.posY : 0f;
+        float z = listener != null ? (float) listener.posZ : 0f;
 
-        mc.getSoundManager().play(new PositionedSoundInstance(
-                sound.getId(), volume, pitch, (float) x, (float) y, (float) z));
+        mc.getSoundHandler().playSound(
+                new PositionedSoundRecord(sound.getId(), volume, pitch, x, y, z));
     }
 }

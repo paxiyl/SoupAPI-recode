@@ -14,13 +14,13 @@ import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.compat.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.GuiChat;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 import me.Padej_.soupapi.compat.Mat4;
 import me.Padej_.soupapi.compat.Vector3f;
 import me.Padej_.soupapi.compat.Vector4f;
@@ -35,8 +35,8 @@ public class TargetHud extends ConfigurableModule {
     private static final float scaleSpeed = 0.2f;
     private static float hudTimer = 0f;
     public static EaseOutCirc headAnimation = new EaseOutCirc();
-    public static LivingEntity target;
-    private static LivingEntity lastTarget;
+    public static EntityLivingBase target;
+    private static EntityLivingBase lastTarget;
     private static float displayedHealth = 0f;
     private static final float healthChangeSpeed = 0.2f;
     private static final float colorAnimationSpeed = 0.01f;
@@ -51,15 +51,15 @@ public class TargetHud extends ConfigurableModule {
 
     public static void onTick() {
         if (!CONFIG.targetHudEnabled) return;
-        if (mc.player == null) return;
+        if (mc.thePlayer == null) return;
 
         getTarget();
 
-        if (lastTarget != null && !mc.player.canSee(lastTarget)) {
+        if (lastTarget != null && !mc.thePlayer.canEntityBeSeen(lastTarget)) {
             hudTimer = 0;
         }
 
-        if (target instanceof PlayerEntity) {
+        if (target instanceof EntityPlayer) {
             if (target != lastTarget) {
                 displayedHealth = Math.min(target.getMaxHealth(), getHealth());
                 lastTarget = target;
@@ -68,7 +68,7 @@ public class TargetHud extends ConfigurableModule {
             target = null;
         }
 
-        if (lastTarget instanceof PlayerEntity) {
+        if (lastTarget instanceof EntityPlayer) {
             float targetHealth = Math.min(lastTarget.getMaxHealth(), getHealth());
             displayedHealth = Maths.lerp(healthChangeSpeed, displayedHealth, targetHealth);
         }
@@ -113,34 +113,34 @@ public class TargetHud extends ConfigurableModule {
         }
 
         // Проверяем, существует ли lastTarget в мире
-        // 1.8.9 has no getEntitiesByClass predicate query and its Box.expand takes three
+        // 1.8.9 has no getEntitiesByClass predicate query and its AxisAlignedBB.expand takes three
         // axes; checking that the entity is still in the world's entity list is both simpler
         // and exactly what the original test amounted to.
-        if (lastTarget != null && (lastTarget.removed
-                || mc.world == null || !mc.world.entities.contains(lastTarget))) {
+        if (lastTarget != null && (lastTarget.isDead
+                || mc.theWorld == null || !mc.theWorld.loadedEntityList.contains(lastTarget))) {
             hudTimer = 0; // Сбрасываем таймер, чтобы HUD исчез
             lastTarget = null; // Очищаем lastTarget
         }
 
-        if (hudScale > 0 && lastTarget instanceof PlayerEntity) {
+        if (hudScale > 0 && lastTarget instanceof EntityPlayer) {
             int targetScreenX, targetScreenY;
-            // 1.8.9 has no Vec3d.ZERO constant.
-            Vec3d screenPos = new Vec3d(0.0, 0.0, 0.0);
+            // 1.8.9 has no Vec3.ZERO constant.
+            Vec3 screenPos = new Vec3(0.0, 0.0, 0.0);
 
             // Определяем координаты HUD в зависимости от флага isFollow
             if (CONFIG.targetHudFollow) {
                 // Получаем экранные координаты сущности
                 float tickDelta = renderTickCounter.getTickDelta(true);
-                double x = lastTarget.prevX + (lastTarget.x - lastTarget.prevX) * tickDelta;
-                double y = lastTarget.prevY + (lastTarget.y - lastTarget.prevY) * tickDelta;
-                double z = lastTarget.prevZ + (lastTarget.z - lastTarget.prevZ) * tickDelta;
-                Vec3d entityPos = new Vec3d(x, y + 1.1, z);
+                double x = lastTarget.prevPosX + (lastTarget.posX - lastTarget.prevPosX) * tickDelta;
+                double y = lastTarget.prevPosY + (lastTarget.posY - lastTarget.prevPosY) * tickDelta;
+                double z = lastTarget.prevPosZ + (lastTarget.posZ - lastTarget.prevPosZ) * tickDelta;
+                Vec3 entityPos = new Vec3(x, y + 1.1, z);
                 screenPos = worldSpaceToScreenSpace(entityPos);
 
                 // Проверяем, находится ли сущность в видимой области
-                if (screenPos.z > 0 && screenPos.z < 1) {
-                    targetScreenX = (int) screenPos.x;
-                    targetScreenY = (int) screenPos.y;
+                if (screenPos.zCoord > 0 && screenPos.z < 1) {
+                    targetScreenX = (int) screenPos.xCoord;
+                    targetScreenY = (int) screenPos.yCoord;
                 } else {
                     return;
                 }
@@ -174,7 +174,7 @@ public class TargetHud extends ConfigurableModule {
             context.getMatrices().translate(-centerX, -centerY, 0);
 
             if (CONFIG.targetHudFollow) {
-                float depthFactor = MathHelper.clamp(1.0f - (float) screenPos.z, 0.1f, 1.0f);
+                float depthFactor = MathHelper.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f);
                 float adjustedOffsetX = CONFIG.targetHudEntityOffsetX * 10 * depthFactor;
                 float adjustedOffsetY = CONFIG.targetHudEntityOffsetY * 10 * depthFactor;
                 context.getMatrices().translate(adjustedOffsetX, -adjustedOffsetY, 0);
@@ -183,19 +183,19 @@ public class TargetHud extends ConfigurableModule {
             float animationFactor = MathUtility.clamp(hudScale, 0, 1f);
             switch (CONFIG.targetHudStyle) {
                 case MINI:
-                    TargetHudRenderer.renderMiniHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    TargetHudRenderer.renderMiniHUD(context, normalizedDelta, displayedHealth, animationFactor, (EntityPlayer) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
                     break;
                 case TINY:
-                    TargetHudRenderer.renderTinyHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    TargetHudRenderer.renderTinyHUD(context, normalizedDelta, displayedHealth, animationFactor, (EntityPlayer) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
                     break;
                 case ARES:
-                    TargetHudRenderer.renderAresHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    TargetHudRenderer.renderAresHUD(context, normalizedDelta, displayedHealth, animationFactor, (EntityPlayer) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
                     break;
                 case ALT_1:
-                    TargetHudRenderer.renderAlt_1_HUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    TargetHudRenderer.renderAlt_1_HUD(context, normalizedDelta, displayedHealth, animationFactor, (EntityPlayer) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
                     break;
                 default:
-                    TargetHudRenderer.renderNormalHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    TargetHudRenderer.renderNormalHUD(context, normalizedDelta, displayedHealth, animationFactor, (EntityPlayer) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
                     break;
             }
 
@@ -240,15 +240,15 @@ public class TargetHud extends ConfigurableModule {
 
     public static void getTarget() {
         if (mc.currentScreen == null) {
-            if (!(EntityUtils.getTargetEntity() instanceof LivingEntity)) return;
-            target = (LivingEntity) EntityUtils.getTargetEntity();
+            if (!(EntityUtils.getTargetEntity() instanceof EntityLivingBase)) return;
+            target = (EntityLivingBase) EntityUtils.getTargetEntity();
             if (target.isInvisible()) hudTimer = 0;
-            if (target != null && !mc.player.canSee(target)) {
+            if (target != null && !mc.thePlayer.canEntityBeSeen(target)) {
                 target = null;
             }
         } else {
-            if (mc.currentScreen instanceof ChatScreen) {
-                target = mc.player;
+            if (mc.currentScreen instanceof GuiChat) {
+                target = mc.thePlayer;
             } else {
                 target = null;
             }
@@ -257,10 +257,10 @@ public class TargetHud extends ConfigurableModule {
 
     public static float getHealth() {
         if (lastTarget == null) return 0f;
-        if (mc.getNetworkHandler() != null) {
-            mc.getCurrentServerEntry();
+        if (mc.getNetHandler() != null) {
+            mc.getCurrentServerData();
         }
-        return lastTarget.getHealth() + lastTarget.getAbsorption();
+        return lastTarget.getHealth() + lastTarget.getAbsorptionAmount();
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
@@ -271,7 +271,7 @@ public class TargetHud extends ConfigurableModule {
         return new Color(r, g, b, a);
     }
 
-    public static Vec3d worldSpaceToScreenSpace(Vec3d pos) {
+    public static Vec3 worldSpaceToScreenSpace(Vec3 pos) {
         Camera camera = Cameras.get();
         int displayHeight = Windows.height();
         // LWJGL 2 reads integer state into an IntBuffer rather than an int[].
@@ -283,16 +283,16 @@ public class TargetHud extends ConfigurableModule {
         Vector3f target = new Vector3f();
         double scale = Windows.scaleFactor();
 
-        double deltaX = pos.x - camera.getPos().x;
-        double deltaY = pos.y - camera.getPos().y;
-        double deltaZ = pos.z - camera.getPos().z;
+        double deltaX = pos.xCoord - camera.getPos().x;
+        double deltaY = pos.yCoord - camera.getPos().y;
+        double deltaZ = pos.zCoord - camera.getPos().z;
 
         Vector4f transformedCoordinates = new Vector4f((float) deltaX, (float) deltaY, (float) deltaZ, 1.f).mul(lastWorldSpaceMatrix);
         Mat4 matrixProj = new Mat4(lastProjMat);
         Mat4 matrixModel = new Mat4(lastModMat);
         matrixProj.mul(matrixModel).project(transformedCoordinates.x(), transformedCoordinates.y(), transformedCoordinates.z(), viewport, target);
 
-        return new Vec3d(target.x / scale, (displayHeight - target.y) / scale, target.z);
+        return new Vec3(target.x / scale, (displayHeight - target.y) / scale, target.z);
     }
 
     public enum Style {

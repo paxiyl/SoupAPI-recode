@@ -10,13 +10,13 @@ import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.block.AirBlock;
+import net.minecraft.block.BlockAir;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import me.Padej_.soupapi.compat.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -27,15 +27,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class JumpParticles extends ConfigurableModule {
     public static final CopyOnWriteArrayList<Particle> particles = new CopyOnWriteArrayList<>();
-    private static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    private static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static boolean wasJumping = false;
 
     public static void onTick() {
-        if (mc.player == null || !CONFIG.jumpParticlesEnabled) return;
+        if (mc.thePlayer == null || !CONFIG.jumpParticlesEnabled) return;
         updateAvailableTextures();
 
-        boolean isJumping = !mc.player.onGround;
-        if (isJumping && !wasJumping && mc.options.jumpKey.isPressed()) {
+        boolean isJumping = !mc.thePlayer.onGround;
+        if (isJumping && !wasJumping && mc.gameSettings.jumpKey.isPressed()) {
             spawnParticles();
         }
         wasJumping = isJumping;
@@ -44,7 +44,7 @@ public class JumpParticles extends ConfigurableModule {
     }
 
     public static void render(WorldRenderContext context) {
-        if (mc.player != null && mc.world != null) {
+        if (mc.thePlayer != null && mc.theWorld != null) {
             for (Particle particle : particles) {
                 particle.render(context.matrixStack(), context.tickCounter().getTickDelta(true));
             }
@@ -69,12 +69,12 @@ public class JumpParticles extends ConfigurableModule {
     }
 
     private static void spawnParticles() {
-        if (mc.player == null) return;
-        Vec3d pos = mc.player.getPos();
+        if (mc.thePlayer == null) return;
+        Vec3 pos = mc.thePlayer.getPos();
         for (int i = 0; i < CONFIG.jumpParticlesCount; i++) {
             Color color = Palette.getRandomColor();
             particles.add(new Particle(
-                    (float) pos.x, (float) pos.y, (float) pos.z,
+                    (float) pos.xCoord, (float) pos.yCoord, (float) pos.zCoord,
                     color,
                     MathUtility.random(0, 180),
                     MathUtility.random(10f, 60f)
@@ -87,7 +87,7 @@ public class JumpParticles extends ConfigurableModule {
         protected float px, py, pz;
         protected float motionX, motionY, motionZ;
         protected float rotationAngle, rotationSpeed;
-        protected Identifier glyphTexture;
+        protected ResourceLocation glyphTexture;
         protected long time;
 
         private final long lifeTimeMs;
@@ -172,9 +172,9 @@ public class JumpParticles extends ConfigurableModule {
             float baseScale = 0.07f;
             float renderScale = baseScale * scale;
 
-            double posX = Maths.lerp(tickDelta, px, x) - mc.getEntityRenderManager().cameraX;
-            double posY = Maths.lerp(tickDelta, py, y) - mc.getEntityRenderManager().cameraY;
-            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getEntityRenderManager().cameraZ;
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().cameraX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().cameraY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().cameraZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);
@@ -191,8 +191,8 @@ public class JumpParticles extends ConfigurableModule {
         }
 
         private boolean posBlock(double x, double y, double z) {
-            if (mc.player == null || mc.world == null) return false;
-            return (!(mc.world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof AirBlock));
+            if (mc.thePlayer == null || mc.theWorld == null) return false;
+            return (!(mc.theWorld.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BlockAir));
         }
     }
 

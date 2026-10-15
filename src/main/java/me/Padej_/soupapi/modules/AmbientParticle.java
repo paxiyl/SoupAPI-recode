@@ -10,14 +10,14 @@ import me.Padej_.soupapi.settings.impl.SliderSetting;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class AmbientParticle extends SoupModule {
-    public static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    public static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static final ArrayList<DefaultAmbientParticle> fireFlies = new ArrayList<>();
     private static final ArrayList<DefaultAmbientParticle> particles = new ArrayList<>();
 
@@ -42,16 +42,16 @@ public class AmbientParticle extends SoupModule {
     }
 
     public static void onTick() {
-        if (mc.player == null || mc.world == null || !enabled.getValue()) return;
+        if (mc.thePlayer == null || mc.theWorld == null || !enabled.getValue()) return;
         fireFlies.removeIf(DefaultAmbientParticle::tick);
         particles.removeIf(DefaultAmbientParticle::tick);
 
         updateAvailableTextures();
         for (int i = fireFlies.size(); i < particlesWitchTrailCount.getValue(); i++) {
             fireFlies.add(new FireFly(
-                    (float) (mc.player.x + MathUtility.random(-25f, 25f)),
-                    (float) (mc.player.y + MathUtility.random(2f, 15f)),
-                    (float) (mc.player.z + MathUtility.random(-25f, 25f)),
+                    (float) (mc.thePlayer.posX + MathUtility.random(-25f, 25f)),
+                    (float) (mc.thePlayer.posY + MathUtility.random(2f, 15f)),
+                    (float) (mc.thePlayer.posZ + MathUtility.random(-25f, 25f)),
                     MathUtility.random(-0.2f, 0.2f),
                     MathUtility.random(-0.1f, 0.1f),
                     MathUtility.random(-0.2f, 0.2f)));
@@ -60,9 +60,9 @@ public class AmbientParticle extends SoupModule {
         boolean isFallPhysic = physic.getValue().equals(Physics.FALL);
         for (int j = particles.size(); j < particlesCount.getValue(); j++) {
             particles.add(new DefaultAmbientParticle(
-                    (float) (mc.player.x + MathUtility.random(-48f, 48f)),
-                    (float) (mc.player.y + MathUtility.random(2, 48f)),
-                    (float) (mc.player.z + MathUtility.random(-48f, 48f)),
+                    (float) (mc.thePlayer.posX + MathUtility.random(-48f, 48f)),
+                    (float) (mc.thePlayer.posY + MathUtility.random(2, 48f)),
+                    (float) (mc.thePlayer.posZ + MathUtility.random(-48f, 48f)),
                     isFallPhysic ? MathUtility.random(-0.4f, 0.4f) : 0,
                     isFallPhysic ? MathUtility.random(-0.1f, 0.1f) : MathUtility.random(-0.2f, -0.05f),
                     isFallPhysic ? MathUtility.random(-0.4f, 0.4f) : 0));

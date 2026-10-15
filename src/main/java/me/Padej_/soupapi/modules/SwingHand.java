@@ -3,7 +3,7 @@ package me.Padej_.soupapi.modules;
 import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 
 public class SwingHand extends ConfigurableModule {
     public static float xPos = 0.7f;
@@ -22,7 +22,7 @@ public class SwingHand extends ConfigurableModule {
         if (mc.currentScreen == null) {
             return false;
         } else {
-            return mc.currentScreen.getTitle().equals(Texts.literal("Swing Hand Screen"));
+            return mc.currentScreen.getTitle().equals(Texts.literal("Swing Hand GuiScreen"));
         }
     }
 

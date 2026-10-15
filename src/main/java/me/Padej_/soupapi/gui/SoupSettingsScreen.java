@@ -8,10 +8,10 @@ import me.Padej_.soupapi.gui.settings.*;
 import me.Padej_.soupapi.modules.*;
 import me.Padej_.soupapi.settings.Setting;
 import me.Padej_.soupapi.settings.impl.*;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.SoupScreen;
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 
 import java.util.*;
 
@@ -81,7 +81,7 @@ public class SoupSettingsScreen extends SoupScreen {
             boolean selected = cat == selectedCategory;
             int color = selected ? 0xFFAAAAFF : 0xFF888888;
             context.fill(padding, y, padding + colWidth, y + 20, color);
-            context.drawText(MinecraftClient.getInstance().textRenderer,
+            context.drawText(Minecraft.getMinecraft().fontRendererObj,
                     Texts.translatable(cat.getTranslationKey()), padding + 5, y + 6, 0xFFFFFFFF, false);
             y += 25;
         }
@@ -94,7 +94,7 @@ public class SoupSettingsScreen extends SoupScreen {
             boolean selected = mod == selectedModule;
             int color = selected ? 0xFFAAFFAA : 0xFF888888;
             context.fill(modX, y, modX + colWidth, y + 20, color);
-            context.drawText(MinecraftClient.getInstance().textRenderer, mod.getTranslationKey(), modX + 5, y + 6, 0xFFFFFFFF, false);
+            context.drawText(Minecraft.getMinecraft().fontRendererObj, mod.getTranslationKey(), modX + 5, y + 6, 0xFFFFFFFF, false);
             y += 25;
         }
 
@@ -136,12 +136,12 @@ public class SoupSettingsScreen extends SoupScreen {
         if (hoveredDescription != null && !hoveredDescription.isEmpty()) {
             int screenWidth = this.width;
             int screenHeight = this.height;
-            int textWidth = MinecraftClient.getInstance().textRenderer.getStringWidth(hoveredDescription);
+            int textWidth = Minecraft.getMinecraft().fontRendererObj.getStringWidth(hoveredDescription);
             int textX = (screenWidth - textWidth) / 2;
             int textY = screenHeight - 80;
 
             context.fill(textX - 4, textY - 2, textX + textWidth + 4, textY + 12, 0x88000000);
-            context.drawText(MinecraftClient.getInstance().textRenderer, hoveredDescription, textX, textY, 0xFFFFFFFF, false);
+            context.drawText(Minecraft.getMinecraft().fontRendererObj, hoveredDescription, textX, textY, 0xFFFFFFFF, false);
         }
     }
 
@@ -281,7 +281,7 @@ public class SoupSettingsScreen extends SoupScreen {
     @Override
     public void close() {
         ConfigManager.setMetadata("selectedCategory", selectedCategory.name());
-        ConfigManager.setMetadata("selectedModule", selectedModule != null ? selectedModule.getDisplayName().asUnformattedString() : null);
+        ConfigManager.setMetadata("selectedModule", selectedModule != null ? selectedModule.getDisplayName().getUnformattedText() : null);
         ConfigManager.saveConfig();
         super.close();
     }

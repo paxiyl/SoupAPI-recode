@@ -8,12 +8,12 @@ import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 import me.Padej_.soupapi.compat.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 import java.util.Random;
@@ -22,9 +22,9 @@ import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 import static me.Padej_.soupapi.modules.AmbientParticle.AVAILABLE_TEXTURES;
 
 public class DefaultAmbientParticle {
-    public static MinecraftClient mc = MinecraftClient.getInstance();
+    public static Minecraft mc = Minecraft.getMinecraft();
 
-    protected Identifier texture;
+    protected ResourceLocation texture;
     protected final Color color;
     protected float prevPosX, prevPosY, prevPosZ, posX, posY, posZ, motionX, motionY, motionZ;
     protected int age;
@@ -47,7 +47,7 @@ public class DefaultAmbientParticle {
     }
 
     public boolean tick() {
-        if (mc.player.squaredDistanceTo(posX, posY, posZ) > 4096) age -= 8;
+        if (mc.thePlayer.getDistanceSqToEntity(posX, posY, posZ) > 4096) age -= 8;
         else age--;
 
         if (age < 0)
@@ -75,10 +75,10 @@ public class DefaultAmbientParticle {
     public void render(WorldRenderContext context) {
         Camera camera = Cameras.get();
         Color color = TargetHudRenderer.topLeft;
-        Vec3d pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
+        Vec3 pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
 
         MatrixStack matrices = new MatrixStack();
-        matrices.translate(pos.x, pos.y, pos.z);
+        matrices.translate(pos.xCoord, pos.yCoord, pos.zCoord);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
@@ -89,12 +89,12 @@ public class DefaultAmbientParticle {
         Render2D.drawGlyphs(matrices, texture, withAlpha, AmbientParticle.particleScale.getValue() / 100f);
     }
 
-    private static Vec3d interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
+    private static Vec3 interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Vec3d cameraPos = Cameras.get().getPos();
-        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.x;
-        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.y;
-        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.z;
-        return new Vec3d(x, y, z);
+        Vec3 cameraPos = Cameras.get().getPos();
+        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.xCoord;
+        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.yCoord;
+        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.zCoord;
+        return new Vec3(x, y, z);
     }
 }

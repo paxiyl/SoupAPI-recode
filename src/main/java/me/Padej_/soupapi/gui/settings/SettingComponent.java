@@ -1,8 +1,8 @@
 package me.Padej_.soupapi.gui.settings;
 
 import me.Padej_.soupapi.settings.Setting;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import me.Padej_.soupapi.compat.DrawContext;
 
 public abstract class SettingComponent<T> {
@@ -12,7 +12,7 @@ public abstract class SettingComponent<T> {
     public int width;
     public int height;
 
-    public static TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+    public static FontRenderer textRenderer = Minecraft.getMinecraft().fontRendererObj;
 
     public SettingComponent(Setting<T> setting, int x, int y, int width, int height) {
         this.setting = setting;

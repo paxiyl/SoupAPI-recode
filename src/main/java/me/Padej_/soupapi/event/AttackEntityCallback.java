@@ -2,7 +2,7 @@ package me.Padej_.soupapi.event;
 
 import me.Padej_.soupapi.compat.SoupLog;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public final class AttackEntityCallback {
     }
 
     public interface Listener {
-        Result attack(PlayerEntity player, World world, Hand hand, Entity entity, Object hitResult);
+        Result attack(EntityPlayer player, World world, Hand hand, Entity entity, Object hitResult);
     }
 
     /** 1.8.9 has no off-hand; this exists only so the ported lambdas keep their arity. */
@@ -45,7 +45,7 @@ public final class AttackEntityCallback {
         listeners.add(listener);
     }
 
-    public void invoke(PlayerEntity player, World world, Entity entity) {
+    public void invoke(EntityPlayer player, World world, Entity entity) {
         for (int i = 0; i < listeners.size(); i++) {
             try {
                 listeners.get(i).attack(player, world, Hand.MAIN_HAND, entity, null);

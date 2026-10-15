@@ -4,7 +4,7 @@ import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.settings.impl.ButtonSetting;
 import me.Padej_.soupapi.compat.DrawContext;
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 
 public class ButtonComponent extends SettingComponent<Void> {
 

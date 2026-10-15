@@ -3,7 +3,7 @@ package me.Padej_.soupapi.utils;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.sounds.CustomSounds;
 import me.Padej_.soupapi.event.AttackEntityCallback;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.EntityLivingBase;
 import me.Padej_.soupapi.compat.SoundEvent;
 import me.Padej_.soupapi.compat.Sounds;
 
@@ -14,7 +14,7 @@ public class HitSound extends ConfigurableModule {
 
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
-            if ((entity instanceof LivingEntity && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitSoundEnabled) {
+            if ((entity instanceof EntityLivingBase && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitSoundEnabled) {
                 long now = System.currentTimeMillis();
                 if (now - lastHitTime < 150) return AttackEntityCallback.Result.PASS;
                 lastHitTime = now;

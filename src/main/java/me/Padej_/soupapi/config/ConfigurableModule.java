@@ -1,8 +1,8 @@
 package me.Padej_.soupapi.config;
 
 import me.Padej_.soupapi.main.SoupAPI_Main;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 
 /**
  * Base class giving every module static access to the client and the live config.
@@ -12,14 +12,14 @@ import net.minecraft.client.gui.screen.Screen;
  * anything touches a module.
  */
 public abstract class ConfigurableModule {
-    public static MinecraftClient mc = MinecraftClient.getInstance();
+    public static Minecraft mc = Minecraft.getMinecraft();
     public static final SoupAPI_Config CONFIG = SoupAPI_Main.configHolder.get();
 
     public static void saveConfig() {
         SoupAPI_Main.configHolder.save();
     }
 
-    public static void saveAll(Screen screen) {
+    public static void saveAll(GuiScreen screen) {
         if (screen instanceof ConfigScreen) {
             ((ConfigScreen) screen).saveAll(false);
         }

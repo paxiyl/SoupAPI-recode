@@ -2,9 +2,9 @@ package me.Padej_.soupapi.font;
 
 import me.Padej_.soupapi.compat.Caps;
 import me.Padej_.soupapi.compat.SoupLog;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.util.ResourceLocation;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -28,7 +28,7 @@ import java.util.Map;
  * <ul>
  *   <li><b>Texture upload is far simpler.</b> The 1.21.4 version built a {@code NativeImage},
  *       reached into its off-heap pointer via an accessor mixin and wrote ABGR ints through
- *       {@code MemoryUtil}. 1.8.9's {@link NativeImageBackedTexture} takes a {@link BufferedImage}
+ *       {@code MemoryUtil}. 1.8.9's {@link DynamicTexture} takes a {@link BufferedImage}
  *       directly and handles the channel order itself, so all of that goes away — along with the
  *       {@code NativeImageAccessor} mixin and the LWJGL 3 {@code MemoryUtil} dependency, neither of
  *       which exists here.</li>
@@ -44,14 +44,14 @@ import java.util.Map;
 class GlyphMap {
     final char fromIncl, toExcl;
     final Font font;
-    final Identifier bindToTexture;
+    final ResourceLocation bindToTexture;
     final int pixelPadding;
     private final Map<Character, Glyph> glyphs = new HashMap<Character, Glyph>();
     int width, height;
 
     boolean generated = false;
 
-    public GlyphMap(char from, char to, Font font, Identifier identifier, int padding) {
+    public GlyphMap(char from, char to, Font font, ResourceLocation identifier, int padding) {
         this.fromIncl = from;
         this.toExcl = to;
         this.font = font;
@@ -67,7 +67,7 @@ class GlyphMap {
     }
 
     public void destroy() {
-        MinecraftClient.getInstance().getTextureManager().close(this.bindToTexture);
+        Minecraft.getMinecraft().getTextureManager().close(this.bindToTexture);
         this.glyphs.clear();
         this.width = -1;
         this.height = -1;
@@ -169,11 +169,11 @@ class GlyphMap {
      * rendering; glyph pages are baked lazily from draw calls, so that holds. The prebake worker
      * only computes metrics, it does not upload.
      */
-    public static void registerBufferedImageTexture(Identifier id, BufferedImage bi) {
+    public static void registerBufferedImageTexture(ResourceLocation id, BufferedImage bi) {
         try {
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(bi);
+            DynamicTexture tex = new DynamicTexture(bi);
             tex.upload();
-            MinecraftClient.getInstance().getTextureManager().loadTexture(id, tex);
+            Minecraft.getMinecraft().getTextureManager().loadTexture(id, tex);
         } catch (Throwable t) {
             // A failed glyph upload must not take the frame down; text just will not draw.
             SoupLog.error("Failed to upload glyph atlas " + id

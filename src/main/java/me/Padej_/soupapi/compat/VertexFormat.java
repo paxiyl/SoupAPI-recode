@@ -3,12 +3,12 @@ package me.Padej_.soupapi.compat;
 import org.lwjgl.opengl.GL11;
 
 /**
- * Replacement for {@code net.minecraft.client.render.VertexFormat}, carrying the nested
- * {@link DrawMode} enum the 1.21.4 sources use at every {@code begin(...)} call site.
+ * Replacement for 1.21.4's {@code VertexFormat}, carrying the nested {@link DrawMode} enum its
+ * {@code begin(...)} call sites use.
  *
- * <p>1.8.9 <i>has</i> a class by this name, but its {@code begin} takes a raw GL primitive int and
- * it has no {@code DrawMode}. Rather than rewrite 17 call sites, this compat class keeps the newer
- * shape and holds the 1.8.9 format it maps onto, so ported files change only their imports.
+ * <p>MCP 1.8.9 has a {@code VertexFormat} too, but {@code WorldRenderer.begin} takes a raw GL
+ * primitive int and there is no {@code DrawMode}. This compat class keeps the newer shape and
+ * holds the MCP format it maps onto, so ported files change only their imports.
  */
 public final class VertexFormat {
 
@@ -20,8 +20,8 @@ public final class VertexFormat {
         TRIANGLE_FAN(GL11.GL_TRIANGLE_FAN),
         /**
          * In 1.21.4 this meant "lines expanded to screen-space quads by the core line shader".
-         * 1.8.9 has no such shader, so it becomes a real {@code GL_LINES} draw. Callers that need a
-         * guaranteed stroke thickness must build geometry themselves — gl4es clamps
+         * 1.8.9 has no such shader, so it becomes a real {@code GL_LINES} draw. Callers that need
+         * a guaranteed stroke thickness must build geometry themselves — gl4es clamps
          * {@code glLineWidth} to 1.0 (see {@link Caps#thickLinesSupported()}).
          */
         LINES(GL11.GL_LINES),
@@ -35,13 +35,13 @@ public final class VertexFormat {
         }
     }
 
-    final net.minecraft.client.render.VertexFormat delegate;
+    final net.minecraft.client.renderer.vertex.VertexFormat delegate;
     final boolean hasColor;
     final boolean hasTexture;
     final boolean hasLight;
     final boolean hasNormal;
 
-    VertexFormat(net.minecraft.client.render.VertexFormat delegate,
+    VertexFormat(net.minecraft.client.renderer.vertex.VertexFormat delegate,
                  boolean hasTexture, boolean hasColor, boolean hasLight, boolean hasNormal) {
         this.delegate = delegate;
         this.hasTexture = hasTexture;

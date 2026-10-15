@@ -15,9 +15,9 @@ import me.Padej_.soupapi.compat.VertexFormat;
 import me.Padej_.soupapi.compat.VertexFormats;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.Vec3;
 import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
@@ -27,16 +27,16 @@ import java.util.List;
 public class Trails extends ConfigurableModule {
 
     public static void onTick() {
-        if (mc.player == null) return;
+        if (mc.thePlayer == null) return;
         if (!CONFIG.trailsEnabled) return;
 
         int trailLifetime = CONFIG.trailsLenght;
         float minStep = 0.001f;
 
-        for (PlayerEntity player : mc.world.playerEntities) {
+        for (EntityPlayer player : mc.theWorld.playerEntities) {
             // Добавляем сегмент, если есть любое движение
-            Vec3d prevPos = new Vec3d(player.prevX, player.prevY, player.prevZ);
-            Vec3d currentPos = player.getPos();
+            Vec3 prevPos = new Vec3(player.prevPosX, player.prevPosY, player.prevPosZ);
+            Vec3 currentPos = player.getPos();
             if (prevPos.distanceTo(currentPos) > minStep) { // Минимальный порог для избежания дребезга
                 ((TrailEntity) player).soupAPI$getTrails().add(new TrailSegment(
                         prevPos,
@@ -48,17 +48,17 @@ public class Trails extends ConfigurableModule {
         }
 
         if (CONFIG.trailsForGliders) {
-            for (Entity entity : mc.world.entities) {
-                if (entity == mc.player || !(entity instanceof LivingEntity)) {
+            for (Entity entity : mc.theWorld.loadedEntityList) {
+                if (entity == mc.thePlayer || !(entity instanceof EntityLivingBase)) {
                     continue;
                 }
-                LivingEntity livingEntity = (LivingEntity) entity;
+                EntityLivingBase livingEntity = (EntityLivingBase) entity;
                 if (!livingEntity.isGliding()) {
                     continue;
                 }
 
-                Vec3d prevPos = new Vec3d(entity.prevX, entity.prevY, entity.prevZ);
-                Vec3d currentPos = entity.getPos();
+                Vec3 prevPos = new Vec3(entity.prevPosX, entity.prevPosY, entity.prevPosZ);
+                Vec3 currentPos = entity.getPos();
                 float yOffset = entity.height / 2;
                 if (prevPos.distanceTo(currentPos) > minStep) {
                     ((TrailEntity) entity).soupAPI$getTrails().add(new TrailSegment(
@@ -90,14 +90,14 @@ public class Trails extends ConfigurableModule {
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        for (Entity entity : mc.world.entities) {
-            if ((entity instanceof PlayerEntity && !EntityUtils.isFriend(entity) && entity != mc.player) ||
-                    (!CONFIG.trailsForGliders && entity != mc.player && !(entity instanceof PlayerEntity)))
+        for (Entity entity : mc.theWorld.loadedEntityList) {
+            if ((entity instanceof EntityPlayer && !EntityUtils.isFriend(entity) && entity != mc.thePlayer) ||
+                    (!CONFIG.trailsForGliders && entity != mc.thePlayer && !(entity instanceof EntityPlayer)))
                 continue;
 
-            if (entity == mc.player && mc.options.perspective == 0 && !CONFIG.trailsFirstPerson)
+            if (entity == mc.thePlayer && mc.gameSettings.perspective == 0 && !CONFIG.trailsFirstPerson)
                 continue;
-            if (!(entity instanceof LivingEntity) || !mc.player.canSee(entity)) continue;
+            if (!(entity instanceof EntityLivingBase) || !mc.thePlayer.canEntityBeSeen(entity)) continue;
 
             List<TrailSegment> trails = ((TrailEntity) entity).soupAPI$getTrails();
             if (trails.isEmpty()) continue;
@@ -109,8 +109,8 @@ public class Trails extends ConfigurableModule {
                 TrailSegment current = trails.get(i);
                 TrailSegment next = trails.get(i + 1);
 
-                Vec3d currentPos = current.interpolate(tickDelta);
-                Vec3d nextPos = next.interpolate(tickDelta);
+                Vec3 currentPos = current.interpolate(tickDelta);
+                Vec3 nextPos = next.interpolate(tickDelta);
 
                 float currentProgress = (float) current.animation(tickDelta);
                 float nextProgress = (float) next.animation(tickDelta);
@@ -122,13 +122,13 @@ public class Trails extends ConfigurableModule {
                 Color currentColor = getAnimatedColor(currentProgressColor, 1 - currentProgressColor);
                 Color nextColor = getAnimatedColor(nextProgressColor, 1 - nextProgressColor);
 
-                float x1 = (float) currentPos.x;
-                float y1 = (float) currentPos.y;
-                float z1 = (float) currentPos.z;
+                float x1 = (float) currentPos.xCoord;
+                float y1 = (float) currentPos.yCoord;
+                float z1 = (float) currentPos.zCoord;
 
-                float x2 = (float) nextPos.x;
-                float y2 = (float) nextPos.y;
-                float z2 = (float) nextPos.z;
+                float x2 = (float) nextPos.xCoord;
+                float y2 = (float) nextPos.yCoord;
+                float z2 = (float) nextPos.zCoord;
 
                 int currentBottomAlpha;
                 int currentMidAlpha;
@@ -194,24 +194,24 @@ public class Trails extends ConfigurableModule {
     }
 
     public static class TrailSegment {
-        private final Vec3d from;
-        private final Vec3d to;
+        private final Vec3 from;
+        private final Vec3 to;
         private int ticks;
         private int prevTicks;
         private final int maxLifetime;
 
-        public TrailSegment(Vec3d from, Vec3d to, int lifetime) {
+        public TrailSegment(Vec3 from, Vec3 to, int lifetime) {
             this.from = from;
             this.to = to;
             this.ticks = lifetime;
             this.maxLifetime = lifetime;
         }
 
-        public Vec3d interpolate(float pt) {
-            double x = from.x + ((to.x - from.x) * pt) - mc.getEntityRenderManager().cameraX;
-            double y = from.y + ((to.y - from.y) * pt) - mc.getEntityRenderManager().cameraY;
-            double z = from.z + ((to.z - from.z) * pt) - mc.getEntityRenderManager().cameraZ;
-            return new Vec3d(x, y, z);
+        public Vec3 interpolate(float pt) {
+            double x = from.xCoord + ((to.xCoord - from.x) * pt) - mc.getRenderManager().cameraX;
+            double y = from.yCoord + ((to.yCoord - from.y) * pt) - mc.getRenderManager().cameraY;
+            double z = from.zCoord + ((to.zCoord - from.z) * pt) - mc.getRenderManager().cameraZ;
+            return new Vec3(x, y, z);
         }
 
         public double animation(float pt) {

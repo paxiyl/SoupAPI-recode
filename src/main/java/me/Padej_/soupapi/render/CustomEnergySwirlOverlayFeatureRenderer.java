@@ -1,14 +1,14 @@
 package me.Padej_.soupapi.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -27,21 +27,21 @@ import org.lwjgl.opengl.GL11;
  * frame.
  */
 @Environment(EnvType.CLIENT)
-public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends LivingEntity>
-        implements FeatureRenderer<E> {
+public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends EntityLivingBase>
+        implements LayerRenderer<E> {
 
     @Override
     public void render(E entity, float limbAngle, float limbDistance, float tickDelta,
                        float age, float headYaw, float headPitch, float scale) {
         if (!shouldRender(entity)) return;
 
-        EntityModel model = getEnergySwirlModel();
+        ModelBase model = getEnergySwirlModel();
         if (model == null) return;
 
         boolean invisible = entity.isInvisible();
         GlStateManager.depthMask(!invisible);
 
-        MinecraftClient.getInstance().getTextureManager().bindTexture(getEnergySwirlTexture());
+        Minecraft.getMinecraft().getTextureManager().bindTexture(getEnergySwirlTexture());
 
         GlStateManager.matrixMode(GL11.GL_TEXTURE);
         GlStateManager.pushMatrix();
@@ -82,7 +82,7 @@ public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends LivingEn
     /** Texture-coordinate scroll for the given entity age, in texture units per tick. */
     protected abstract float getEnergySwirlX(float partialAge);
 
-    protected abstract Identifier getEnergySwirlTexture();
+    protected abstract ResourceLocation getEnergySwirlTexture();
 
-    protected abstract EntityModel getEnergySwirlModel();
+    protected abstract ModelBase getEnergySwirlModel();
 }

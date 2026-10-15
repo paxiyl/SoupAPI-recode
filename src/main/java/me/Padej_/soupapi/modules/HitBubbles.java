@@ -4,7 +4,7 @@ import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.compat.BlendFactor;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
@@ -15,13 +15,11 @@ import me.Padej_.soupapi.utils.Timer;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import me.Padej_.soupapi.event.AttackEntityCallback;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.Box;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.AxisAlignedBB;
 import me.Padej_.soupapi.compat.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Vec3;
 
 import java.util.ArrayList;
 
@@ -32,19 +30,19 @@ public class HitBubbles extends ConfigurableModule {
 
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
-            if ((entity instanceof LivingEntity && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitBubblesEnabled) {
+            if ((entity instanceof EntityLivingBase && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitBubblesEnabled) {
                 long now = System.currentTimeMillis();
                 if (now - lastHitTime < 150) return ActionResult.PASS; // защита от спама (150мс)
                 lastHitTime = now;
 
-                float yaw = playerEntity.yaw;
-                float pitch = playerEntity.pitch;
+                float yaw = playerEntity.rotationYaw;
+                float pitch = playerEntity.rotationPitch;
                 double distance = 5.0;
-                Vec3d point = getRtxPoint(yaw, pitch, distance);
+                Vec3 point = getRtxPoint(yaw, pitch, distance);
 
                 if (point != null) {
                     bubbles.add(new HitBubble(
-                            (float) point.x, (float) point.y, (float) point.z,
+                            (float) point.xCoord, (float) point.yCoord, (float) point.zCoord,
                             -yaw, pitch, new Timer()
                     ));
                 }
@@ -98,15 +96,15 @@ public class HitBubbles extends ConfigurableModule {
         RenderSystem.enableCull();
     }
 
-    private static Vec3d getRtxPoint(float yaw, float pitch, double distance) {
-        Vec3d from = mc.player.getPos().add(0, mc.player.getEyeHeight(mc.player.getPose()), 0);
-        Vec3d direction = getRotationVector(pitch, yaw);
-        Vec3d to = from.add(direction.multiply(distance));
+    private static Vec3 getRtxPoint(float yaw, float pitch, double distance) {
+        Vec3 from = mc.thePlayer.getPos().add(0, mc.thePlayer.getEyeHeight(mc.thePlayer.getPose()), 0);
+        Vec3 direction = getRotationVector(pitch, yaw);
+        Vec3 to = from.add(direction.multiply(distance));
         double distanceSq = distance * distance;
 
-        Box box = mc.player.getBoundingBox().stretch(direction.multiply(distance)).expand(1.0, 1.0, 1.0);
+        AxisAlignedBB box = mc.thePlayer.getEntityBoundingBox().stretch(direction.multiply(distance)).expand(1.0, 1.0, 1.0);
         EntityHitResult result = ProjectileUtil.raycast(
-                mc.player,
+                mc.thePlayer,
                 from,
                 to,
                 box,
@@ -114,18 +112,18 @@ public class HitBubbles extends ConfigurableModule {
                 distanceSq
         );
 
-        if (result != null && result.getEntity() instanceof LivingEntity) {
+        if (result != null && result.getEntity() instanceof EntityLivingBase) {
             return result.getPos();
         }
         return null;
     }
 
-    private static Vec3d getRotationVector(float pitch, float yaw) {
+    private static Vec3 getRotationVector(float pitch, float yaw) {
         float f = (float) Math.cos(-yaw * 0.017453292F - Math.PI);
         float g = (float) Math.sin(-yaw * 0.017453292F - Math.PI);
         float h = (float) -Math.cos(-pitch * 0.017453292F);
         float i = (float) Math.sin(-pitch * 0.017453292F);
-        return new Vec3d(g * h, i, f * h);
+        return new Vec3(g * h, i, f * h);
     }
 
     public enum Style {

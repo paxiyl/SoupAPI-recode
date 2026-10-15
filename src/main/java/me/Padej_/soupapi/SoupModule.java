@@ -3,8 +3,8 @@ package me.Padej_.soupapi;
 import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.settings.Setting;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.IChatComponent;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ public abstract class SoupModule {
     protected final String translationKey;
     protected final Category category;
 
-    public static MinecraftClient mc = MinecraftClient.getInstance();
+    public static Minecraft mc = Minecraft.getMinecraft();
 
     public SoupModule(String name, Category category) {
         this.translationKey = "soupapi.module." + name.toLowerCase(Locale.ROOT).replace(" ", "_");
@@ -45,7 +45,7 @@ public abstract class SoupModule {
         return translationKey;
     }
 
-    public Text getDisplayName() {
+    public IChatComponent getDisplayName() {
         return Texts.translatable(translationKey);
     }
 

@@ -1,9 +1,9 @@
 package me.Padej_.soupapi.utils;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class MathUtility {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
 
     public static double random(double min, double max) {
         return ThreadLocalRandom.current().nextDouble() * (max - min) + min;
@@ -22,9 +22,9 @@ public final class MathUtility {
     }
 
     public static double getDistanceSq(double x, double y, double z) {
-        double d0 = mc.player.x - x;
-        double d1 = mc.player.y - y;
-        double d2 = mc.player.z - z;
+        double d0 = mc.thePlayer.posX - x;
+        double d1 = mc.thePlayer.posY - y;
+        double d2 = mc.thePlayer.posZ - z;
         return d0 * d0 + d1 * d1 + d2 * d2;
     }
 
@@ -49,7 +49,7 @@ public final class MathUtility {
     }
 
     public static double getDistanceSq(Entity ent) {
-        return getDistanceSq(ent.x, ent.y, ent.z);
+        return getDistanceSq(ent.posX, ent.posY, ent.posZ);
     }
 
     public static double roundToDecimal(double n, int point) {
@@ -60,7 +60,7 @@ public final class MathUtility {
         return Math.round(n * factor) / factor;
     }
 
-    public static double angle(Vec3d vec3d, Vec3d other) {
+    public static double angle(Vec3 vec3d, Vec3 other) {
         double lengthSq = vec3d.length() * other.length();
 
         if (lengthSq < 1.0E-4D) {
@@ -79,16 +79,16 @@ public final class MathUtility {
         return Math.acos(arg) * 180.0f / Math.PI;
     }
 
-    public static Vec3d fromTo(Vec3d from, double x, double y, double z) {
-        return fromTo(from.x, from.y, from.z, x, y, z);
+    public static Vec3 fromTo(Vec3 from, double x, double y, double z) {
+        return fromTo(from.xCoord, from.yCoord, from.zCoord, x, y, z);
     }
 
     public static float lerp(float f, float st, float en) {
         return st + f * (en - st);
     }
 
-    public static Vec3d fromTo(double x, double y, double z, double x2, double y2, double z2) {
-        return new Vec3d(x2 - x, y2 - y, z2 - z);
+    public static Vec3 fromTo(double x, double y, double z, double x2, double y2, double z2) {
+        return new Vec3(x2 - x, y2 - y, z2 - z);
     }
 
     public static float rad(float angle) {
@@ -144,8 +144,8 @@ public final class MathUtility {
         return wrappedAngle;
     }
 
-    public static Vec3d direction(float yaw) {
-        return new Vec3d(Math.cos(MathUtility.degToRad(yaw + 90.0f)), 0.0, Math.sin(MathUtility.degToRad(yaw + 90.0f)));
+    public static Vec3 direction(float yaw) {
+        return new Vec3(Math.cos(MathUtility.degToRad(yaw + 90.0f)), 0.0, Math.sin(MathUtility.degToRad(yaw + 90.0f)));
     }
 
     public static float round(float value, int places) {

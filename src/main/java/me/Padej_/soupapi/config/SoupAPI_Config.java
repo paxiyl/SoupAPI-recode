@@ -40,7 +40,7 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public MC_Tiers.TierGameModes mctiersGameMode = MC_Tiers.TierGameModes.SWORD;
 
-    @ConfigEntry.Gui.PrefixText // Config Screen
+    @ConfigEntry.Gui.PrefixText // Config GuiScreen
     @ConfigEntry.Category("main")
     public boolean blurShadowEnabled = true;
 

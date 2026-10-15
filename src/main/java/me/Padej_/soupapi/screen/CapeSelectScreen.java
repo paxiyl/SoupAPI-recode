@@ -4,12 +4,12 @@ import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.modules.Capes;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.SoupScreen;
 import me.Padej_.soupapi.compat.RenderLayer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 import static me.Padej_.soupapi.config.ConfigurableModule.saveConfig;
@@ -35,8 +35,8 @@ public class CapeSelectScreen extends SoupScreen {
 
         for (String category : categories) {
             context.drawText(
-                    MinecraftClient.getInstance().textRenderer,
-                    // 1.8.9 has no Text.formatted(); the legacy bold code is the
+                    Minecraft.getMinecraft().fontRendererObj,
+                    // 1.8.9 has no IChatComponent.formatted(); the legacy bold code is the
                     // equivalent and renders identically.
                     Texts.literal("\u00A7l" + category),
                     x,
@@ -49,7 +49,7 @@ public class CapeSelectScreen extends SoupScreen {
 
             for (Capes.CapeTextures cape : Capes.CapeTextures.values()) {
                 if (cape.name().startsWith(category)) {
-                    Identifier texture = cape.getTexturePath();
+                    ResourceLocation texture = cape.getTexturePath();
 
                     drawTexture(context, texture, textureX, textureY);
 
@@ -111,7 +111,7 @@ public class CapeSelectScreen extends SoupScreen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private void drawTexture(DrawContext context, Identifier texture, int x, int y) {
+    private void drawTexture(DrawContext context, ResourceLocation texture, int x, int y) {
         // 1.8.9 has no render-layer parameter: DrawContext binds the texture itself.
         context.drawTexture(texture, x, y, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT,
                 2, 2, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT, 128, 64);

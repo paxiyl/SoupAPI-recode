@@ -2,7 +2,7 @@ package me.Padej_.soupapi.modules;
 
 import me.Padej_.soupapi.compat.BlendFactor;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render3D;
@@ -15,14 +15,14 @@ public class Halo extends ConfigurableModule {
     public static void render(WorldRenderContext context) {
         float tickDelta = context.tickCounter().getTickDelta(true);
 
-        if (mc.world == null || mc.player == null || !CONFIG.haloEnabled) return;
+        if (mc.theWorld == null || mc.thePlayer == null || !CONFIG.haloEnabled) return;
 
-        boolean isFirstPerson = mc.options.perspective == 0;
+        boolean isFirstPerson = mc.gameSettings.perspective == 0;
 
-        for (Entity entity : mc.world.entities) {
-            if (EntityUtils.isFriend(entity) || entity.equals(mc.player)) {
-                if (entity == mc.player && isFirstPerson) continue;
-                if (!mc.player.canSee(entity) || entity.isInvisible()) return;
+        for (Entity entity : mc.theWorld.loadedEntityList) {
+            if (EntityUtils.isFriend(entity) || entity.equals(mc.thePlayer)) {
+                if (entity == mc.thePlayer && isFirstPerson) continue;
+                if (!mc.thePlayer.canEntityBeSeen(entity) || entity.isInvisible()) return;
 
                 Render3D.renderSoulPair(tickDelta, entity);
             }

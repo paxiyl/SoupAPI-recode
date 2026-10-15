@@ -1,38 +1,35 @@
 package me.Padej_.soupapi.compat;
 
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
 
 /**
- * Factory methods for {@link Text}, replacing the static {@code Text.translatable} /
+ * Factory methods for chat components, replacing the static {@code Text.translatable} /
  * {@code Text.literal} helpers added in 1.19.
  *
- * <p>1.8.9 has {@code Text} but builds instances through the {@code LiteralText} and
- * {@code TranslatableText} subclasses.
+ * <p>1.8.9 calls the type {@link IChatComponent} and builds instances through the
+ * {@code ChatComponentText} / {@code ChatComponentTranslation} subclasses.
  */
 public final class Texts {
 
     private Texts() {
     }
 
-    public static Text literal(String text) {
-        return new LiteralText(text);
+    public static IChatComponent literal(String text) {
+        return new ChatComponentText(text == null ? "" : text);
     }
 
-    public static Text translatable(String key) {
-        return new TranslatableText(key);
+    public static IChatComponent translatable(String key) {
+        return new ChatComponentTranslation(key);
     }
 
-    public static Text translatable(String key, Object... args) {
-        return new TranslatableText(key, args);
+    public static IChatComponent translatable(String key, Object... args) {
+        return new ChatComponentTranslation(key, args);
     }
 
-    /**
-     * Flattens a {@link Text} to a plain string. 1.8.9 spells this {@code asUnformattedString};
-     * 1.21.4 called it {@code getString()}.
-     */
-    public static String toPlainString(Text text) {
-        return text == null ? "" : text.asUnformattedString();
+    /** Flattens a component to a plain string. 1.8.9 spells this {@code getUnformattedText}. */
+    public static String toPlainString(IChatComponent text) {
+        return text == null ? "" : text.getUnformattedText();
     }
 }

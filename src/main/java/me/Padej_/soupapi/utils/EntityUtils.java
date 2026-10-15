@@ -1,24 +1,24 @@
 package me.Padej_.soupapi.utils;
 
 import me.Padej_.soupapi.main.SoupAPI_Main;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.potion.Potion;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MovingObjectPosition;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.mc;
 
 public class EntityUtils {
     private static Entity targetEntity;
-    private static LivingEntity lastHitEntity;
+    private static EntityLivingBase lastHitEntity;
 
-    public static void updateEntities(MinecraftClient client) {
-        if (client.player == null) return;
+    public static void updateEntities(Minecraft client) {
+        if (client.thePlayer == null) return;
 
-        BlockHitResult hitResult = client.result;
-        if (hitResult != null && hitResult.type == BlockHitResult.Type.ENTITY && hitResult.entity != null) {
+        MovingObjectPosition hitResult = client.objectMouseOver;
+        if (hitResult != null && hitResult.type == MovingObjectPosition.Type.ENTITY && hitResult.entity != null) {
             Entity checkedEntity = hitResult.entity;
             if (!isFriend(checkedEntity) && !isSpectator(checkedEntity)) {
                 targetEntity = checkedEntity;
@@ -31,29 +31,29 @@ public class EntityUtils {
     }
 
     public static boolean isCrit() {
-        PlayerEntity player = mc.player;
+        EntityPlayer player = mc.thePlayer;
         if (player == null) return false;
         // 1.9 introduced the attack cooldown; in 1.8.9 every swing is at full strength, so the
         // cooldown term of the 1.21.4 check has no counterpart and is dropped.
         return player.fallDistance > 0.0F &&
                 !player.onGround &&
-                !player.isClimbing() &&
-                !player.isTouchingWater() &&
-                !player.hasStatusEffect(StatusEffect.BLINDNESS) &&
-                !player.hasVehicle() &&
+                !player.isOnLadder() &&
+                !player.isInWater() &&
+                !player.isPotionActive(Potion.BLINDNESS) &&
+                !player.isRiding() &&
                 !player.isSprinting();
     }
 
     /**
-     * 1.8.9 declares {@code isSpectator()} on {@link PlayerEntity} rather than {@link Entity}, so
+     * 1.8.9 declares {@code isSpectator()} on {@link EntityPlayer} rather than {@link Entity}, so
      * non-players are simply never spectators.
      */
     public static boolean isSpectator(Entity entity) {
-        return entity instanceof PlayerEntity && ((PlayerEntity) entity).isSpectator();
+        return entity instanceof EntityPlayer && ((EntityPlayer) entity).isSpectator();
     }
 
     public static boolean isFriend(Entity entity) {
-        String entityName = entity.getName() == null ? null : entity.getName().asUnformattedString();
+        String entityName = entity.getName() == null ? null : entity.getName().getUnformattedText();
         if (entityName == null) return false;
         for (String friend : SoupAPI_Main.configHolder.get().friends) {
             if (friend.equalsIgnoreCase(entityName)) {
@@ -76,7 +76,7 @@ public class EntityUtils {
         return targetEntity;
     }
 
-    public static LivingEntity getLastHitEntity() {
+    public static EntityLivingBase getLastHitEntity() {
         return lastHitEntity;
     }
 

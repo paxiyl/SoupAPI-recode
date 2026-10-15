@@ -7,11 +7,11 @@ import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.compat.VertexConsumerProvider;
 import me.Padej_.soupapi.main.SoupAPI_Main;
 import me.Padej_.soupapi.utils.EntityUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.entity.AbstractClientPlayer;
 
 /**
  * Draws the "china hat" cone above a player's head.
@@ -26,30 +26,30 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
  * <p>Positioning follows the 1.8.9 idiom used by vanilla's own head feature: push the GL matrix,
  * call {@link net.minecraft.client.render.model.ModelPart#preRender(float)} on the head part to
  * inherit its pivot and rotation, then draw in block units. The entity render context has a
- * {@code scale(-1, -1, 1)} applied by {@code LivingEntityRenderer}, so Y is flipped back here
+ * {@code scale(-1, -1, 1)} applied by {@code RendererLivingEntity}, so Y is flipped back here
  * before drawing the cone, which is authored Y-up.
  */
-public class ChinaHatFeatureRenderer implements FeatureRenderer<AbstractClientPlayerEntity> {
+public class ChinaHatFeatureRenderer implements LayerRenderer<AbstractClientPlayer> {
 
-    private final PlayerEntityRenderer playerRenderer;
+    private final RenderPlayer playerRenderer;
 
-    public ChinaHatFeatureRenderer(PlayerEntityRenderer playerRenderer) {
+    public ChinaHatFeatureRenderer(RenderPlayer playerRenderer) {
         this.playerRenderer = playerRenderer;
     }
 
     @Override
-    public void render(AbstractClientPlayerEntity entity, float limbAngle, float limbDistance,
+    public void render(AbstractClientPlayer entity, float limbAngle, float limbDistance,
                        float tickDelta, float age, float headYaw, float headPitch, float scale) {
         if (!SoupAPI_Main.configHolder.get().chinaHatEnabled) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || entity == null) return;
+        Minecraft client = Minecraft.getMinecraft();
+        if (client.thePlayer == null || entity == null) return;
 
         // Only the local player and friends get a hat, as before. The game profile gives the
-        // raw username; Entity.getName() returns a Text carrying display formatting in 1.8.9.
+        // raw username; Entity.getName() returns a IChatComponent carrying display formatting in 1.8.9.
         String name = entity.getGameProfile() != null ? entity.getGameProfile().getName() : null;
         if (name == null) return;
-        boolean isLocalPlayer = name.equals(client.player.getGameProfile().getName());
+        boolean isLocalPlayer = name.equals(client.thePlayer.getGameProfile().getName());
         if (!isLocalPlayer && !EntityUtils.isFriend(name)) return;
 
         GlStateManager.pushMatrix();

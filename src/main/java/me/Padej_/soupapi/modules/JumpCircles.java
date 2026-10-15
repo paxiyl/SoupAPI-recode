@@ -5,7 +5,7 @@ import me.Padej_.soupapi.compat.Cameras;
 import me.Padej_.soupapi.compat.BlendFactor;
 import me.Padej_.soupapi.compat.ShaderKey;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
@@ -13,7 +13,7 @@ import me.Padej_.soupapi.utils.ConfigUtils;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.BufferBuilder;
 import me.Padej_.soupapi.compat.BufferRenderer;
 import me.Padej_.soupapi.compat.Tessellator;
@@ -25,10 +25,10 @@ import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import me.Padej_.soupapi.compat.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Vec3;
 import me.Padej_.soupapi.compat.Mat4;
 
 import java.awt.*;
@@ -42,11 +42,11 @@ public class JumpCircles extends ConfigurableModule {
     private static boolean wasJumping = false;
 
     public static void onTick() {
-        if (mc.player != null) {
-            PlayerEntity player = mc.player;
+        if (mc.thePlayer != null) {
+            EntityPlayer player = mc.thePlayer;
             boolean isJumping = !player.onGround;
 
-            if (isJumping && !wasJumping && mc.options.jumpKey.isPressed()) {
+            if (isJumping && !wasJumping && mc.gameSettings.jumpKey.isPressed()) {
                 CIRCLES.add(new JumpCircle(player.getPos()));
             }
 
@@ -71,7 +71,7 @@ public class JumpCircles extends ConfigurableModule {
     }
 
     private static class JumpCircle {
-        private final Vec3d position;
+        private final Vec3 position;
         private final double offsetY;
         private final long startTime; // Время создания круга
         private float rotationAngle;
@@ -79,9 +79,9 @@ public class JumpCircles extends ConfigurableModule {
         private long lastUpdateTime; // Время последнего обновления
         private final boolean isFadeOut; // Флаг для эффекта затухания
 
-        public JumpCircle(Vec3d position) {
+        public JumpCircle(Vec3 position) {
             this.position = position;
-            this.offsetY = mc.player.getVelocity().getY();
+            this.offsetY = mc.thePlayer.getVelocity().getY();
             this.rotationAngle = 0f;
             this.angularVelocity = (float) Math.toRadians(CONFIG.jumpCirclesSpinSpeed);
             this.startTime = System.currentTimeMillis(); // Запоминаем время создания
@@ -96,9 +96,9 @@ public class JumpCircles extends ConfigurableModule {
         }
 
         public void render(WorldRenderContext context, double cameraX, double cameraY, double cameraZ) {
-            double x = position.x - cameraX;
-            double y = position.y - cameraY - offsetY;
-            double z = position.z - cameraZ;
+            double x = position.xCoord - cameraX;
+            double y = position.yCoord - cameraY - offsetY;
+            double z = position.zCoord - cameraZ;
 
             updateRotation();
             renderGlowCircleBufferBuilder(context.matrixStack(), x, y, z);

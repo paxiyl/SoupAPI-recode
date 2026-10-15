@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.modules;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.SoupModule;
 import me.Padej_.soupapi.settings.impl.BooleanSetting;
 import me.Padej_.soupapi.settings.impl.EnumSetting;
@@ -15,7 +15,7 @@ import java.awt.Color;
  *
  * <p Restructured for 1.8.9. 1.21.4 modelled fog as an immutable {@code Fog} record returned from
  * {@code BackgroundRenderer.applyFog}, which the mod simply replaced. 1.8.9 has no such object:
- * fog is fixed-function GL state, set up across two {@code GameRenderer} methods — {@code
+ * fog is fixed-function GL state, set up across two {@code EntityRenderer} methods — {@code
  * updateFog} picks the colour and {@code renderFog} sets the distance curve. So instead of
  * building a Fog value, this module exposes the colour and applies the GL state, and
  * {@code GameRendererFogMixin} calls into it at the end of each of those methods.
@@ -48,17 +48,17 @@ public class CustomFog extends SoupModule {
     }
 
     /**
-     * Applies the fog distance curve. Called at the end of {@code GameRenderer.renderFog}, so it
+     * Applies the fog distance curve. Called at the end of {@code EntityRenderer.renderFog}, so it
      * overrides whatever vanilla just configured.
      */
     public static void applyFogState() {
         if (shape.getValue() == CustomFogShape.SPHERE) {
-            GlStateManager.fogMode(GL11.GL_EXP2);
-            GlStateManager.fogDensity(getDensity() * 0.1f);
+            GlStateManager.setFog(GL11.GL_EXP2);
+            GlStateManager.setFogDensity(getDensity() * 0.1f);
         } else {
-            GlStateManager.fogMode(GL11.GL_LINEAR);
-            GlStateManager.fogStart(start.getValue());
-            GlStateManager.fogEnd(end.getValue());
+            GlStateManager.setFog(GL11.GL_LINEAR);
+            GlStateManager.setFogStart(start.getValue());
+            GlStateManager.setFogEnd(end.getValue());
         }
         GlStateManager.enableFog();
     }

@@ -5,11 +5,11 @@ import me.Padej_.soupapi.font.FontRenderer;
 import me.Padej_.soupapi.font.FontRenderers;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -17,7 +17,7 @@ import java.awt.*;
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
 public class WatermarkRenderer {
-    private static MinecraftClient mc = MinecraftClient.getInstance();
+    private static Minecraft mc = Minecraft.getMinecraft();
 
     public static void render(DrawContext context) {
         if (!CONFIG.waterMarkEnabled) return;
@@ -36,7 +36,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderBackground(DrawContext context, float x, float y) {
-        float width = FontRenderers.sf_bold.getStringWidth(mc.player.getGameProfile().getName()) + 20;
+        float width = FontRenderers.sf_bold.getStringWidth(mc.thePlayer.getGameProfile().getName()) + 20;
         float height = 14;
         x += 13;
         if (CONFIG.mctiersEnabled) width += 18;
@@ -48,13 +48,13 @@ public class WatermarkRenderer {
     }
 
     private static void renderName(DrawContext context, float x, float y) {
-        String displayName = mc.player.getGameProfile().getName();
+        String displayName = mc.thePlayer.getGameProfile().getName();
         y += 21.5f;
         MatrixStack stack = context.getMatrices();
         FontRenderers.sf_bold.drawString(stack, displayName, x + 32, y, Palette.getTextColor());
 
         if (!CONFIG.mctiersEnabled) return;
-        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.player.getGameProfile().getName());
+        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.thePlayer.getGameProfile().getName());
 
         stack.push();
         stack.translate(x + 40 + textWidth, y - 3.7, 0);
@@ -66,7 +66,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderHead(DrawContext context, float x, float y) {
-        Identifier texture = mc.player.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getSkinId();
         float scale = 0.3f;
         float r = 9;
 

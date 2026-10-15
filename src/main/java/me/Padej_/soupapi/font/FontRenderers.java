@@ -14,7 +14,7 @@ import java.io.InputStream;
  * The mod's font renderers.
  *
  * <p>Initialisation is lazy rather than eager. The 1.21.4 version built these from a mixin on
- * {@code MinecraftClient.<init>}, but on 1.8.9 the constructor runs before game options exist, and
+ * {@code Minecraft.<init>}, but on 1.8.9 the constructor runs before game options exist, and
  * constructing a renderer reads the GUI scale — so building them there would fail. Instead
  * {@link #ensureLoaded()} is called from the render and tick hooks, which only run once the client
  * is fully up, and is a cheap boolean check after the first call.

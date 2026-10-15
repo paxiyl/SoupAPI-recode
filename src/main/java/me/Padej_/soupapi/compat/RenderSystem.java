@@ -1,7 +1,7 @@
 package me.Padej_.soupapi.compat;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
@@ -70,9 +70,9 @@ public final class RenderSystem {
     public static void setShader(ShaderKey key) {
         currentShader = key;
         if (key.isTextured()) {
-            GlStateManager.enableTexture();
+            GlStateManager.enableTexture2D();
         } else {
-            GlStateManager.disableTexture();
+            GlStateManager.disableTexture2D();
         }
     }
 
@@ -80,23 +80,23 @@ public final class RenderSystem {
         return currentShader;
     }
 
-    public static void setShaderTexture(int unit, Identifier texture) {
+    public static void setShaderTexture(int unit, ResourceLocation texture) {
         if (unit != 0) {
-            GlStateManager.activeTexture(GL13.GL_TEXTURE0 + unit);
+            GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + unit);
         }
         GlCompat.bindTexture(texture);
         if (unit != 0) {
-            GlStateManager.activeTexture(GL13.GL_TEXTURE0);
+            GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
         }
     }
 
     public static void setShaderTexture(int unit, int glId) {
         if (unit != 0) {
-            GlStateManager.activeTexture(GL13.GL_TEXTURE0 + unit);
+            GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + unit);
         }
         GlStateManager.bindTexture(glId);
         if (unit != 0) {
-            GlStateManager.activeTexture(GL13.GL_TEXTURE0);
+            GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
         }
     }
 
@@ -111,7 +111,7 @@ public final class RenderSystem {
     }
 
     public static void defaultBlendFunc() {
-        GlStateManager.blendFuncSeparate(
+        GlStateManager.tryBlendFuncSeparate(
                 GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
                 GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -125,22 +125,22 @@ public final class RenderSystem {
     }
 
     public static void blendFuncSeparate(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
-        GlStateManager.blendFuncSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha);
+        GlStateManager.tryBlendFuncSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha);
     }
 
     public static void blendFuncSeparate(BlendFactor.SrcFactor srcRgb, BlendFactor.DstFactor dstRgb,
                                          BlendFactor.SrcFactor srcAlpha, BlendFactor.DstFactor dstAlpha) {
-        GlStateManager.blendFuncSeparate(srcRgb.value, dstRgb.value, srcAlpha.value, dstAlpha.value);
+        GlStateManager.tryBlendFuncSeparate(srcRgb.value, dstRgb.value, srcAlpha.value, dstAlpha.value);
     }
 
     // ---- depth / culling / masks -----------------------------------------------------------
 
     public static void enableDepthTest() {
-        GlStateManager.enableDepthTest();
+        GlStateManager.enableDepth();
     }
 
     public static void disableDepthTest() {
-        GlStateManager.disableDepthTest();
+        GlStateManager.disableDepth();
     }
 
     public static void depthMask(boolean enable) {
@@ -189,11 +189,11 @@ public final class RenderSystem {
     }
 
     public static void enableAlphaTest() {
-        GlStateManager.enableAlphaTest();
+        GlStateManager.enableAlpha();
     }
 
     public static void disableAlphaTest() {
-        GlStateManager.disableAlphaTest();
+        GlStateManager.disableAlpha();
     }
 
     // ---- matrices --------------------------------------------------------------------------

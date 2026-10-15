@@ -1,7 +1,7 @@
 package me.Padej_.soupapi.interpolation;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.MathHelper;
 
 public class EaseOutCirc {
     private float progress = 0f; // Прогресс анимации (0.0f до 1.0f)

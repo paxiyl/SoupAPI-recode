@@ -11,7 +11,7 @@ final class Render2DBridge {
     private Render2DBridge() {
     }
 
-    /** Matrix-aware equivalent of {@code DrawableHelper.fill}, taking an ARGB colour. */
+    /** Matrix-aware equivalent of {@code Gui.fill}, taking an ARGB colour. */
     static void fill(MatrixStack matrices, float x1, float y1, float x2, float y2, int argb) {
         if (x1 > x2) {
             float t = x1;

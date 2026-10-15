@@ -10,16 +10,14 @@ import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.util.ResourceLocation;
 
 import java.awt.*;
 import java.io.InputStream;
@@ -28,16 +26,16 @@ import java.util.List;
 import java.util.*;
 
 public class PotionsHud extends ConfigurableModule {
-    private static final Map<StatusEffect, Float> effectAlphas = new HashMap<>();
-    private static final Map<StatusEffect, Integer> maxDurations = new HashMap<>();
+    private static final Map<Potion, Float> effectAlphas = new HashMap<>();
+    private static final Map<Potion, Integer> maxDurations = new HashMap<>();
     private static final Map<String, String> enUsTranslations = new HashMap<>();
 
     private static float currentWidth = 0f;
     private static float currentHeight = 0f;
 
     static {
-        ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
-        Identifier enUsId = new Identifier("lang/en_us.json");
+        IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+        ResourceLocation enUsId = new ResourceLocation("lang/en_us.json");
 
         try (InputStream input = resourceManager.getResource(enUsId).get().getInputStream()) {
             String json = new String(input.readAllBytes(), StandardCharsets.UTF_8);
@@ -53,7 +51,7 @@ public class PotionsHud extends ConfigurableModule {
     }
 
     public static void render(DrawContext context) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.thePlayer == null || mc.theWorld == null) return;
 
         float x = CONFIG.hudBetterPotionsHudX;
         float y = CONFIG.hudBetterPotionsHudY;
@@ -61,7 +59,7 @@ public class PotionsHud extends ConfigurableModule {
         float targetWidth = 0f;
         float targetHeight;
 
-        List<StatusEffectInstance> rawEffects = new ArrayList<>(mc.player.getStatusEffects());
+        List<PotionEffect> rawEffects = new ArrayList<>(mc.thePlayer.getStatusEffects());
         rawEffects.sort(Comparator.comparing(a -> {
             String key = a.getEffectType().value().getTranslationKey();
             return enUsTranslations.getOrDefault(key, key);
@@ -76,19 +74,19 @@ public class PotionsHud extends ConfigurableModule {
         }
 
         maxDurations.keySet().removeIf(effect -> {
-            RegistryEntry<StatusEffect> entry = Registries.STATUS_EFFECT.getEntry(effect);
-            return mc.player.getEffectInstance(entry) == null;
+            RegistryEntry<Potion> entry = Registries.STATUS_EFFECT.getEntry(effect);
+            return mc.thePlayer.getActivePotionEffect(entry) == null;
         });
 
         List<EffectElement> effects = new ArrayList<>();
-        for (StatusEffectInstance instance : rawEffects) {
-            StatusEffect effect = instance.getEffectType().value();
+        for (PotionEffect instance : rawEffects) {
+            Potion effect = instance.getEffectType().value();
             maxDurations.putIfAbsent(effect, instance.getDuration());
             effects.add(new EffectElement(instance));
         }
 
         for (EffectElement element : effects) {
-            StatusEffect effect = element.getEffect();
+            Potion effect = element.getEffect();
             float currentAlpha = effectAlphas.getOrDefault(effect, 0f);
             float newAlpha = fast(currentAlpha, 255f, 10f);
             effectAlphas.put(effect, newAlpha);
@@ -140,7 +138,7 @@ public class PotionsHud extends ConfigurableModule {
         }
     }
 
-    private static String getDuration(StatusEffectInstance statusEffect) {
+    private static String getDuration(PotionEffect statusEffect) {
         if (statusEffect.isInfinite()) return "**:**";
         int duration = statusEffect.getDuration();
         int minutes = duration / 1200;
@@ -168,11 +166,11 @@ public class PotionsHud extends ConfigurableModule {
     }
 
     private static class EffectElement {
-        private final StatusEffectInstance instance;
+        private final PotionEffect instance;
         private final String displayText;
         private final float textWidth;
 
-        public EffectElement(StatusEffectInstance instance) {
+        public EffectElement(PotionEffect instance) {
             this.instance = instance;
             int amplifier = instance.getAmplifier();
 
@@ -203,7 +201,7 @@ public class PotionsHud extends ConfigurableModule {
             FontRenderers.sf_bold_mini.drawString(matrices, "§7" + getDuration(instance), x + 20, y + 9, Palette.getTextColor());
 
             if (!instance.isInfinite()) {
-                StatusEffect effect = instance.getEffectType().value();
+                Potion effect = instance.getEffectType().value();
                 int maxDuration = maxDurations.getOrDefault(effect, instance.getDuration());
                 float progress = MathUtility.clamp(instance.getDuration() / (float) maxDuration, 0f, 1f);
 
@@ -226,7 +224,7 @@ public class PotionsHud extends ConfigurableModule {
             return 24 + 2 + textWidth;
         }
 
-        public StatusEffect getEffect() {
+        public Potion getEffect() {
             return instance.getEffectType().value();
         }
     }

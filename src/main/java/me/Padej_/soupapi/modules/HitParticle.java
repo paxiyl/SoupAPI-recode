@@ -14,19 +14,17 @@ import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import me.Padej_.soupapi.event.AttackEntityCallback;
-import net.minecraft.block.AirBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.block.BlockAir;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import me.Padej_.soupapi.compat.VertexConsumerProvider;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import me.Padej_.soupapi.compat.RotationAxis;
 
 import java.awt.*;
@@ -40,19 +38,19 @@ public class HitParticle extends ConfigurableModule {
     private static final HashMap<Integer, Float> healthMap = new HashMap<>();
     public static final CopyOnWriteArrayList<Particle> particles = new CopyOnWriteArrayList<>();
     private static VertexConsumerProvider vertexConsumerProvider;
-    private static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    private static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static final Random RANDOM = new Random();
-    public static LivingEntity damagedEntity;
+    public static EntityLivingBase damagedEntity;
 
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
-            if (!CONFIG.hitParticlesEnabled || playerEntity != mc.player) {
+            if (!CONFIG.hitParticlesEnabled || playerEntity != mc.thePlayer) {
                 return ActionResult.PASS;
             }
-            if (!(entity instanceof LivingEntity)) {
+            if (!(entity instanceof EntityLivingBase)) {
                 return ActionResult.PASS;
             }
-            LivingEntity target = (LivingEntity) entity;
+            EntityLivingBase target = (EntityLivingBase) entity;
             if (!target.isAlive()) {
                 return ActionResult.PASS;
             }
@@ -66,9 +64,9 @@ public class HitParticle extends ConfigurableModule {
             for (int i = 0; i < CONFIG.hitParticlesCount; i++) {
                 Color c = Palette.getRandomColor();
                 float critOffset = CONFIG.hitParticlesLikeCrit ? 0 : target.height / 2f;
-                float baseX = (float) target.x;
-                float baseY = (float) (target.y + critOffset);
-                float baseZ = (float) target.z;
+                float baseX = (float) target.posX;
+                float baseY = (float) (target.posY + critOffset);
+                float baseZ = (float) target.posZ;
 
                 if (CONFIG.hitParticlesLikeCrit) {
                     float offsetX = (RANDOM.nextFloat() - 0.5f) * target.width;
@@ -104,7 +102,7 @@ public class HitParticle extends ConfigurableModule {
     }
 
     public static void onTick() {
-        if (mc.player == null || !CONFIG.hitParticlesEnabled) return;
+        if (mc.thePlayer == null || !CONFIG.hitParticlesEnabled) return;
 
         particles.removeIf(Particle::update);
         updateAvailableTextures();
@@ -114,11 +112,11 @@ public class HitParticle extends ConfigurableModule {
         // Текстовые частицы
         if (!CONFIG.hitParticlesTextMode.equals(HitTextMode.DISABLED)) {
             if (CONFIG.hitParticlesTextMode == HitTextMode.ALL_ENTITIES) {
-                for (Entity entity : mc.world.entities) {
-                    if (!(entity instanceof LivingEntity)) continue;
-                    LivingEntity lent = (LivingEntity) entity;
-                    if (mc.player.squaredDistanceTo(entity) <= 256f && lent.isAlive()) {
-                        float health = lent.getHealth() + lent.getAbsorption();
+                for (Entity entity : mc.theWorld.loadedEntityList) {
+                    if (!(entity instanceof EntityLivingBase)) continue;
+                    EntityLivingBase lent = (EntityLivingBase) entity;
+                    if (mc.thePlayer.getDistanceSqToEntity(entity) <= 256f && lent.isAlive()) {
+                        float health = lent.getHealth() + lent.getAbsorptionAmount();
                         float lastHealth = healthMap.getOrDefault(entity.getId(), health);
                         healthMap.put(entity.getId(), health);
                         if (lastHealth == health) continue;
@@ -128,9 +126,9 @@ public class HitParticle extends ConfigurableModule {
 
                         Color color = Palette.getRandomColor();
                         particles.add(new Particle(
-                                (float) lent.x,
-                                MathUtility.random((float) (lent.y + lent.height), (float) lent.y),
-                                (float) lent.z,
+                                (float) lent.posX,
+                                MathUtility.random((float) (lent.posY + lent.height), (float) lent.posY),
+                                (float) lent.posZ,
                                 color,
                                 MathUtility.random(0, 180),
                                 MathUtility.random(10f, 60f),
@@ -138,13 +136,13 @@ public class HitParticle extends ConfigurableModule {
                                 true));
                     }
                 }
-            } else if (CONFIG.hitParticlesTextMode == HitTextMode.ONLY_SELF_DAMAGE && mc.player.hurtTime > 0 && CONFIG.hitParticlesSelf) {
+            } else if (CONFIG.hitParticlesTextMode == HitTextMode.ONLY_SELF_DAMAGE && mc.thePlayer.hurtTime > 0 && CONFIG.hitParticlesSelf) {
                 Color color = Palette.getRandomColor();
                 float delta = -1.0f;
                 particles.add(new Particle(
-                        (float) mc.player.x,
-                        MathUtility.random((float) (mc.player.y + mc.player.height), (float) mc.player.y),
-                        (float) mc.player.z,
+                        (float) mc.thePlayer.posX,
+                        MathUtility.random((float) (mc.thePlayer.posY + mc.thePlayer.height), (float) mc.thePlayer.posY),
+                        (float) mc.thePlayer.posZ,
                         color,
                         MathUtility.random(0, 180),
                         MathUtility.random(10f, 60f),
@@ -154,13 +152,13 @@ public class HitParticle extends ConfigurableModule {
         }
 
         // Частицы для игрока при получении урона
-        if (mc.player.hurtTime == 9 && CONFIG.hitParticlesSelf) {
+        if (mc.thePlayer.hurtTime == 9 && CONFIG.hitParticlesSelf) {
             for (int i = 0; i < CONFIG.hitParticlesCount; i++) {
                 Color c = Palette.getRandomColor();
                 particles.add(new Particle(
-                        (float) mc.player.x,
-                        MathUtility.random((float) (mc.player.y + mc.player.height), (float) mc.player.y),
-                        (float) mc.player.z,
+                        (float) mc.thePlayer.posX,
+                        MathUtility.random((float) (mc.thePlayer.posY + mc.thePlayer.height), (float) mc.thePlayer.posY),
+                        (float) mc.thePlayer.posZ,
                         c,
                         MathUtility.random(0, 180),
                         MathUtility.random(10f, 60f),
@@ -172,7 +170,7 @@ public class HitParticle extends ConfigurableModule {
 
     public static void render(WorldRenderContext context) {
         vertexConsumerProvider = context.consumers();
-        if (mc.player != null) {
+        if (mc.thePlayer != null) {
             for (Particle particle : particles) {
                 particle.render(context.matrixStack(), context.tickCounter().getTickDelta(true));
             }
@@ -213,7 +211,7 @@ public class HitParticle extends ConfigurableModule {
         float rotationAngle, rotationSpeed, health;
         long time;
         Color color;
-        Identifier glyphTexture;
+        ResourceLocation glyphTexture;
 
         public Particle(float x, float y, float z, Color color, float rotationAngle, float rotationSpeed, float health, boolean isText) {
             int speed = CONFIG.hitParticlesSpeed;
@@ -294,9 +292,9 @@ public class HitParticle extends ConfigurableModule {
             Color healColor = new Color(0x76cf41);
             Color damageColor = new Color(0xd42d2d);
 
-            double posX = Maths.lerp(tickDelta, px, x) - mc.getEntityRenderManager().cameraX;
-            double posY = Maths.lerp(tickDelta, py, y) - mc.getEntityRenderManager().cameraY;
-            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getEntityRenderManager().cameraZ;
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().cameraX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().cameraY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().cameraZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);
@@ -309,7 +307,7 @@ public class HitParticle extends ConfigurableModule {
             if (isText) {
                 matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
             } else {
-                matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / MinecraftClient.getInstance().getCurrentFps()) * rotationSpeed));
+                matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getMinecraft().getCurrentFps()) * rotationSpeed));
             }
 
             matrixStack.translate(-size / 2f, -size / 2f, -size / 2f);
@@ -324,7 +322,7 @@ public class HitParticle extends ConfigurableModule {
                         Math.max(1, (int) (alpha * 255))
                 ).getRGB();
 
-                MinecraftClient.getInstance().textRenderer.draw(
+                Minecraft.getMinecraft().fontRendererObj.draw(
                         Texts.literal(hpString),
                         0,
                         0,
@@ -332,7 +330,7 @@ public class HitParticle extends ConfigurableModule {
                         false,
                         matrixStack.peek().getPositionMatrix(),
                         vertexConsumerProvider,
-                        TextRenderer.TextLayerType.NORMAL,
+                        FontRenderer.TextLayerType.NORMAL,
                         0,
                         LightmapTextureManager.pack(15, 15)
                 );
@@ -346,8 +344,8 @@ public class HitParticle extends ConfigurableModule {
         }
 
         private boolean posBlock(double x, double y, double z) {
-            if (mc.player == null || mc.world == null) return false;
-            return (!(mc.world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof AirBlock));
+            if (mc.thePlayer == null || mc.theWorld == null) return false;
+            return (!(mc.theWorld.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BlockAir));
         }
     }
 

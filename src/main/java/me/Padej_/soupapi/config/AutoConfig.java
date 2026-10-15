@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.config;
 
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.GuiScreen;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.function.Function;
  * <p>Cloth also generated a settings screen by reflecting over the config class. That part is not
  * reproduced here: the mod already ships its own settings UI
  * ({@code me.Padej_.soupapi.gui.SoupSettingsScreen}), which is what
- * {@link #getConfigScreen(Class, Screen)} returns. Keeping the method means the ported call sites
+ * {@link #getConfigScreen(Class, GuiScreen)} returns. Keeping the method means the ported call sites
  * and the removed ModMenu entrypoint do not have to be restructured.
  */
 public final class AutoConfig {
@@ -23,7 +23,7 @@ public final class AutoConfig {
     private static final Map<Class<?>, ConfigHolder<?>> HOLDERS = new HashMap<Class<?>, ConfigHolder<?>>();
 
     /** Factory for the screen opened by {@link #getConfigScreen}; set by the client initialiser. */
-    private static Function<Screen, Screen> screenFactory;
+    private static Function<GuiScreen, GuiScreen> screenFactory;
 
     public static <T extends ConfigData> ConfigHolder<T> register(
             Class<T> type, Function<Class<T>, ConfigSerializer<T>> serializerFactory) {
@@ -41,19 +41,19 @@ public final class AutoConfig {
         return (ConfigHolder<T>) holder;
     }
 
-    public static void setScreenFactory(Function<Screen, Screen> factory) {
+    public static void setScreenFactory(Function<GuiScreen, GuiScreen> factory) {
         screenFactory = factory;
     }
 
     /**
      * Returns a supplier of the mod's settings screen. Mirrors Cloth's signature (which returned a
-     * {@code Supplier<Screen>}) so call sites keep their trailing {@code .get()}.
+     * {@code Supplier<GuiScreen>}) so call sites keep their trailing {@code .get()}.
      */
-    public static <T extends ConfigData> java.util.function.Supplier<Screen> getConfigScreen(
-            Class<T> type, final Screen parent) {
-        return new java.util.function.Supplier<Screen>() {
+    public static <T extends ConfigData> java.util.function.Supplier<GuiScreen> getConfigScreen(
+            Class<T> type, final GuiScreen parent) {
+        return new java.util.function.Supplier<GuiScreen>() {
             @Override
-            public Screen get() {
+            public GuiScreen get() {
                 return screenFactory != null ? screenFactory.apply(parent) : parent;
             }
         };

@@ -7,26 +7,19 @@ import me.Padej_.soupapi.render.Render3D_Shapes;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.event.WorldRenderContext;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.ClientPlayerEntity;
+import net.minecraft.init.Blocks;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.*;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 
@@ -42,13 +35,13 @@ public class Trajectories extends ConfigurableModule {
     }
 
     public static void render(WorldRenderContext context) {
-        if (mc.options.hudHidden) return;
-        if (mc.player == null || mc.world == null || !mc.options.perspective == 0 || !CONFIG.trajectoriesPreviewEnabled) return;
+        if (mc.gameSettings.hudHidden) return;
+        if (mc.thePlayer == null || mc.theWorld == null || !mc.gameSettings.perspective == 0 || !CONFIG.trajectoriesPreviewEnabled) return;
         Hand hand;
         float tickDelta = context.tickCounter().getTickDelta(true);
 
-        ItemStack mainHand = mc.player.getMainHandStack();
-        ItemStack offHand = mc.player.getOffHandStack();
+        ItemStack mainHand = mc.thePlayer.getHeldItem();
+        ItemStack offHand = mc.thePlayer.getOffHandStack();
 
         if (mainHand.getItem() instanceof BowItem || mainHand.getItem() instanceof CrossbowItem || isThrowable(mainHand.getItem())) {
             hand = Hand.MAIN_HAND;
@@ -56,11 +49,11 @@ public class Trajectories extends ConfigurableModule {
             hand = Hand.OFF_HAND;
         } else return;
 
-        boolean prev_bob = mc.options.getBobView().getValue();
-        mc.options.getBobView().setValue(false);
+        boolean prev_bob = mc.gameSettings.getBobView().getValue();
+        mc.gameSettings.getBobView().setValue(false);
 
         RegistryWrapper.Impl<Enchantment> enchantmentWrapper =
-                mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+                mc.theWorld.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
         RegistryEntry<Enchantment> multishotEntry =
                 enchantmentWrapper.getOptional(RegistryKey.of(RegistryKeys.ENCHANTMENT, Enchantments.MULTISHOT.getValue()))
@@ -69,13 +62,13 @@ public class Trajectories extends ConfigurableModule {
         if (multishotEntry != null && ((offHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(multishotEntry, offHand) > 0) ||
                         (mainHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(multishotEntry, mainHand) > 0))) {
 
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw - 10, tickDelta);
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw, tickDelta);
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw + 10, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.thePlayer.rotationYaw - 10, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.thePlayer.rotationYaw, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.thePlayer.rotationYaw + 10, tickDelta);
 
         } else
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw, tickDelta);
-        mc.options.getBobView().setValue(prev_bob);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.thePlayer.rotationYaw, tickDelta);
+        mc.gameSettings.getBobView().setValue(prev_bob);
     }
 
     private static boolean isThrowable(Item item) {
@@ -100,15 +93,15 @@ public class Trajectories extends ConfigurableModule {
     }
 
     private static void calcTrajectory(Item item, float yaw, float tickDelta) {
-        ClientPlayerEntity player = mc.player;
+        EntityPlayerSP player = mc.thePlayer;
         if (player == null) return;
-        double x = Render2D.interpolate(player.prevX, player.x, tickDelta);
-        double y = Render2D.interpolate(player.prevY, player.y, tickDelta);
-        double z = Render2D.interpolate(player.prevZ, player.z, tickDelta);
+        double x = Render2D.interpolate(player.prevPosX, player.posX, tickDelta);
+        double y = Render2D.interpolate(player.prevPosY, player.posY, tickDelta);
+        double z = Render2D.interpolate(player.prevPosZ, player.posZ, tickDelta);
 
         y = y + player.getEyeHeight(player.getPose()) - 0.1000000014901161;
 
-        if (item == player.getMainHandStack().getItem()) {
+        if (item == player.getHeldItem().getItem()) {
             x = x - MathHelper.cos(yaw / 180.0f * 3.1415927f) * 0.16f;
             z = z - MathHelper.sin(yaw / 180.0f * 3.1415927f) * 0.16f;
         } else {
@@ -117,9 +110,9 @@ public class Trajectories extends ConfigurableModule {
         }
 
         final float maxDist = getDistance(item);
-        double motionX = -MathHelper.sin(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.pitch / 180.0f * 3.1415927f) * maxDist;
-        double motionY = -MathHelper.sin((player.pitch - getThrowPitch(item)) / 180.0f * 3.141593f) * maxDist;
-        double motionZ = MathHelper.cos(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.pitch / 180.0f * 3.1415927f) * maxDist;
+        double motionX = -MathHelper.sin(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.rotationPitch / 180.0f * 3.1415927f) * maxDist;
+        double motionY = -MathHelper.sin((player.rotationPitch - getThrowPitch(item)) / 180.0f * 3.141593f) * maxDist;
+        double motionZ = MathHelper.cos(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.rotationPitch / 180.0f * 3.1415927f) * maxDist;
 
         float power = player.getItemUseTime() / 20.0f;
         power = (power * power + power * 2.0f) / 3.0f;
@@ -141,13 +134,13 @@ public class Trajectories extends ConfigurableModule {
         if (!player.onGround)
             motionY += player.getVelocity().getY();
 
-        Vec3d lastPos;
+        Vec3 lastPos;
         for (int i = 0; i < 300; i++) {
-            lastPos = new Vec3d(x, y, z);
+            lastPos = new Vec3(x, y, z);
             x += motionX;
             y += motionY;
             z += motionZ;
-            if (mc.world.getBlockState(new BlockPos((int) x, (int) y, (int) z)).getBlock() == Blocks.WATER) {
+            if (mc.theWorld.getBlockState(new BlockPos((int) x, (int) y, (int) z)).getBlock() == Blocks.WATER) {
                 motionX *= 0.8;
                 motionY *= 0.8;
                 motionZ *= 0.8;
@@ -158,20 +151,20 @@ public class Trajectories extends ConfigurableModule {
             }
 
             if (item instanceof BowItem) motionY -= 0.05000000074505806;
-            else if (player.getMainHandStack().getItem() instanceof CrossbowItem) motionY -= 0.05000000074505806;
+            else if (player.getHeldItem().getItem() instanceof CrossbowItem) motionY -= 0.05000000074505806;
             else motionY -= 0.03f;
 
 
-            Vec3d pos = new Vec3d(x, y, z);
+            Vec3 pos = new Vec3(x, y, z);
 
-            BlockHitResult bhr = mc.world.raycast(new RaycastContext(lastPos, pos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player));
+            MovingObjectPosition bhr = mc.theWorld.raycast(new RaycastContext(lastPos, pos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player));
             Color color = Render2D.injectAlpha(Palette.getColor(0.33f), 220).brighter();
             if (bhr != null && bhr.getType() == HitResult.Type.BLOCK) {
                 if (CONFIG.trajectoriesPreviewLandSideOutline) {
-                    Render3D_Shapes.OUTLINE_SIDE_QUEUE.add(new Render3D_Shapes.OutlineSideAction(new Box(bhr.getBlockPos()), color, 2f, bhr.getSide())); // Land Side Outline
+                    Render3D_Shapes.OUTLINE_SIDE_QUEUE.add(new Render3D_Shapes.OutlineSideAction(new AxisAlignedBB(bhr.getBlockPos()), color, 2f, bhr.getSide())); // Land Side Outline
                 }
                 if (CONFIG.trajectoriesPreviewLandSideFill) {
-                    Render3D_Shapes.FILLED_SIDE_QUEUE.add(new Render3D_Shapes.FillSideAction(new Box(bhr.getBlockPos()), color, bhr.getSide())); // Land Side Fill
+                    Render3D_Shapes.FILLED_SIDE_QUEUE.add(new Render3D_Shapes.FillSideAction(new AxisAlignedBB(bhr.getBlockPos()), color, bhr.getSide())); // Land Side Fill
                 }
                 break;
             }

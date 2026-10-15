@@ -2,12 +2,12 @@ package me.Padej_.soupapi.particle;
 
 import me.Padej_.soupapi.compat.BlendFactor;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 import java.awt.*;
 
@@ -21,9 +21,9 @@ public class Particle2D {
     public double hudOffsetX, hudOffsetY; // Смещение для слежения за HUD
     public double x, y, deltaX, deltaY, size, opacity;
     public Color color;
-    private Identifier texture;
+    private ResourceLocation texture;
 
-    private static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    private static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static final Random RANDOM = new Random();
 
     public static void updateAvailableTextures() {

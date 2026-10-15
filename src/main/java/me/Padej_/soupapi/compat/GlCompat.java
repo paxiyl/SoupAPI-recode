@@ -1,8 +1,8 @@
 package me.Padej_.soupapi.compat;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -35,7 +35,7 @@ public final class GlCompat {
         MATRIX_BUFFER.clear();
         matrix.writeTo(MATRIX_BUFFER);
         MATRIX_BUFFER.flip();
-        GlStateManager.multiMatrix(MATRIX_BUFFER);
+        GlStateManager.multMatrix(MATRIX_BUFFER);
     }
 
     /** Reads back a GL matrix (e.g. {@code GL_MODELVIEW_MATRIX}) into a {@link Mat4}. */
@@ -46,8 +46,8 @@ public final class GlCompat {
         return new Mat4().readFrom(MATRIX_BUFFER);
     }
 
-    public static void bindTexture(Identifier texture) {
-        MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
+    public static void bindTexture(ResourceLocation texture) {
+        Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
     }
 
     public static void lineWidth(float width) {
@@ -64,10 +64,8 @@ public final class GlCompat {
      * pixels GL expects. Mirrors what 1.21.4's {@code DrawContext.enableScissor} does for callers.
      */
     public static void enableScissor(int x1, int y1, int x2, int y2) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        net.minecraft.client.util.Window window = new net.minecraft.client.util.Window(mc);
-        int scale = window.getScaleFactor();
-        int fbHeight = window.getHeight();
+        int scale = Windows.scaleFactor();
+        int fbHeight = Windows.height();
 
         int left = x1 * scale;
         int width = (x2 - x1) * scale;

@@ -2,7 +2,7 @@ package me.Padej_.soupapi.event;
 
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.RenderTickCounter;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 /**
  * The mod's event bus, fired from its own mixins.
@@ -21,8 +21,8 @@ public final class SoupEvents {
     }
 
     /** Fired at the end of each client tick. */
-    public static final SoupEvent<MinecraftClient> END_CLIENT_TICK =
-            new SoupEvent<MinecraftClient>("END_CLIENT_TICK");
+    public static final SoupEvent<Minecraft> END_CLIENT_TICK =
+            new SoupEvent<Minecraft>("END_CLIENT_TICK");
 
     /** Fired after the world and entities are drawn, with the camera transform still applied. */
     public static final SoupEvent<WorldRenderContext> WORLD_RENDER_LAST =
@@ -35,7 +35,7 @@ public final class SoupEvents {
     private static final WorldRenderContext WORLD_CONTEXT = new WorldRenderContext();
     private static final HudRenderContext HUD_CONTEXT = new HudRenderContext();
 
-    public static void fireEndClientTick(MinecraftClient client) {
+    public static void fireEndClientTick(Minecraft client) {
         END_CLIENT_TICK.invoke(client);
     }
 
@@ -57,7 +57,7 @@ public final class SoupEvents {
         void begin(float tickDelta) {
             tickCounter.setTickDelta(tickDelta);
             // A fresh DrawContext per frame: it caches the window size, which changes on resize.
-            drawContext = new DrawContext(MinecraftClient.getInstance());
+            drawContext = new DrawContext(Minecraft.getMinecraft());
         }
 
         public DrawContext drawContext() {

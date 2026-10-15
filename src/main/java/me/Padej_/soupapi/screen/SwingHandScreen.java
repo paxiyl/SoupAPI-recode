@@ -5,7 +5,7 @@ import me.Padej_.soupapi.compat.SoupScreen;
 import me.Padej_.soupapi.compat.Texts;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.modules.SwingHand;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +17,8 @@ import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
  *
  * <p>Rewritten with self-contained sliders. The 1.21.4 version used
  * {@code SliderWidget}'s {@code applyValue}/{@code updateMessage} hooks and
- * {@code ButtonWidget.builder(...).dimensions(...).build()}, none of which exist in 1.8.9 — its
- * {@code SliderWidget} is hard-wired to a {@code GameOptions} entry and its {@code ButtonWidget}
+ * {@code GuiButton.builder(...).dimensions(...).build()}, none of which exist in 1.8.9 — its
+ * {@code SliderWidget} is hard-wired to a {@code GameOptions} entry and its {@code GuiButton}
  * is an id-plus-message object dispatched through {@code buttonClicked}. Drawing and hit-testing
  * the sliders directly is both shorter than adapting those and behaves the same under
  * PojavLauncher's touch input, which synthesises ordinary click and drag events.
@@ -35,7 +35,7 @@ public class SwingHandScreen extends SoupScreen {
     private int buttonX, buttonY, buttonWidth, buttonHeight;
 
     public SwingHandScreen() {
-        super(Texts.literal("Swing Hand Screen"));
+        super(Texts.literal("Swing Hand GuiScreen"));
     }
 
     @Override
@@ -137,10 +137,10 @@ public class SwingHandScreen extends SoupScreen {
 
         if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth
                 && mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            if (mc.player != null) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.thePlayer != null) {
                 // 1.8.9 has only one hand, so swingHand() takes no argument.
-                mc.player.swingHand();
+                mc.thePlayer.swingItem();
             }
             return true;
         }

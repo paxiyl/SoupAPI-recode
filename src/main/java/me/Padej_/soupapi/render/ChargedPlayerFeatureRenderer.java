@@ -1,9 +1,9 @@
 package me.Padej_.soupapi.render;
 
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * Applies the energy-swirl overlay to players.
@@ -14,18 +14,18 @@ import net.minecraft.util.Identifier;
  * missing-texture placeholder. This was equally true on 1.21.4.
  */
 public class ChargedPlayerFeatureRenderer
-        extends CustomEnergySwirlOverlayFeatureRenderer<AbstractClientPlayerEntity> {
+        extends CustomEnergySwirlOverlayFeatureRenderer<AbstractClientPlayer> {
 
-    private static final Identifier SKIN = new Identifier("soupapi", "textures/i.png");
+    private static final ResourceLocation SKIN = new ResourceLocation("soupapi", "textures/i.png");
 
-    private final PlayerEntityModel model;
+    private final ModelPlayer model;
 
-    public ChargedPlayerFeatureRenderer(PlayerEntityModel model) {
+    public ChargedPlayerFeatureRenderer(ModelPlayer model) {
         this.model = model;
     }
 
     @Override
-    protected boolean shouldRender(AbstractClientPlayerEntity entity) {
+    protected boolean shouldRender(AbstractClientPlayer entity) {
         return true;
     }
 
@@ -35,12 +35,12 @@ public class ChargedPlayerFeatureRenderer
     }
 
     @Override
-    protected Identifier getEnergySwirlTexture() {
+    protected ResourceLocation getEnergySwirlTexture() {
         return SKIN;
     }
 
     @Override
-    protected EntityModel getEnergySwirlModel() {
+    protected ModelBase getEnergySwirlModel() {
         return model;
     }
 }

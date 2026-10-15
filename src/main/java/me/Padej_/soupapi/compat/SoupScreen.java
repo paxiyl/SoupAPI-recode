@@ -1,11 +1,11 @@
 package me.Padej_.soupapi.compat;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
 /**
- * Adapter from 1.8.9's {@link Screen} contract to the 1.21.4-style one the mod's screens are
+ * Adapter from 1.8.9's {@link GuiScreen} contract to the 1.21.4-style one the mod's screens are
  * written against.
  *
  * <p>The two are quite different. 1.8.9 has:
@@ -24,13 +24,13 @@ import org.lwjgl.input.Mouse;
  * <p>Escape handling is done here too: 1.8.9 screens close themselves on key code 1 rather than
  * having a {@code shouldCloseOnEsc()} hook, so that hook is reproduced.
  */
-public abstract class SoupScreen extends Screen {
+public abstract class SoupScreen extends GuiScreen {
 
     /** LWJGL 2 reports one wheel notch as ±120. */
     private static final double WHEEL_NOTCH = 120.0;
 
     /**
-     * 1.8.9's {@link Screen} has no title, so the port keeps one here. Screens pass theirs to
+     * 1.8.9's {@link GuiScreen} has no title, so the port keeps one here. Screens pass theirs to
      * {@code super(...)} exactly as they did on 1.21.4.
      */
     private final net.minecraft.text.Text title;
@@ -82,7 +82,7 @@ public abstract class SoupScreen extends Screen {
     }
 
     public void close() {
-        MinecraftClient.getInstance().setScreen(null);
+        Minecraft.getMinecraft().displayGuiScreen(null);
     }
 
     /** 1.21.4 name; 1.8.9 spells it {@code shouldPauseGame}. */
@@ -95,7 +95,7 @@ public abstract class SoupScreen extends Screen {
     @Override
     public void render(int mouseX, int mouseY, float delta) {
         super.render(mouseX, mouseY, delta);
-        render(new DrawContext(MinecraftClient.getInstance()), mouseX, mouseY, delta);
+        render(new DrawContext(Minecraft.getMinecraft()), mouseX, mouseY, delta);
     }
 
     @Override

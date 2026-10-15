@@ -6,12 +6,12 @@ import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.CursorUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.SoupScreen;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
 
 import java.awt.*;
 import java.util.List;
@@ -310,8 +310,8 @@ public class ConfigHudPositionsScreen extends SoupScreen {
             context.fill(x, y, x + width, y + height, color);
             context.drawBorder(x, y, width, height, color);
 
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-            int textHeight = textRenderer.fontHeight;
+            FontRenderer textRenderer = Minecraft.getMinecraft().fontRendererObj;
+            int textHeight = textRenderer.FONT_HEIGHT;
 
             int textY = y - textHeight - 2;
 

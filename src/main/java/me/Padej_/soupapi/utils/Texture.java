@@ -1,32 +1,32 @@
 package me.Padej_.soupapi.utils;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 public class Texture {
-    final Identifier id;
+    final ResourceLocation id;
 
     public Texture(String path) {
-        id = new Identifier("maillib", validatePath(path));
+        id = new ResourceLocation("maillib", validatePath(path));
     }
 
-    public Texture(Identifier i) {
-        id = new Identifier(i.getNamespace(), i.getPath());
+    public Texture(ResourceLocation i) {
+        id = new ResourceLocation(i.getResourceDomain(), i.getResourcePath());
     }
 
     String validatePath(String path) {
-        if (Identifier.isPathValid(path)) {
+        if (ResourceLocation.isPathValid(path)) {
             return path;
         }
         StringBuilder ret = new StringBuilder();
         for (char c : path.toLowerCase().toCharArray()) {
-            if (Identifier.isPathCharacterValid(c)) {
+            if (ResourceLocation.isPathCharacterValid(c)) {
                 ret.append(c);
             }
         }
         return ret.toString();
     }
 
-    public Identifier getId() {
+    public ResourceLocation getId() {
         return id;
     }
 }

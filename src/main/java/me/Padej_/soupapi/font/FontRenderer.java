@@ -6,7 +6,7 @@ import me.Padej_.soupapi.compat.Windows;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import me.Padej_.soupapi.compat.BufferBuilder;
 import me.Padej_.soupapi.compat.BufferRenderer;
 import me.Padej_.soupapi.compat.Tessellator;
@@ -18,7 +18,7 @@ import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FontRenderer extends ConfigurableModule implements Closeable {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
     /** Legacy section-sign colour codes, keyed by the upper-case code character. */
     private static final Map<Character, Integer> colorCodes = new HashMap<Character, Integer>();
 
@@ -58,7 +58,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     private static final ExecutorService ASYNC_WORKER = Executors.newCachedThreadPool();
-    private final Map<Identifier, List<DrawEntry>> GLYPH_PAGE_CACHE = new LinkedHashMap<Identifier, List<DrawEntry>>();
+    private final Map<ResourceLocation, List<DrawEntry>> GLYPH_PAGE_CACHE = new LinkedHashMap<ResourceLocation, List<DrawEntry>>();
     private final float originalSize;
     private final List<GlyphMap> maps = new ArrayList<GlyphMap>();
     private final Map<Character, Glyph> allGlyphs = new HashMap<Character, Glyph>();
@@ -72,7 +72,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     private boolean initialized;
 
     /**
-     * When true, drawing and measuring are delegated to vanilla's {@code TextRenderer} instead of
+     * When true, drawing and measuring are delegated to vanilla's {@code FontRenderer} instead of
      * an AWT-rasterised atlas.
      *
      * <p>1.8.9 needs {@code BufferedImage} and {@code ImageIO} to boot at all, so those are always
@@ -284,7 +284,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                 Glyph glyph = locateGlyph1(c);
                 if (glyph != null) {
                     if (glyph.value() != ' ') {
-                        Identifier i1 = glyph.owner().bindToTexture;
+                        ResourceLocation i1 = glyph.owner().bindToTexture;
                         DrawEntry entry = new DrawEntry(xOffset, yOffset, r2, g2, b2, glyph);
                         List<DrawEntry> page = GLYPH_PAGE_CACHE.get(i1);
                         if (page == null) {
@@ -296,7 +296,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                     xOffset += glyph.width();
                 }
             }
-            for (Identifier identifier : GLYPH_PAGE_CACHE.keySet()) {
+            for (ResourceLocation identifier : GLYPH_PAGE_CACHE.keySet()) {
                 RenderSystem.setShaderTexture(0, identifier);
                 List<DrawEntry> objects = GLYPH_PAGE_CACHE.get(identifier);
 
@@ -352,7 +352,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
             float scale = fallbackScale();
             float widest = 0f;
             for (String line : stripControlCodes(text).split("\n", -1)) {
-                widest = Math.max(widest, mc.textRenderer.getStringWidth(line) * scale);
+                widest = Math.max(widest, mc.fontRendererObj.getStringWidth(line) * scale);
             }
             return widest;
         }
@@ -374,7 +374,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     public float getStringHeight(String text) {
         if (useVanillaFallback) {
             int lines = Math.max(1, stripControlCodes(text).split("\n", -1).length);
-            return mc.textRenderer.fontHeight * fallbackScale() * lines;
+            return mc.fontRendererObj.FONT_HEIGHT * fallbackScale() * lines;
         }
         char[] c = stripControlCodes(text).toCharArray();
         if (c.length == 0) {
@@ -403,7 +403,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
 
 
     /**
-     * Draws through vanilla's {@code TextRenderer}, scaled to match this renderer's size.
+     * Draws through vanilla's {@code FontRenderer}, scaled to match this renderer's size.
      *
      * <p>Colour-code handling differs slightly: vanilla parses the section-sign codes itself, so
      * the string is passed through intact rather than being split into per-run colours. Gradient
@@ -430,7 +430,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         try {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            mc.textRenderer.draw(s, 0, 0, argb, false);
+            mc.fontRendererObj.draw(s, 0, 0, argb, false);
         } finally {
             stack.undoGl();
             stack.pop();
@@ -459,8 +459,8 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     @Contract(value = "-> new", pure = true)
-    public static @NotNull Identifier randomIdentifier() {
-        return new Identifier("soupapi", "temp/" + randomString());
+    public static @NotNull ResourceLocation randomIdentifier() {
+        return new ResourceLocation("soupapi", "temp/" + randomString());
     }
 
     private static String randomString() {

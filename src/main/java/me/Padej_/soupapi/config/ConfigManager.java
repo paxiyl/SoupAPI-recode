@@ -9,7 +9,7 @@ import me.Padej_.soupapi.settings.impl.BooleanSetting;
 import me.Padej_.soupapi.settings.impl.EnumSetting;
 import me.Padej_.soupapi.settings.impl.MinMaxSliderSetting;
 import me.Padej_.soupapi.settings.impl.SliderSetting;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ConfigManager {
-    private static final Path CONFIG_PATH = Paths.get(MinecraftClient.getInstance().runDirectory.getPath(), "config", "soupapi_config.json");
+    private static final Path CONFIG_PATH = Paths.get(Minecraft.getMinecraft().runDirectory.getResourcePath(), "config", "soupapi_config.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private static Map<String, Map<String, Object>> config = new HashMap<>();
@@ -34,7 +34,7 @@ public class ConfigManager {
         // Собираем настройки модулей
         Map<String, Map<String, Object>> modulesConfig = new HashMap<>();
         for (SoupModule module : SoupSettingsScreen.getAllModules()) {
-            modulesConfig.put(module.getDisplayName().asUnformattedString(), getStringObjectMap(module));
+            modulesConfig.put(module.getDisplayName().getUnformattedText(), getStringObjectMap(module));
         }
 
         fullData.put("modules", modulesConfig);

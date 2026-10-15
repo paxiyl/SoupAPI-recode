@@ -1,33 +1,33 @@
 package me.Padej_.soupapi.particle.ambient;
 
 import me.Padej_.soupapi.modules.AmbientParticle;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
 public class Trail {
-    private static MinecraftClient mc = MinecraftClient.getInstance();
-    private final Vec3d from;
-    private final Vec3d to;
+    private static Minecraft mc = Minecraft.getMinecraft();
+    private final Vec3 from;
+    private final Vec3 to;
     private final Color color;
     private int ticks, prevTicks;
 
-    public Trail(Vec3d from, Vec3d to, Color color) {
+    public Trail(Vec3 from, Vec3 to, Color color) {
         this.from = from;
         this.to = to;
         this.ticks = AmbientParticle.trailLenght.getValue().intValue();
         this.color = color;
     }
 
-    public Vec3d interpolate(float pt) {
-        Vec3d cameraPos = new net.minecraft.util.math.Vec3d(mc.getEntityRenderManager().cameraX, mc.getEntityRenderManager().cameraY, mc.getEntityRenderManager().cameraZ);
-        double x = from.x + ((to.x - from.x) * pt) - cameraPos.x;
-        double y = from.y + ((to.y - from.y) * pt) - cameraPos.y;
-        double z = from.z + ((to.z - from.z) * pt) - cameraPos.z;
-        return new Vec3d(x, y, z);
+    public Vec3 interpolate(float pt) {
+        Vec3 cameraPos = new net.minecraft.util.math.Vec3d(mc.getRenderManager().cameraX, mc.getRenderManager().cameraY, mc.getRenderManager().cameraZ);
+        double x = from.xCoord + ((to.xCoord - from.xCoord) * pt) - cameraPos.x;
+        double y = from.yCoord + ((to.yCoord - from.yCoord) * pt) - cameraPos.y;
+        double z = from.zCoord + ((to.zCoord - from.zCoord) * pt) - cameraPos.z;
+        return new Vec3(x, y, z);
     }
 
     public double animation(float pt) {

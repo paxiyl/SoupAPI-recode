@@ -1,12 +1,12 @@
 package me.Padej_.soupapi.compat;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 /**
  * The frame's camera, as a process-wide singleton.
  *
- * <p>1.21.4 reached the camera through {@code mc.gameRenderer.getCamera()}. 1.8.9's
- * {@code GameRenderer} has no such accessor — its camera is a static utility holding only the
+ * <p>1.21.4 reached the camera through {@code mc.entityRenderer.getCamera()}. 1.8.9's
+ * {@code EntityRenderer} has no such accessor — its camera is a static utility holding only the
  * interpolated eye position — so the port keeps one {@link Camera} that the world-render hook
  * refreshes at the start of every frame and that the ~58 call sites read from here.
  *
@@ -30,8 +30,8 @@ public final class Cameras {
 
     public static Camera get() {
         if (!updatedThisSession) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            CAMERA.update(mc.getCameraEntity() != null ? mc.getCameraEntity() : mc.player, 0f);
+            Minecraft mc = Minecraft.getMinecraft();
+            CAMERA.update(mc.getRenderViewEntity() != null ? mc.getRenderViewEntity() : mc.thePlayer, 0f);
         }
         return CAMERA;
     }
