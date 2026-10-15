@@ -1,11 +1,15 @@
 package me.Padej_.soupapi.mixin.event;
 
+import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.Cameras;
+import me.Padej_.soupapi.compat.MatrixStack;
+import me.Padej_.soupapi.compat.RenderSystem;
+import me.Padej_.soupapi.compat.RotationAxis;
 import me.Padej_.soupapi.event.SoupEvents;
+import me.Padej_.soupapi.modules.TargetHud;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -24,9 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameRenderer.class)
 public class WorldRenderHookMixin {
 
-    @Shadow
-    private MinecraftClient client;
-
     @Inject(method = "renderWorld(IFJ)V", at = @At("TAIL"))
     private void soupapi$worldRenderLast(int pass, float tickDelta, long limitTime, CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -35,6 +36,26 @@ public class WorldRenderHookMixin {
         net.minecraft.entity.Entity cameraEntity =
                 mc.getCameraEntity() != null ? mc.getCameraEntity() : mc.player;
         Cameras.update(cameraEntity, tickDelta);
+        captureWorldSpaceMatrices();
         SoupEvents.fireWorldRenderLast(cameraEntity, tickDelta);
+    }
+
+    /**
+     * Records the projection, model-view and camera-space matrices the target HUD needs to project
+     * world positions onto the screen.
+     *
+     * <p>In 1.21.4 this lived in its own {@code GameRenderer} hook keyed off a field access inside
+     * {@code renderWorld}. Doing it here instead means it is captured at a point already known to
+     * be correct, and the GL matrices read back are the ones actually in effect for this frame.
+     */
+    private static void captureWorldSpaceMatrices() {
+        Camera camera = Cameras.get();
+        MatrixStack matrixStack = new MatrixStack();
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
+
+        TargetHud.lastProjMat.set(RenderSystem.getProjectionMatrix());
+        TargetHud.lastModMat.set(RenderSystem.getModelViewMatrix());
+        TargetHud.lastWorldSpaceMatrix.set(matrixStack.peek().getPositionMatrix());
     }
 }

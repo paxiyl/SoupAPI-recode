@@ -1,20 +1,14 @@
 package me.Padej_.soupapi.mixin.modifyReturnValue;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.mojang.authlib.GameProfile;
+import me.Padej_.soupapi.compat.SoupLog;
 import me.Padej_.soupapi.modules.Capes;
 import me.Padej_.soupapi.utils.EntityUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.SkinTextures;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,115 +16,141 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Replaces a player's cape texture with the one chosen in the mod (or a custom URL).
+ *
+ * <p>Much simpler on 1.8.9. 1.21.4 returned a whole {@code SkinTextures} record from
+ * {@code getSkinTextures}, so the mod had to rebuild the record with one field swapped. 1.8.9 asks
+ * for the cape on its own, through {@code getCapeId()}, so only that return value is modified.
+ * {@code canRenderCapeTexture()} is also forced true, since 1.8.9 gates cape rendering on it and
+ * it is false for players whose account has no cape.
+ *
+ * <p>The custom-cape loader no longer round-trips the image through PNG bytes and a
+ * {@code NativeImage}: 1.8.9's {@link NativeImageBackedTexture} takes the decoded
+ * {@link BufferedImage} directly. The upload is still deferred to the client thread, because the
+ * download runs on a worker and GL calls must not.
+ */
 @Mixin(value = AbstractClientPlayerEntity.class, priority = 20000)
-public abstract class CapeTextureChanger extends PlayerEntity {
+public abstract class CapeTextureChanger {
 
     @Shadow
-    private @Nullable PlayerListEntry playerListEntry;
+    protected abstract PlayerListEntry getPlayerListEntry();
+
     @Unique
-    private static final Map<String, Boolean> loadedCapes = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> soupapi$loadedCapes =
+            new ConcurrentHashMap<String, Boolean>();
 
-    public CapeTextureChanger(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-        super(world, pos, yaw, gameProfile);
-    }
+    /** Textures that finished downloading and still need uploading on the client thread. */
+    @Unique
+    private static final Map<String, BufferedImage> soupapi$pendingUploads =
+            new ConcurrentHashMap<String, BufferedImage>();
 
-    @ModifyReturnValue(method = "getSkinTextures", at = @At("TAIL"))
-    protected SkinTextures useCapeIfPresent(SkinTextures original) {
-        Identifier cape = getDirCape();
-        String currentUsername = MinecraftClient.getInstance().getSession().getUsername();
-        String playerName = playerListEntry != null ? playerListEntry.getProfile().getName() : null;
-
-        // Если капа нет, возвращаем оригинальные текстуры
+    @ModifyReturnValue(method = "getCapeId", at = @At("RETURN"))
+    private Identifier soupapi$useCapeIfPresent(Identifier original) {
+        Identifier cape = soupapi$getDirCape();
         if (cape == null) {
             return original;
         }
 
-        // Проверка, является ли игрок другом
-        if (playerName != null && EntityUtils.isFriend(playerName)) {
-            return new SkinTextures(
-                    original.texture(),
-                    null,
-                    cape, // Используем плащ для друзей
-                    original.elytraTexture(),
-                    original.model(),
-                    true
-            );
+        PlayerListEntry entry = getPlayerListEntry();
+        String playerName = entry != null && entry.getProfile() != null
+                ? entry.getProfile().getName() : null;
+        if (playerName == null) {
+            return original;
         }
 
-        // Используем плащ для текущего игрока
-        return new SkinTextures(
-                original.texture(),
-                null,
-                playerName != null && playerName.equals(currentUsername) ? cape : original.capeTexture(),
-                original.elytraTexture(),
-                original.model(),
-                true
-        );
+        // Friends get the chosen cape, and so does the local player.
+        if (EntityUtils.isFriend(playerName)) {
+            return cape;
+        }
+        String currentUsername = MinecraftClient.getInstance().getSession().getUsername();
+        return playerName.equals(currentUsername) ? cape : original;
+    }
+
+    /**
+     * 1.8.9 only draws a cape when this returns true, and it is false for accounts without one.
+     * A mod-supplied cape has to override that.
+     */
+    @ModifyReturnValue(method = "canRenderCapeTexture", at = @At("RETURN"))
+    private boolean soupapi$allowCustomCape(boolean original) {
+        return original || soupapi$getDirCape() != null;
     }
 
     @Unique
-    private static Identifier getDirCape() {
+    private static Identifier soupapi$getDirCape() {
         MinecraftClient client = MinecraftClient.getInstance();
 
         String linkValue = Capes.link.getValue();
         if (Capes.useCustom.getValue() && linkValue != null && !linkValue.isEmpty()) {
-            String idString = "custom_cape_" + linkValue.hashCode();
-            Identifier textureId = new Identifier("soupapi", idString);
+            Identifier textureId = new Identifier("soupapi", "custom_cape_" + linkValue.hashCode());
 
-            // Не возвращаем, если кап не загружен
-            if (!Boolean.TRUE.equals(loadedCapes.get(linkValue))) {
-                if (!loadedCapes.containsKey(linkValue)) {
-                    // Асинхронная загрузка, только один раз
-                    loadedCapes.put(linkValue, false); // ставим флаг, что начали загрузку
-
-                    new Thread(() -> {
-                        try {
-                            BufferedImage image = ImageIO.read(new URL(linkValue));
-                            if (image == null) {
-                                System.err.println("ImageIO.read вернул null для URL: " + linkValue);
-                                return;
-                            }
-
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ImageIO.write(image, "PNG", baos);
-                            byte[] data = baos.toByteArray();
-
-                            NativeImage nativeImage = NativeImage.read(new ByteArrayInputStream(data));
-
-                            NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
-
-                            client.execute(() -> {
-                                client.getTextureManager().registerTexture(textureId, texture);
-                                loadedCapes.put(linkValue, true); // загружено
-                                System.out.println("Плащ загружен: " + textureId);
-                            });
-
-                        } catch (Exception e) {
-                            System.err.println("Ошибка при загрузке кастомного плаща:");
-                            e.printStackTrace();
-                        }
-                    }, "CapeLoader").start();
+            // Finish any download that completed since the last frame; GL uploads must happen on
+            // the client thread, and this method is only ever called from rendering.
+            BufferedImage pending = soupapi$pendingUploads.remove(linkValue);
+            if (pending != null) {
+                try {
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(pending);
+                    texture.upload();
+                    client.getTextureManager().loadTexture(textureId, texture);
+                    soupapi$loadedCapes.put(linkValue, Boolean.TRUE);
+                } catch (Throwable t) {
+                    SoupLog.error("Could not upload the custom cape texture", t);
                 }
-
-                return null; // пока не загружено — не использовать
             }
 
-            return textureId; // всё загружено
+            if (!Boolean.TRUE.equals(soupapi$loadedCapes.get(linkValue))) {
+                if (!soupapi$loadedCapes.containsKey(linkValue)) {
+                    soupapi$loadedCapes.put(linkValue, Boolean.FALSE);
+                    soupapi$startCapeDownload(linkValue);
+                }
+                // Not ready yet; keep the original cape this frame.
+                return null;
+            }
+            return textureId;
         }
 
         Identifier cape = Capes.cape.getValue().getTexturePath();
-        if (Capes.enabled.getValue() && client.getResourceManager().getResource(cape).isPresent()) {
+        if (Capes.enabled.getValue() && soupapi$resourceExists(cape)) {
             return cape;
         }
-
         return null;
     }
 
+    @Unique
+    private static void soupapi$startCapeDownload(final String linkValue) {
+        Thread worker = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BufferedImage image = ImageIO.read(new URL(linkValue));
+                    if (image == null) {
+                        SoupLog.warn("Custom cape URL decoded to no image: " + linkValue);
+                        return;
+                    }
+                    soupapi$pendingUploads.put(linkValue, image);
+                } catch (Throwable t) {
+                    SoupLog.error("Could not download the custom cape", t);
+                }
+            }
+        }, "SoupAPI-CapeLoader");
+        worker.setDaemon(true);
+        worker.start();
+    }
 
+    /**
+     * 1.8.9's resource manager throws rather than returning an {@code Optional} when a resource is
+     * missing, so presence is probed with a try/catch.
+     */
+    @Unique
+    private static boolean soupapi$resourceExists(Identifier id) {
+        try {
+            return MinecraftClient.getInstance().getResourceManager().getResource(id) != null;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 }

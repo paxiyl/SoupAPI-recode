@@ -6,6 +6,7 @@
   "mixins": [
     "FallDistanceFix",
     "inject.RegisterEntityTrails",
+    "inject.WorldTimeMixin",
     "redirect.PlayerEntityMixin"
   ],
   "client": [
@@ -13,7 +14,6 @@
     "event.HudRenderHookMixin",
     "event.MinecraftClientMixin",
     "event.WorldRenderHookMixin",
-    "inject.ClientWorldPropertiesMixin",
     "inject.ClientWorldWeather",
     "inject.GameRendererFogMixin",
     "inject.GameRendererMixin",
