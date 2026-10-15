@@ -1,42 +1,88 @@
 package me.Padej_.soupapi.render;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.render.OverlayTexture;
-import me.Padej_.soupapi.compat.RenderLayer;
-import me.Padej_.soupapi.compat.VertexConsumer;
-import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
+import org.lwjgl.opengl.GL11;
 
+/**
+ * Re-renders an entity's model with a scrolling, additively blended overlay texture — the
+ * "charged creeper" look, applied to arbitrary entities.
+ *
+ * <p>Fully rewritten for 1.8.9. The 1.21.4 version obtained a {@code VertexConsumer} for a render
+ * layer carrying an {@code OffsetTexturing} phase and submitted the model into it. 1.8.9 draws
+ * immediately and animates such overlays by translating the <i>texture matrix</i>, so this follows
+ * vanilla 1.8.9's own charged-creeper feature renderer: bind the overlay texture, scroll the
+ * texture matrix, switch to additive blending with lighting off, draw the model again, then restore
+ * every piece of state it touched.
+ *
+ * <p>Restoring state matters more here than it did in 1.21.4: the fixed-function pipeline is
+ * global, so a leaked texture matrix or blend func would corrupt everything drawn afterwards in the
+ * frame.
+ */
 @Environment(EnvType.CLIENT)
-public abstract class CustomEnergySwirlOverlayFeatureRenderer<S extends EntityRenderState, M extends EntityModel<S>> extends FeatureRenderer<S, M> {
-    public CustomEnergySwirlOverlayFeatureRenderer(FeatureRendererContext<S, M> featureRendererContext) {
-        super(featureRendererContext);
-    }
+public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends LivingEntity>
+        implements FeatureRenderer<E> {
 
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, S state, float limbAngle, float limbDistance) {
-        if (this.shouldRender(state)) {
-            float f = state.age;
-            M entityModel = this.getEnergySwirlModel();
-            VertexConsumer vertexConsumer = vertexConsumers.getBuffer(CustomRenderLayers.getCustomEnergySwirl(this.getEnergySwirlTexture(),
-                    this.getEnergySwirlX(f) % 1.0F,
-                    f * 0.01F % 1.0F));
-            entityModel.setAngles(state);
-            entityModel.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 0xFF00FF00);
+    @Override
+    public void render(E entity, float limbAngle, float limbDistance, float tickDelta,
+                       float age, float headYaw, float headPitch, float scale) {
+        if (!shouldRender(entity)) return;
+
+        EntityModel model = getEnergySwirlModel();
+        if (model == null) return;
+
+        boolean invisible = entity.isInvisible();
+        GlStateManager.depthMask(!invisible);
+
+        MinecraftClient.getInstance().getTextureManager().bindTexture(getEnergySwirlTexture());
+
+        GlStateManager.matrixMode(GL11.GL_TEXTURE);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        float offset = getEnergySwirlX(age) % 1.0f;
+        GlStateManager.translate(offset, offset, 0f);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+
+        GlStateManager.enableBlend();
+        // Additive, matching the 1.21.4 layer's ADDITIVE_TRANSPARENCY.
+        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
+        GlStateManager.disableLighting();
+        GlStateManager.color(0.5f, 0.5f, 0.5f, 1.0f);
+
+        try {
+            model.render(entity, limbAngle, limbDistance, age, headYaw, headPitch, scale);
+        } finally {
+            // Restore: the fixed-function pipeline is global state.
+            GlStateManager.matrixMode(GL11.GL_TEXTURE);
+            GlStateManager.popMatrix();
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+
+            GlStateManager.enableLighting();
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            RenderSystem.defaultBlendFunc();
+            GlStateManager.disableBlend();
+            GlStateManager.depthMask(true);
         }
     }
 
-    protected abstract boolean shouldRender(S state);
+    @Override
+    public boolean combineTextures() {
+        return false;
+    }
 
+    protected abstract boolean shouldRender(E entity);
+
+    /** Texture-coordinate scroll for the given entity age, in texture units per tick. */
     protected abstract float getEnergySwirlX(float partialAge);
 
     protected abstract Identifier getEnergySwirlTexture();
 
-    protected abstract M getEnergySwirlModel();
+    protected abstract EntityModel getEnergySwirlModel();
 }

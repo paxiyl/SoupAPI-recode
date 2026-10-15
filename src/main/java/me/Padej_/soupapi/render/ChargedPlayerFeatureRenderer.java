@@ -1,21 +1,31 @@
 package me.Padej_.soupapi.render;
 
-import net.minecraft.client.render.entity.feature.FeatureRendererContext;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.util.Identifier;
 
-public class ChargedPlayerFeatureRenderer extends CustomEnergySwirlOverlayFeatureRenderer<PlayerEntityRenderState, PlayerEntityModel> {
+/**
+ * Applies the energy-swirl overlay to players.
+ *
+ * <p>Note: {@code soupapi:textures/i.png} is referenced here but is not present in this
+ * repository — it is one of 39 textures the code refers to that were never committed upstream. The
+ * renderer is ported faithfully, but until that file is added the overlay will sample the
+ * missing-texture placeholder. This was equally true on 1.21.4.
+ */
+public class ChargedPlayerFeatureRenderer
+        extends CustomEnergySwirlOverlayFeatureRenderer<AbstractClientPlayerEntity> {
+
     private static final Identifier SKIN = new Identifier("soupapi", "textures/i.png");
+
     private final PlayerEntityModel model;
 
-    public ChargedPlayerFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState, PlayerEntityModel> context, PlayerEntityModel model) {
-        super(context);
+    public ChargedPlayerFeatureRenderer(PlayerEntityModel model) {
         this.model = model;
     }
 
     @Override
-    protected boolean shouldRender(PlayerEntityRenderState state) {
+    protected boolean shouldRender(AbstractClientPlayerEntity entity) {
         return true;
     }
 
@@ -30,9 +40,7 @@ public class ChargedPlayerFeatureRenderer extends CustomEnergySwirlOverlayFeatur
     }
 
     @Override
-    protected PlayerEntityModel getEnergySwirlModel() {
+    protected EntityModel getEnergySwirlModel() {
         return model;
     }
 }
-
-

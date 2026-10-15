@@ -1,6 +1,8 @@
 package me.Padej_.soupapi.compat;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.util.Identifier;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Replacement for {@code net.minecraft.client.render.RenderLayer}.
@@ -31,6 +33,9 @@ public final class RenderLayer {
     private final boolean culling;
     private final boolean depthTest;
     private final boolean lightmap;
+    private final boolean hasTextureOffset;
+    private final float textureOffsetX;
+    private final float textureOffsetY;
 
     private RenderLayer(Builder b) {
         this.name = b.name;
@@ -41,6 +46,9 @@ public final class RenderLayer {
         this.culling = b.culling;
         this.depthTest = b.depthTest;
         this.lightmap = b.lightmap;
+        this.hasTextureOffset = b.hasTextureOffset;
+        this.textureOffsetX = b.textureOffsetX;
+        this.textureOffsetY = b.textureOffsetY;
     }
 
     public String getName() {
@@ -94,11 +102,27 @@ public final class RenderLayer {
         if (!lightmap) {
             // The port renders these layers full-bright rather than sampling the lightmap; see
             // VertexFormats.POSITION_TEXTURE_COLOR_LIGHT for why.
-            com.mojang.blaze3d.platform.GlStateManager.disableLighting();
+            GlStateManager.disableLighting();
+        }
+
+        if (hasTextureOffset) {
+            // 1.21.4 expressed scrolling UVs as a RenderPhase.OffsetTexturing phase. On the
+            // fixed-function pipeline the equivalent is translating the texture matrix, which is
+            // exactly what vanilla 1.8.9 does for the charged-creeper swirl.
+            GlStateManager.matrixMode(GL11.GL_TEXTURE);
+            GlStateManager.pushMatrix();
+            GlStateManager.loadIdentity();
+            GlStateManager.translate(textureOffsetX, textureOffsetY, 0f);
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         }
     }
 
     public void endDrawing() {
+        if (hasTextureOffset) {
+            GlStateManager.matrixMode(GL11.GL_TEXTURE);
+            GlStateManager.popMatrix();
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+        }
         RenderSystem.enableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.defaultBlendFunc();
@@ -120,6 +144,9 @@ public final class RenderLayer {
         private boolean culling = true;
         private boolean depthTest = true;
         private boolean lightmap = false;
+        private boolean hasTextureOffset = false;
+        private float textureOffsetX;
+        private float textureOffsetY;
 
         private Builder(String name, VertexFormat.DrawMode drawMode, VertexFormat format) {
             this.name = name;
@@ -149,6 +176,14 @@ public final class RenderLayer {
 
         public Builder lightmap(boolean lightmap) {
             this.lightmap = lightmap;
+            return this;
+        }
+
+        /** Scrolls the texture coordinates, replacing 1.21.4's {@code OffsetTexturing} phase. */
+        public Builder textureOffset(float x, float y) {
+            this.hasTextureOffset = true;
+            this.textureOffsetX = x;
+            this.textureOffsetY = y;
             return this;
         }
 

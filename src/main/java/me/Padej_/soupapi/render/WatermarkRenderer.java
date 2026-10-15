@@ -36,7 +36,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderBackground(DrawContext context, float x, float y) {
-        float width = FontRenderers.sf_bold.getStringWidth(mc.player.getName()) + 20;
+        float width = FontRenderers.sf_bold.getStringWidth(mc.player.getGameProfile().getName()) + 20;
         float height = 14;
         x += 13;
         if (CONFIG.mctiersEnabled) width += 18;
@@ -48,13 +48,13 @@ public class WatermarkRenderer {
     }
 
     private static void renderName(DrawContext context, float x, float y) {
-        String displayName = mc.player.getName();
+        String displayName = mc.player.getGameProfile().getName();
         y += 21.5f;
         MatrixStack stack = context.getMatrices();
         FontRenderers.sf_bold.drawString(stack, displayName, x + 32, y, Palette.getTextColor());
 
         if (!CONFIG.mctiersEnabled) return;
-        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.player.getName());
+        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.player.getGameProfile().getName());
 
         stack.push();
         stack.translate(x + 40 + textWidth, y - 3.7, 0);
