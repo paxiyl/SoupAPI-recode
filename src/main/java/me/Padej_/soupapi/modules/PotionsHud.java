@@ -30,6 +30,10 @@ public class PotionsHud extends ConfigurableModule {
     private static final Map<Potion, Integer> maxDurations = new HashMap<>();
     private static final Map<String, String> enUsTranslations = new HashMap<>();
 
+    /** Vanilla's inventory sheet, which carries the 18x18 status-effect icons at y=198. */
+    private static final ResourceLocation INVENTORY_ICONS =
+            new ResourceLocation("textures/gui/container/inventory.png");
+
     private static float currentWidth = 0f;
     private static float currentHeight = 0f;
 
@@ -37,9 +41,9 @@ public class PotionsHud extends ConfigurableModule {
         IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
         ResourceLocation enUsId = new ResourceLocation("lang/en_us.json");
 
-        try (InputStream input = resourceManager.getResource(enUsId).get().getInputStream()) {
-            String json = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            JsonObject langJson = JsonParser.parseString(json).getAsJsonObject();
+        try (InputStream input = resourceManager.getResource(enUsId).getInputStream()) {
+            String json = new String(readAll(input), StandardCharsets.UTF_8);
+            JsonObject langJson = new JsonParser().parse(json).getAsJsonObject();
 
             for (Map.Entry<String, JsonElement> entry : langJson.entrySet()) {
                 enUsTranslations.put(entry.getKey(), entry.getValue().getAsString());
@@ -48,6 +52,17 @@ public class PotionsHud extends ConfigurableModule {
             System.err.println("[PotionsHud] Failed to load en_us.json");
             e.printStackTrace();
         }
+    }
+
+    /** Java 8 has no {@code InputStream.readAllBytes}. */
+    private static byte[] readAll(InputStream in) throws java.io.IOException {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int read;
+        while ((read = in.read(buf)) != -1) {
+            out.write(buf, 0, read);
+        }
+        return out.toByteArray();
     }
 
     public static void render(DrawContext context) {
@@ -59,9 +74,9 @@ public class PotionsHud extends ConfigurableModule {
         float targetWidth = 0f;
         float targetHeight;
 
-        List<PotionEffect> rawEffects = new ArrayList<>(mc.thePlayer.getStatusEffects());
+        List<PotionEffect> rawEffects = new ArrayList<PotionEffect>(mc.thePlayer.getActivePotionEffects());
         rawEffects.sort(Comparator.comparing(a -> {
-            String key = a.getPotionID().value().getTranslationKey();
+            String key = potionOf(a).getName();
             return enUsTranslations.getOrDefault(key, key);
         }));
 
@@ -73,14 +88,12 @@ public class PotionsHud extends ConfigurableModule {
             if (currentWidth < 0.1f && currentHeight < 0.1f) return;
         }
 
-        maxDurations.keySet().removeIf(effect -> {
-            RegistryEntry<Potion> entry = Registries.STATUS_EFFECT.getEntry(effect);
-            return mc.thePlayer.getActivePotionEffect(entry) == null;
-        });
+        // 1.8.9 looks effects up by Potion directly; there is no registry entry wrapper.
+        maxDurations.keySet().removeIf(effect -> mc.thePlayer.getActivePotionEffect(effect) == null);
 
         List<EffectElement> effects = new ArrayList<>();
         for (PotionEffect instance : rawEffects) {
-            Potion effect = instance.getPotionID().value();
+            Potion effect = potionOf(instance);
             maxDurations.putIfAbsent(effect, instance.getDuration());
             effects.add(new EffectElement(instance));
         }
@@ -127,7 +140,7 @@ public class PotionsHud extends ConfigurableModule {
             matrices.push();
             matrices.translate(x, headerY + 1.5f, 0);
             matrices.scale(0.5f, 0.5f, 0.5f);
-            context.drawTexture(RenderLayer::getGuiTextured, TexturesManager.GUI_POTION, 0, 0, 0, 0, 16, 16, 1024, 1024, 1024, 1024, Palette.getTextColor());
+            context.drawTexture(TexturesManager.GUI_POTION, 0, 0, 16, 16, 0, 0, 1024, 1024, 1024, 1024);
             matrices.pop();
         }
 
@@ -139,11 +152,26 @@ public class PotionsHud extends ConfigurableModule {
     }
 
     private static String getDuration(PotionEffect statusEffect) {
-        if (statusEffect.isInfinite()) return "**:**";
+        // Infinite effects arrived in 1.19; in 1.8.9 every effect has a finite duration.
         int duration = statusEffect.getDuration();
         int minutes = duration / 1200;
         int seconds = (duration % 1200) / 20;
         return minutes + ":" + String.format("%02d", seconds);
+    }
+
+    /**
+     * Resolves a {@link PotionEffect}'s numeric id to its {@link Potion}.
+     *
+     * <p>1.21.4 carried a registry entry on the instance; 1.8.9 stores a raw id and looks it up in
+     * {@code Potion.potionTypes}. Returns the "unknown" potion rather than null for an id outside
+     * the table, which a modded effect could produce.
+     */
+    static Potion potionOf(PotionEffect instance) {
+        int id = instance.getPotionID();
+        if (id >= 0 && id < Potion.potionTypes.length && Potion.potionTypes[id] != null) {
+            return Potion.potionTypes[id];
+        }
+        return Potion.moveSpeed;
     }
 
     private static String toRoman(int number) {
@@ -175,7 +203,7 @@ public class PotionsHud extends ConfigurableModule {
             int amplifier = instance.getAmplifier();
 
             // Получение англоязычного имени эффекта (en_us)
-            String key = instance.getPotionID().value().getTranslationKey();
+            String key = potionOf(instance).getName();
             String name = PotionsHud.enUsTranslations.getOrDefault(key, key);
 
             String levelPart = amplifier > 0
@@ -194,14 +222,21 @@ public class PotionsHud extends ConfigurableModule {
             matrices.push();
             matrices.translate(x + (1 + scale), y + (1 + scale), 0);
             matrices.scale(scale, scale, 0);
-            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(instance.getPotionID()), 0, 0, 18, 18);
+            // 1.8.9 has no status-effect sprite atlas: icons live on the inventory sheet,
+            // indexed by Potion.getStatusIconIndex() in an 8-wide grid of 18x18 cells.
+            Potion potion = potionOf(instance);
+            if (potion.hasStatusIcon()) {
+                int icon = potion.getStatusIconIndex();
+                context.drawTexture(INVENTORY_ICONS, 0, 0, 18, 18,
+                        (icon % 8) * 18, 198 + (icon / 8) * 18, 18, 18, 256, 256);
+            }
             matrices.pop();
 
             FontRenderers.sf_bold_mini.drawString(matrices, displayText, x + 20, y + 2, Palette.getTextColor());
             FontRenderers.sf_bold_mini.drawString(matrices, "§7" + getDuration(instance), x + 20, y + 9, Palette.getTextColor());
 
-            if (!instance.isInfinite()) {
-                Potion effect = instance.getPotionID().value();
+            {
+                Potion effect = potionOf(instance);
                 int maxDuration = maxDurations.getOrDefault(effect, instance.getDuration());
                 float progress = MathUtility.clamp(instance.getDuration() / (float) maxDuration, 0f, 1f);
 
@@ -225,7 +260,7 @@ public class PotionsHud extends ConfigurableModule {
         }
 
         public Potion getEffect() {
-            return instance.getPotionID().value();
+            return potionOf(instance);
         }
     }
 }

@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.config;
 
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -13,10 +13,10 @@ import net.minecraft.client.gui.GuiScreen;
  */
 public abstract class ConfigurableModule {
     public static Minecraft mc = Minecraft.getMinecraft();
-    public static final SoupAPI_Config CONFIG = SoupAPI_Main.configHolder.get();
+    public static final SoupAPI_Config CONFIG = SoupAPI.configHolder.get();
 
     public static void saveConfig() {
-        SoupAPI_Main.configHolder.save();
+        SoupAPI.configHolder.save();
     }
 
     public static void saveAll(GuiScreen screen) {

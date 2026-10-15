@@ -63,7 +63,7 @@ public final class MathUtility {
     }
 
     public static double angle(Vec3 vec3d, Vec3 other) {
-        double lengthSq = vec3d.length() * other.length();
+        double lengthSq = vec3d.lengthVector() * other.lengthVector();
 
         if (lengthSq < 1.0E-4D) {
             return 0.0;

@@ -14,12 +14,11 @@ public class Texture {
     }
 
     String validatePath(String path) {
-        if (ResourceLocation.isPathValid(path)) {
-            return path;
-        }
+        // 1.8.9 ResourceLocation exposes no validators, so the path is always normalised.
         StringBuilder ret = new StringBuilder();
         for (char c : path.toLowerCase().toCharArray()) {
-            if (ResourceLocation.isPathCharacterValid(c)) {
+            if (c == '_' || c == '-' || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '/') {
                 ret.append(c);
             }
         }

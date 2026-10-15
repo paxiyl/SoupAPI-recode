@@ -47,7 +47,7 @@ public class DefaultAmbientParticle {
     }
 
     public boolean tick() {
-        if (mc.thePlayer.getDistanceSqToEntity(posX, posY, posZ) > 4096) age -= 8;
+        if (mc.thePlayer.getDistanceSq(posX, posY, posZ) > 4096) age -= 8;
         else age--;
 
         if (age < 0)

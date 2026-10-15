@@ -35,9 +35,9 @@ public class StringComponent extends SettingComponent<String> {
         this.textRenderer = mc.fontRendererObj;
 
         this.textField = new GuiTextField(0, textRenderer, x, y, width, height);
-        this.textField.setMaxLength(1024);
+        this.textField.setMaxStringLength(1024);
         this.textField.setText(setting.getValue() == null ? "" : setting.getValue());
-        this.textField.setEditable(true);
+        this.textField.setEnabled(true);
         this.lastText = this.textField.getText();
     }
 
@@ -48,9 +48,9 @@ public class StringComponent extends SettingComponent<String> {
                 x, y, 0xFFFFFFFF, false);
 
         // Two pixels of padding between the label and the field.
-        textField.x = x;
-        textField.y = y + labelHeight + 2;
-        textField.render();
+        textField.xPosition = x;
+        textField.yPosition = y + labelHeight + 2;
+        textField.drawTextBox();
 
         // Stands in for the changed-listener 1.8.9's widget does not have.
         String current = textField.getText();
@@ -90,12 +90,12 @@ public class StringComponent extends SettingComponent<String> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // 1.8.9 routes control keys through the same entry point as characters; characters are
         // handled in charTyped so they are not delivered twice.
-        return textField.isFocused() && textField.keyPressed('\0', keyCode);
+        return textField.isFocused() && textField.textboxKeyTyped('\0', keyCode);
     }
 
     @Override
     public boolean charTyped(char chr, int modifiers) {
-        return textField.isFocused() && textField.keyPressed(chr, 0);
+        return textField.isFocused() && textField.textboxKeyTyped(chr, 0);
     }
 
     public void setFocused(boolean focused) {

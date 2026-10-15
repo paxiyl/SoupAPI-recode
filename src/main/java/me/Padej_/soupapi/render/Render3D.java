@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.Mat4;
+
 import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.compat.BlendFactor;
@@ -10,7 +12,7 @@ import me.Padej_.soupapi.compat.ShaderKey;
 import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import me.Padej_.soupapi.modules.Halo;
 import me.Padej_.soupapi.modules.TargetRender;
 import me.Padej_.soupapi.utils.Palette;
@@ -32,7 +34,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
 import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.Vec3;
-import org.joml.*;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -51,7 +52,7 @@ public class Render3D extends ConfigurableModule {
         float height = CONFIG.chinaHatTipHeight / 100f;
         float yOffset = -CONFIG.chinaHatYOffset / 100f;
         int segments = 60;
-        float time = mc.theWorld.getTime() % 360;
+        float time = mc.theWorld.getTotalWorldTime() % 360;
         int alpha = (int) (1 - (CONFIG.chinaHatAlpha * 255 / 100f));
         boolean isHalf = CONFIG.chinaHatRenderHalf;
 
@@ -83,7 +84,7 @@ public class Render3D extends ConfigurableModule {
 
             // Вычисляем альфа-значение в зависимости от расстояния от центра
             if (isHalf) {
-                float distanceFromCenter = Math.sqrt(xCoords[i] * xCoords[i] + zCoords[i] * zCoords[i]);
+                float distanceFromCenter = (float) Math.sqrt(xCoords[i] * xCoords[i] + zCoords[i] * zCoords[i]);
                 float alphaFactor = 1.0f - (distanceFromCenter / baseRadius); // От 1 в центре до 0 на краю
                 alphas[i] = Math.max(alphaFactor, 0) * alpha; // Умножаем на базовую альфу
             } else {
@@ -156,7 +157,7 @@ public class Render3D extends ConfigurableModule {
         float halfSize = (CONFIG.targetRenderLegacyScale / 50f) / 2.0F;
         float alpha = CONFIG.targetRenderLegacyAlpha / 100f;
 
-        float time = mc.theWorld.getTime() % 360;
+        float time = mc.theWorld.getTotalWorldTime() % 360;
         int rotationAngle = 360 / 5;
         float rotationOffset = (time % rotationAngle) / (float) rotationAngle;
 
@@ -271,8 +272,8 @@ public class Render3D extends ConfigurableModule {
                     particleMatrix.translate(x, y, z);
 
                     Quaternionf billboardRot = new Quaternionf().identity();
-                    billboardRot.rotateY(Math.toRadians(-camera.getYaw()));
-                    billboardRot.rotateX(Math.toRadians(camera.getPitch()));
+                    billboardRot.rotateY((float) Math.toRadians(-camera.getYaw()));
+                    billboardRot.rotateX((float) Math.toRadians(camera.getPitch()));
                     particleMatrix.multiply(billboardRot);
 
                     Mat4 matrix = particleMatrix.peek().getPositionMatrix();
@@ -306,7 +307,7 @@ public class Render3D extends ConfigurableModule {
         float layerSpacing = 2;
 
         if (targetEntity == null) return;
-        if (targetEntity instanceof EntityPlayer && ((EntityPlayer) targetEntity).isGliding()) return;
+        if (targetEntity instanceof EntityPlayer && ((EntityPlayer) targetEntity) == null) return;
         Vec3 newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
         float entityAge = targetEntity.ticksExisted + tickDelta;
 
@@ -354,8 +355,8 @@ public class Render3D extends ConfigurableModule {
                     particleMatrix.translate(x, y, z);
 
                     Quaternionf billboardRot = new Quaternionf().identity();
-                    billboardRot.rotateY(Math.toRadians(-camera.getYaw()));
-                    billboardRot.rotateX(Math.toRadians(camera.getPitch())); // хотим только для квадрата
+                    billboardRot.rotateY((float) Math.toRadians(-camera.getYaw()));
+                    billboardRot.rotateX((float) Math.toRadians(camera.getPitch())); // хотим только для квадрата
 
                     particleMatrix.multiply(billboardRot);
 
@@ -382,7 +383,7 @@ public class Render3D extends ConfigurableModule {
 
     public static void drawSpiralsEsp(MatrixStack stack, Entity target) {
 
-        float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
+        float tickDelta = me.Padej_.soupapi.compat.Cameras.get().getTickDelta();
 
         float radius = 0.75f;
         float heightStep = 0.004f;
@@ -391,13 +392,13 @@ public class Render3D extends ConfigurableModule {
         float alphaDivider = 100f;
 
         // Интерполяция позиции цели относительно камеры
-        double x = Maths.lerp(tickDelta, target.prevPosX, target.getX()) - mc.getRenderManager().viewerPosX;
-        double y = Maths.lerp(tickDelta, target.prevPosY, target.getY()) - mc.getRenderManager().viewerPosY;
-        double z = Maths.lerp(tickDelta, target.prevPosZ, target.getZ()) - mc.getRenderManager().viewerPosZ;
+        double x = Maths.lerp(tickDelta, target.prevPosX, target.posX) - mc.getRenderManager().viewerPosX;
+        double y = Maths.lerp(tickDelta, target.prevPosY, target.posY) - mc.getRenderManager().viewerPosY;
+        double z = Maths.lerp(tickDelta, target.prevPosZ, target.posZ) - mc.getRenderManager().viewerPosZ;
         double height = target.height;
 
         // Генерация трёх спиралей с разными угловыми сдвигами
-        var spirals = new ArrayList[]{new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
+        ArrayList[] spirals = new ArrayList[]{new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
         generateSpiralVectors(spirals, radius, height, heightStep);
 
         stack.push();
@@ -454,7 +455,7 @@ public class Render3D extends ConfigurableModule {
         float smoothingEnd = 1.0f - smoothingRange;
 
         for (int j = 0; j < size - 1; ++j) {
-            float alpha = 1f - (((float) j + ((System.currentTimeMillis() - SoupAPI_Main.initTime) / animationSpeed)) % 360) / alphaDivider;
+            float alpha = 1f - (((float) j + ((System.currentTimeMillis() - SoupAPI.initTime) / animationSpeed)) % 360) / alphaDivider;
             float progress = (j / (float) size + progressOffset) % 1f;
 
             // Определяем цвет с учётом сглаживания
@@ -499,7 +500,7 @@ public class Render3D extends ConfigurableModule {
 
     public static void drawScanEsp(MatrixStack stack, Entity target) {
 
-        float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
+        float tickDelta = me.Padej_.soupapi.compat.Cameras.get().getTickDelta();
         float animationSpeed = CONFIG.targetRenderTopkaSpeed / 100f;
         float minHeightOffset = 0.01f;
         float maxHeightOffset = 0.5f;

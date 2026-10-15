@@ -426,7 +426,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         try {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            mc.fontRendererObj.draw(s, 0, 0, argb, false);
+            mc.fontRendererObj.drawString(s, 0, 0, argb, false);
         } finally {
             stack.undoGl();
             stack.pop();
@@ -493,7 +493,7 @@ static final class DrawEntry {
     private final float b;
     private final Glyph toDraw;
 
-    DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
+    public DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
         this.atX = atX;
         this.atY = atY;
         this.r = r;

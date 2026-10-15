@@ -29,6 +29,41 @@ import static me.Padej_.soupapi.modules.TargetHud.smoothedScreenX;
 import static me.Padej_.soupapi.modules.TargetHud.smoothedScreenY;
 
 public class TargetHudRenderer extends ConfigurableModule {
+    /** Vanilla's inventory sheet, which carries the 18x18 status-effect icons at y=198. */
+    private static final ResourceLocation INVENTORY_ICONS =
+            new ResourceLocation("textures/gui/container/inventory.png");
+
+    /**
+     * Resolves a vanilla effect name to its {@link Potion}.
+     *
+     * <p>1.8.9 has no string-keyed effect registry — {@code Potion} is a static table — so the
+     * handful of names the target HUD shows are mapped explicitly.
+     */
+    private static Potion vanillaPotion(String name) {
+        if ("speed".equals(name)) return Potion.moveSpeed;
+        if ("slowness".equals(name)) return Potion.moveSlowdown;
+        if ("haste".equals(name)) return Potion.digSpeed;
+        if ("mining_fatigue".equals(name)) return Potion.digSlowdown;
+        if ("strength".equals(name)) return Potion.damageBoost;
+        if ("jump_boost".equals(name)) return Potion.jump;
+        if ("nausea".equals(name)) return Potion.confusion;
+        if ("regeneration".equals(name)) return Potion.regeneration;
+        if ("resistance".equals(name)) return Potion.resistance;
+        if ("fire_resistance".equals(name)) return Potion.fireResistance;
+        if ("water_breathing".equals(name)) return Potion.waterBreathing;
+        if ("invisibility".equals(name)) return Potion.invisibility;
+        if ("blindness".equals(name)) return Potion.blindness;
+        if ("night_vision".equals(name)) return Potion.nightVision;
+        if ("hunger".equals(name)) return Potion.hunger;
+        if ("weakness".equals(name)) return Potion.weakness;
+        if ("poison".equals(name)) return Potion.poison;
+        if ("wither".equals(name)) return Potion.wither;
+        if ("health_boost".equals(name)) return Potion.healthBoost;
+        if ("absorption".equals(name)) return Potion.absorption;
+        if ("saturation".equals(name)) return Potion.saturation;
+        return null;
+    }
+
     public static final ArrayList<Particle2D> particles = new ArrayList<>();
     public static boolean sentParticles = false;
     public static float ticks = 0f;
@@ -120,8 +155,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 2);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.inventory.armorInventory;
-        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 25;
         for (ItemStack itemStack : items) {
@@ -139,13 +174,19 @@ public class TargetHudRenderer extends ConfigurableModule {
         float effectXOffset = x + 25;
         float effectYOffset = y + 18;
         for (String effectName : effectNames) {
-            ResourceLocation effectId = ResourceLocation.ofVanilla(effectName);
-            Potion effect = Registries.STATUS_EFFECT.get(effectId);
-            if (effect != null && target.isPotionActive(Registries.STATUS_EFFECT.getEntry(effectId).orElse(null))) {
+            Potion effect = vanillaPotion(effectName);
+            if (effect != null && target.isPotionActive(effect)) {
                 context.getMatrices().push();
                 context.getMatrices().translate(effectXOffset, effectYOffset, 0);
                 context.getMatrices().scale(0.5f, 0.5f, 0.5f);
-                context.drawTexture(RenderLayer::getGuiTextured, ResourceLocation.ofVanilla("textures/mob_effect/" + effectName + ".png"), 0, 0, 0, 0, 18, 18, 18, 18);
+                // 1.8.9 keeps the 18x18 effect icons on the inventory sheet at y=198, in an
+                // 8-wide grid indexed by Potion.getStatusIconIndex(); there are no
+                // per-effect textures/mob_effect files until 1.19.
+                if (effect.hasStatusIcon()) {
+                    int icon = effect.getStatusIconIndex();
+                    context.drawTexture(INVENTORY_ICONS, 0, 0, 18, 18,
+                            (icon % 8) * 18, 198 + (icon / 8) * 18, 18, 18, 256, 256);
+                }
                 context.getMatrices().pop();
                 effectXOffset += 10;
             }
@@ -235,8 +276,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold_mini.drawString(context.getMatrices(), displayName, x + 38, y + 5, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.inventory.armorInventory;
-        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 38;
         for (ItemStack itemStack : items) {
@@ -335,8 +376,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold.drawString(context.getMatrices(), displayName, x + 48, y + 7, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.inventory.armorInventory;
-        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 48;
         for (ItemStack itemStack : items) {
@@ -529,8 +570,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 1);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.inventory.armorInventory;
-        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 20;
         float yItemOffset = y + 12;
@@ -552,10 +593,10 @@ public class TargetHudRenderer extends ConfigurableModule {
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = Maths.lerp(progress, start.getRed(), end.getRed());
-        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
-        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
-        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Math.round(Maths.lerp(progress, start.getRed(), end.getRed()));
+        int g = Math.round(Maths.lerp(progress, start.getGreen(), end.getGreen()));
+        int b = Math.round(Maths.lerp(progress, start.getBlue(), end.getBlue()));
+        int a = Math.round(Maths.lerp(progress, start.getAlpha(), end.getAlpha()));
         return new Color(r, g, b, a);
     }
 }

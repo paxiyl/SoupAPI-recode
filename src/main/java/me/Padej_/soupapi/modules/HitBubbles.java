@@ -15,9 +15,10 @@ import me.Padej_.soupapi.utils.Timer;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import me.Padej_.soupapi.event.AttackEntityCallback;
 import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MovingObjectPosition;
 import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.Vec3;
 
@@ -30,9 +31,9 @@ public class HitBubbles extends ConfigurableModule {
 
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
-            if ((entity instanceof EntityLivingBase && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitBubblesEnabled) {
+            if ((entity instanceof EntityLivingBase && !EntityUtils.isFriend(entity) && !EntityUtils.isSpectator(entity)) && CONFIG.hitBubblesEnabled) {
                 long now = System.currentTimeMillis();
-                if (now - lastHitTime < 150) return ActionResult.PASS; // защита от спама (150мс)
+                if (now - lastHitTime < 150) return AttackEntityCallback.Result.PASS; // защита от спама (150мс)
                 lastHitTime = now;
 
                 float yaw = playerEntity.rotationYaw;
@@ -47,7 +48,7 @@ public class HitBubbles extends ConfigurableModule {
                     ));
                 }
             }
-            return ActionResult.PASS;
+            return AttackEntityCallback.Result.PASS;
         });
     }
 
@@ -59,9 +60,9 @@ public class HitBubbles extends ConfigurableModule {
         for (HitBubble b : copy) {
             matrixStack.push();
             matrixStack.translate(
-                    b.x - Cameras.get().getPositionVector().getX(),
-                    b.y - Cameras.get().getPositionVector().getY(),
-                    b.z - Cameras.get().getPositionVector().getZ()
+                    b.x - Cameras.get().getPositionVector().xCoord,
+                    b.y - Cameras.get().getPositionVector().yCoord,
+                    b.z - Cameras.get().getPositionVector().zCoord
             );
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(b.yaw));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(b.pitch));
@@ -96,26 +97,52 @@ public class HitBubbles extends ConfigurableModule {
         RenderSystem.enableCull();
     }
 
+    /**
+     * Finds where the player's look ray first meets a living entity, or {@code null}.
+     *
+     * <p>1.8.9 has no {@code ProjectileUtil.raycast} and no {@code EntityHitResult}, so the sweep
+     * is done directly: collect entities within the ray's expanded bounding box, intersect the ray
+     * with each one's box, and keep the nearest hit. This is the same algorithm vanilla 1.8.9 uses
+     * for the player's own reach check in {@code EntityRenderer.getMouseOver}.
+     */
     private static Vec3 getRtxPoint(float yaw, float pitch, double distance) {
-        Vec3 from = mc.thePlayer.getPositionVector().add(0, mc.thePlayer.getEyeHeight(mc.thePlayer.getPose()), 0);
+        if (mc.thePlayer == null || mc.theWorld == null) return null;
+
+        Vec3 from = mc.thePlayer.getPositionVector()
+                .addVector(0, mc.thePlayer.getEyeHeight(), 0);
         Vec3 direction = getRotationVector(pitch, yaw);
-        Vec3 to = from.add(direction.multiply(distance));
-        double distanceSq = distance * distance;
+        Vec3 to = from.addVector(direction.xCoord * distance,
+                direction.yCoord * distance,
+                direction.zCoord * distance);
 
-        AxisAlignedBB box = mc.thePlayer.getEntityBoundingBox().stretch(direction.multiply(distance)).expand(1.0, 1.0, 1.0);
-        EntityHitResult result = ProjectileUtil.raycast(
-                mc.thePlayer,
-                from,
-                to,
-                box,
-                (entity) -> !entity.isSpectator() && entity.canHit(),
-                distanceSq
-        );
+        AxisAlignedBB sweep = mc.thePlayer.getEntityBoundingBox()
+                .addCoord(direction.xCoord * distance,
+                        direction.yCoord * distance,
+                        direction.zCoord * distance)
+                .expand(1.0, 1.0, 1.0);
 
-        if (result != null && result.getEntity() instanceof EntityLivingBase) {
-            return result.getPositionVector();
+        Vec3 nearestHit = null;
+        double nearestSq = distance * distance;
+
+        java.util.List<Entity> candidates =
+                mc.theWorld.getEntitiesWithinAABBExcludingEntity(mc.thePlayer, sweep);
+        for (int i = 0; i < candidates.size(); i++) {
+            Entity entity = candidates.get(i);
+            if (!(entity instanceof EntityLivingBase)) continue;
+            if (EntityUtils.isSpectator(entity) || !entity.canBeCollidedWith()) continue;
+
+            float border = entity.getCollisionBorderSize();
+            AxisAlignedBB box = entity.getEntityBoundingBox().expand(border, border, border);
+            MovingObjectPosition hit = box.calculateIntercept(from, to);
+            if (hit == null) continue;
+
+            double distSq = from.squareDistanceTo(hit.hitVec);
+            if (distSq < nearestSq) {
+                nearestSq = distSq;
+                nearestHit = hit.hitVec;
+            }
         }
-        return null;
+        return nearestHit;
     }
 
     private static Vec3 getRotationVector(float pitch, float yaw) {
@@ -137,7 +164,7 @@ public static final class HitBubble {
     private final float pitch;
     private final Timer life;
 
-    HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
+    public HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
         this.x = x;
         this.y = y;
         this.z = z;

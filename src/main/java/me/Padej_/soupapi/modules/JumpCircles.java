@@ -62,9 +62,9 @@ public class JumpCircles extends ConfigurableModule {
             return;
         }
 
-        double cameraX = Cameras.get().getPositionVector().x;
-        double cameraY = Cameras.get().getPositionVector().y;
-        double cameraZ = Cameras.get().getPositionVector().z;
+        double cameraX = Cameras.get().getPositionVector().xCoord;
+        double cameraY = Cameras.get().getPositionVector().yCoord;
+        double cameraZ = Cameras.get().getPositionVector().zCoord;
 
         CIRCLES.removeIf(JumpCircle::isExpired);
         for (JumpCircle circle : CIRCLES) {
@@ -83,7 +83,7 @@ public class JumpCircles extends ConfigurableModule {
 
         public JumpCircle(Vec3 position) {
             this.position = position;
-            this.offsetY = mc.thePlayer.getVelocity().getY();
+            this.offsetY = mc.thePlayer.motionY;
             this.rotationAngle = 0f;
             this.angularVelocity = (float) Math.toRadians(CONFIG.jumpCirclesSpinSpeed);
             this.startTime = System.currentTimeMillis(); // Запоминаем время создания

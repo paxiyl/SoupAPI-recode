@@ -53,7 +53,7 @@ public class Trails extends ConfigurableModule {
                     continue;
                 }
                 EntityLivingBase livingEntity = (EntityLivingBase) entity;
-                if (!livingEntity.isGliding()) {
+                if (!false /* elytra is 1.9+ */) {
                     continue;
                 }
 
@@ -62,8 +62,8 @@ public class Trails extends ConfigurableModule {
                 float yOffset = entity.height / 2;
                 if (prevPos.distanceTo(currentPos) > minStep) {
                     ((TrailEntity) entity).soupAPI$getTrails().add(new TrailSegment(
-                            prevPos.add(0, -yOffset, 0),
-                            currentPos.add(0, -yOffset, 0),
+                            prevPos.addVector(0, -yOffset, 0),
+                            currentPos.addVector(0, -yOffset, 0),
                             trailLifetime
                     ));
                 }
@@ -208,9 +208,9 @@ public class Trails extends ConfigurableModule {
         }
 
         public Vec3 interpolate(float pt) {
-            double x = from.xCoord + ((to.xCoord - from.x) * pt) - mc.getRenderManager().viewerPosX;
-            double y = from.yCoord + ((to.yCoord - from.y) * pt) - mc.getRenderManager().viewerPosY;
-            double z = from.zCoord + ((to.zCoord - from.z) * pt) - mc.getRenderManager().viewerPosZ;
+            double x = from.xCoord + ((to.xCoord - from.xCoord) * pt) - mc.getRenderManager().viewerPosX;
+            double y = from.yCoord + ((to.yCoord - from.yCoord) * pt) - mc.getRenderManager().viewerPosY;
+            double z = from.zCoord + ((to.zCoord - from.zCoord) * pt) - mc.getRenderManager().viewerPosZ;
             return new Vec3(x, y, z);
         }
 

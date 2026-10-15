@@ -1,35 +1,30 @@
 package me.Padej_.soupapi.main;
 
-import me.Padej_.soupapi.compat.Caps;
-import me.Padej_.soupapi.compat.SoupLog;
-import me.Padej_.soupapi.config.AutoConfig;
+import me.Padej_.soupapi.SoupAPI;
 import me.Padej_.soupapi.config.ConfigHolder;
-import me.Padej_.soupapi.config.GsonConfigSerializer;
 import me.Padej_.soupapi.config.SoupAPI_Config;
-import net.fabricmc.api.ModInitializer;
 
 /**
- * Main entrypoint.
+ * Compatibility shim for the former Fabric entrypoint.
  *
- * <p>Registers the config before anything else, because {@code ConfigurableModule.CONFIG} is
- * resolved when that class is first loaded and every module extends it.
- *
- * <p>The 1.21.4 version also registered a {@code SimpleParticleType} ("star") with a physics
- * particle factory. 1.8.9 has no particle registry to extend, and that particle was never
- * spawned — the factory was registered but nothing ever called {@code addParticle} with it — so
- * the type and {@code CustomPhysicParticle} are dropped rather than reimplemented. The particle
- * effects the mod actually shows (hit, jump, totem, ambient) are drawn by its own renderers and
- * are unaffected.
+ * <p>The Forge entry point is {@link SoupAPI}, but a lot of the mod reads
+ * {@code SoupAPI_Main.configHolder} and {@code SoupAPI_Main.initTime}. Keeping this as a thin
+ * forwarder avoids touching all of those call sites for no behavioural gain.
  */
-public class SoupAPI_Main implements ModInitializer {
-    public static ConfigHolder<SoupAPI_Config> configHolder;
-    public static long initTime;
-    public static String ac = "";
+public final class SoupAPI_Main {
 
-    @Override
-    public void onInitialize() {
-        initTime = System.currentTimeMillis();
-        configHolder = AutoConfig.register(SoupAPI_Config.class, GsonConfigSerializer::new);
-        SoupLog.info("SoupAPI initialised for Minecraft 1.8.9 (" + Caps.describe() + ")");
+    private SoupAPI_Main() {
+    }
+
+    public static ConfigHolder<SoupAPI_Config> configHolder() {
+        return SoupAPI.configHolder;
+    }
+
+    /**
+     * Field-style access, matching how the sources already read it. Kept as a method-backed
+     * constant would not see the config registered in pre-init.
+     */
+    public static ConfigHolder<SoupAPI_Config> getConfigHolder() {
+        return SoupAPI.configHolder;
     }
 }

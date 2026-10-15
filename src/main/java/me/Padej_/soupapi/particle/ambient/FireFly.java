@@ -32,8 +32,9 @@ public class FireFly extends DefaultAmbientParticle {
     @Override
     public boolean tick() {
         if (mc.thePlayer == null || mc.theWorld == null) return false;
-        if (mc.thePlayer.getDistanceSqToEntity(posX, posY, posZ) > 100) age -= 4;
-        else if (!mc.theWorld.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ)).isAir()) age -= 8;
+        if (mc.thePlayer.getDistanceSq(posX, posY, posZ) > 100) age -= 4;
+        else if (mc.theWorld.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ))
+                .getBlock() != net.minecraft.init.Blocks.air) age -= 8;
         else age--;
 
         if (age < 0)

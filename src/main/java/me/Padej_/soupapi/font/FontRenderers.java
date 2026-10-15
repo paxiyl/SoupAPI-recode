@@ -2,7 +2,7 @@ package me.Padej_.soupapi.font;
 
 import me.Padej_.soupapi.compat.Caps;
 import me.Padej_.soupapi.compat.SoupLog;
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 
 import java.awt.Font;
 import java.awt.FontFormatException;
@@ -77,7 +77,7 @@ public class FontRenderers {
 
     public static FontRenderer create(float size, String name) throws IOException, FontFormatException {
         String path = "assets/soupapi/fonts/" + name + ".ttf";
-        InputStream in = SoupAPI_Main.class.getClassLoader().getResourceAsStream(path);
+        InputStream in = SoupAPI.class.getClassLoader().getResourceAsStream(path);
         if (in == null) {
             throw new IOException("Missing bundled font: " + path);
         }

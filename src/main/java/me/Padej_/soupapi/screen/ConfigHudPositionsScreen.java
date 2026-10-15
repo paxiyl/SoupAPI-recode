@@ -184,8 +184,8 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         int centerY = screenHeight / 2;
 
         // Центры рамки
-        int frameCenterX = movingFrame.getX() + movingFrame.width / 2;
-        int frameCenterY = movingFrame.getY() + movingFrame.height / 2;
+        int frameCenterX = movingFrame.x + movingFrame.width / 2;
+        int frameCenterY = movingFrame.y + movingFrame.height / 2;
 
         // Привязка к центру экрана
         if (Math.abs(frameCenterX - centerX) < snapThreshold) {
@@ -198,11 +198,11 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         }
 
         // Привязка к другим рамкам (по центрам)
-        for (Frame other : List.of(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
             if (other == movingFrame) continue;
 
-            int otherCenterX = other.getX() + other.width / 2;
-            int otherCenterY = other.getY() + other.height / 2;
+            int otherCenterX = other.x + other.width / 2;
+            int otherCenterY = other.y + other.height / 2;
 
             if (Math.abs(frameCenterX - otherCenterX) < snapThreshold) {
                 drawVertical = true;
@@ -215,10 +215,10 @@ public class ConfigHudPositionsScreen extends SoupScreen {
             }
 
             // Привязка по левому и правому краям
-            if (Math.abs(movingFrame.getX() - other.getX()) < snapThreshold) {
-                movingFrame.snapX(other.getX());
-            } else if (Math.abs((movingFrame.getX() + movingFrame.width) - (other.getX() + other.width)) < snapThreshold) {
-                movingFrame.snapX(other.getX() + other.width - movingFrame.width);
+            if (Math.abs(movingFrame.x - other.x) < snapThreshold) {
+                movingFrame.snapX(other.x);
+            } else if (Math.abs((movingFrame.x + movingFrame.width) - (other.x + other.width)) < snapThreshold) {
+                movingFrame.snapX(other.x + other.width - movingFrame.width);
             }
         }
 
@@ -254,11 +254,11 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         }
 
         // Привязка к другим рамкам
-        for (Frame other : List.of(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
             if (other == frame) continue;
 
-            int otherCenterX = other.getX() + other.width / 2;
-            int otherCenterY = other.getY() + other.height / 2;
+            int otherCenterX = other.x + other.width / 2;
+            int otherCenterY = other.y + other.height / 2;
 
             if (Math.abs(frameCenterX - otherCenterX) < snapThreshold) {
                 newX = otherCenterX - frame.width / 2;
@@ -269,17 +269,17 @@ public class ConfigHudPositionsScreen extends SoupScreen {
             }
 
             // Левые / правые края
-            if (Math.abs(newX - other.getX()) < snapThreshold) {
-                newX = other.getX();
-            } else if (Math.abs((newX + frame.width) - (other.getX() + other.width)) < snapThreshold) {
-                newX = other.getX() + other.width - frame.width;
+            if (Math.abs(newX - other.x) < snapThreshold) {
+                newX = other.x;
+            } else if (Math.abs((newX + frame.width) - (other.x + other.width)) < snapThreshold) {
+                newX = other.x + other.width - frame.width;
             }
 
             // Верх / низ
-            if (Math.abs(newY - other.getY()) < snapThreshold) {
-                newY = other.getY();
-            } else if (Math.abs((newY + frame.height) - (other.getY() + other.height)) < snapThreshold) {
-                newY = other.getY() + other.height - frame.height;
+            if (Math.abs(newY - other.y) < snapThreshold) {
+                newY = other.y;
+            } else if (Math.abs((newY + frame.height) - (other.y + other.height)) < snapThreshold) {
+                newY = other.y + other.height - frame.height;
             }
         }
 

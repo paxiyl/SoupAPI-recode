@@ -67,7 +67,7 @@ class GlyphMap {
     }
 
     public void destroy() {
-        Minecraft.getMinecraft().getTextureManager().close(this.bindToTexture);
+        Minecraft.getMinecraft().getTextureManager().deleteTexture(this.bindToTexture);
         this.glyphs.clear();
         this.width = -1;
         this.height = -1;
@@ -171,8 +171,10 @@ class GlyphMap {
      */
     public static void registerBufferedImageTexture(ResourceLocation id, BufferedImage bi) {
         try {
+            // MCP's DynamicTexture(BufferedImage) uploads the pixels in its constructor; the
+            // explicit refresh keeps it correct if a page is re-baked into the same object.
             DynamicTexture tex = new DynamicTexture(bi);
-            tex.upload();
+            tex.updateDynamicTexture();
             Minecraft.getMinecraft().getTextureManager().loadTexture(id, tex);
         } catch (Throwable t) {
             // A failed glyph upload must not take the frame down; text just will not draw.

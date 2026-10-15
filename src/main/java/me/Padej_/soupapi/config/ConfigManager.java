@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ConfigManager {
-    private static final Path CONFIG_PATH = Paths.get(Minecraft.getMinecraft().runDirectory.getResourcePath(), "config", "soupapi_config.json");
+    private static final Path CONFIG_PATH = Paths.get(Minecraft.getMinecraft().mcDataDir.getAbsolutePath(), "config", "soupapi_config.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private static Map<String, Map<String, Object>> config = new HashMap<>();
@@ -69,14 +69,14 @@ public class ConfigManager {
             String json = new String(Files.readAllBytes(CONFIG_PATH));
             if (json.trim().isEmpty()) return;
 
-            JsonObject fullData = JsonParser.parseString(json).getAsJsonObject();
+            JsonObject fullData = new JsonParser().parse(json).getAsJsonObject();
 
             JsonObject modulesJson = fullData.getAsJsonObject("modules");
             JsonObject metaJson = fullData.getAsJsonObject("meta");
 
             Type modulesType = new TypeToken<Map<String, Map<String, Object>>>(){}.getType();
             Map<String, Map<String, Object>> modulesConfig = GSON.fromJson(modulesJson, modulesType);
-            config = Objects.requireNonNullElseGet(modulesConfig, HashMap::new);
+            config = (modulesConfig != null ? modulesConfig : new HashMap<String, Map<String, Object>>());
 
             if (metaJson != null) {
                 Type metaType = new TypeToken<Map<String, String>>(){}.getType();

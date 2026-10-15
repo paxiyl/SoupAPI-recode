@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.utils;
 
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -18,8 +18,8 @@ public class EntityUtils {
         if (client.thePlayer == null) return;
 
         MovingObjectPosition hitResult = client.objectMouseOver;
-        if (hitResult != null && hitResult.type == MovingObjectPosition.Type.ENTITY && hitResult.entity != null) {
-            Entity checkedEntity = hitResult.entity;
+        if (hitResult != null && hitResult.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && hitResult.entityHit != null) {
+            Entity checkedEntity = hitResult.entityHit;
             if (!isFriend(checkedEntity) && !isSpectator(checkedEntity)) {
                 targetEntity = checkedEntity;
             } else {
@@ -39,7 +39,7 @@ public class EntityUtils {
                 !player.onGround &&
                 !player.isOnLadder() &&
                 !player.isInWater() &&
-                !player.isPotionActive(Potion.BLINDNESS) &&
+                !player.isPotionActive(Potion.blindness) &&
                 !player.isRiding() &&
                 !player.isSprinting();
     }
@@ -53,9 +53,9 @@ public class EntityUtils {
     }
 
     public static boolean isFriend(Entity entity) {
-        String entityName = entity.getName() == null ? null : entity.getName().getUnformattedText();
+        String entityName = entity.getName();
         if (entityName == null) return false;
-        for (String friend : SoupAPI_Main.configHolder.get().friends) {
+        for (String friend : SoupAPI.configHolder.get().friends) {
             if (friend.equalsIgnoreCase(entityName)) {
                 return true;
             }
@@ -64,7 +64,7 @@ public class EntityUtils {
     }
 
     public static boolean isFriend(String name) {
-        for (String friend : SoupAPI_Main.configHolder.get().friends) {
+        for (String friend : SoupAPI.configHolder.get().friends) {
             if (friend.equalsIgnoreCase(name)) {
                 return true;
             }

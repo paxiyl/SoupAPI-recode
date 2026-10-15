@@ -59,7 +59,7 @@ public class WatermarkRenderer {
         stack.push();
         stack.translate(x + 40 + textWidth, y - 3.7, 0);
         stack.scale(0.3f, 0.3f, 0.3f);
-        context.drawTexture(RenderLayer::getGuiTextured, TexturesManager.getMC_TiersGameModeTexture(), 0, 0, 0, 0, 40, 40, 1268, 1153, 1268, 1153, Palette.getTextColor());
+        context.drawTexture(TexturesManager.getMC_TiersGameModeTexture(), 0, 0, 0, 0, 40, 40, 1268, 1153, 1268, 1153);
         stack.pop();
 
         Render2D.renderRoundedGradientRect(stack, TargetHudRenderer.topLeft, TargetHudRenderer.topLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.bottomRight, x + 36 + textWidth, y - 4.5f, 1, 13.5f, 0);

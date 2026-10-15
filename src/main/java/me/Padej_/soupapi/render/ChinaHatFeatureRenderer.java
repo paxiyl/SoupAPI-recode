@@ -5,7 +5,7 @@ import me.Padej_.soupapi.compat.MatrixStack;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.compat.VertexConsumerProvider;
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import me.Padej_.soupapi.utils.EntityUtils;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.Minecraft;
@@ -38,9 +38,9 @@ public class ChinaHatFeatureRenderer implements LayerRenderer<AbstractClientPlay
     }
 
     @Override
-    public void render(AbstractClientPlayer entity, float limbAngle, float limbDistance,
-                       float tickDelta, float age, float headYaw, float headPitch, float scale) {
-        if (!SoupAPI_Main.configHolder.get().chinaHatEnabled) return;
+    public void doRenderLayer(AbstractClientPlayer entity, float limbAngle, float limbDistance,
+                              float tickDelta, float age, float headYaw, float headPitch, float scale) {
+        if (!SoupAPI.configHolder.get().chinaHatEnabled) return;
 
         Minecraft client = Minecraft.getMinecraft();
         if (client.thePlayer == null || entity == null) return;
@@ -58,7 +58,7 @@ public class ChinaHatFeatureRenderer implements LayerRenderer<AbstractClientPlay
                 GlStateManager.translate(0f, 0.2f, 0f);
             }
             // Inherit the head's pivot and rotation.
-            this.playerRenderer.getModel().head.preRender(scale);
+            this.playerRenderer.getMainModel().bipedHead.postRender(scale);
             // Undo the entity context's inverted Y so the cone is drawn upright.
             GlStateManager.scale(1f, -1f, 1f);
 
@@ -79,7 +79,7 @@ public class ChinaHatFeatureRenderer implements LayerRenderer<AbstractClientPlay
     }
 
     @Override
-    public boolean combineTextures() {
+    public boolean shouldCombineTextures() {
         return false;
     }
 }

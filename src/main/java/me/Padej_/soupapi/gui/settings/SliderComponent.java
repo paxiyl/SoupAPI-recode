@@ -24,8 +24,8 @@ public class SliderComponent extends SettingComponent<Float> {
         context.fill(x + fillWidth, y, x + width, y + height, 0xFF555555);
 
         IChatComponent text = Texts.translatable(setting.getTranslationKey())
-                .append(Texts.literal(": "))
-                .append(Texts.literal(String.valueOf(setting.getValue())));
+                .appendSibling(Texts.literal(": "))
+                .appendSibling(Texts.literal(String.valueOf(setting.getValue())));
 
         context.drawText(textRenderer, text, x + 5, y + 5, 0xFFFFFFFF, false);
     }

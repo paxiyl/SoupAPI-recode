@@ -16,8 +16,8 @@ public class EnumComponent<E extends Enum<E>> extends SettingComponent<E> {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         context.fill(x, y, x + width, y + height, 0xFF444444);
         IChatComponent text = Texts.translatable(setting.getTranslationKey())
-                .append(Texts.literal(": "))
-                .append(Texts.literal(setting.getValue().toString()));
+                .appendSibling(Texts.literal(": "))
+                .appendSibling(Texts.literal(setting.getValue().toString()));
         context.drawText(textRenderer, text, x + 4, y + 4, 0xFFFFFFFF, false);
     }
 

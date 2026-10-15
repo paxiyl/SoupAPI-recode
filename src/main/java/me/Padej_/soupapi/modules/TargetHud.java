@@ -138,7 +138,7 @@ public class TargetHud extends ConfigurableModule {
                 screenPos = worldSpaceToScreenSpace(entityPos);
 
                 // Проверяем, находится ли сущность в видимой области
-                if (screenPos.zCoord > 0 && screenPos.z < 1) {
+                if (screenPos.zCoord > 0 && screenPos.zCoord < 1) {
                     targetScreenX = (int) screenPos.xCoord;
                     targetScreenY = (int) screenPos.yCoord;
                 } else {
@@ -283,9 +283,9 @@ public class TargetHud extends ConfigurableModule {
         Vector3f target = new Vector3f();
         double scale = Windows.scaleFactor();
 
-        double deltaX = pos.xCoord - camera.getPositionVector().x;
-        double deltaY = pos.yCoord - camera.getPositionVector().y;
-        double deltaZ = pos.zCoord - camera.getPositionVector().z;
+        double deltaX = pos.xCoord - camera.getPositionVector().xCoord;
+        double deltaY = pos.yCoord - camera.getPositionVector().yCoord;
+        double deltaZ = pos.zCoord - camera.getPositionVector().zCoord;
 
         Vector4f transformedCoordinates = new Vector4f((float) deltaX, (float) deltaY, (float) deltaZ, 1.f).mul(lastWorldSpaceMatrix);
         Mat4 matrixProj = new Mat4(lastProjMat);

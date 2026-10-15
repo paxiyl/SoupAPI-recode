@@ -1,6 +1,6 @@
 package me.Padej_.soupapi.utils;
 
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.RenderWithAnimatedColor;
 
@@ -13,19 +13,19 @@ public class Palette {
     private static final Random random = new Random();
 
     public static int getRawColor1() {
-        return SoupAPI_Main.configHolder.get().c1;
+        return SoupAPI.configHolder.get().c1;
     }
 
     public static int getRawColor2() {
-        return SoupAPI_Main.configHolder.get().c2;
+        return SoupAPI.configHolder.get().c2;
     }
 
     public static int getRawColor3() {
-        return SoupAPI_Main.configHolder.get().c3;
+        return SoupAPI.configHolder.get().c3;
     }
 
     public static int getRawColor4() {
-        return SoupAPI_Main.configHolder.get().c4;
+        return SoupAPI.configHolder.get().c4;
     }
 
     public static int getColorsCount() {
@@ -46,11 +46,11 @@ public class Palette {
         progress = progress % 1f;
         if (progress < 0f) progress += 1f;
 
-        Palette.ColorsStyle style = SoupAPI_Main.configHolder.get().paletteStyle;
-        int c1 = SoupAPI_Main.configHolder.getConfig().c1;
-        int c2 = SoupAPI_Main.configHolder.getConfig().c2;
-        int c3 = SoupAPI_Main.configHolder.getConfig().c3;
-        int c4 = SoupAPI_Main.configHolder.getConfig().c4;
+        Palette.ColorsStyle style = SoupAPI.configHolder.get().paletteStyle;
+        int c1 = SoupAPI.configHolder.getConfig().c1;
+        int c2 = SoupAPI.configHolder.getConfig().c2;
+        int c3 = SoupAPI.configHolder.getConfig().c3;
+        int c4 = SoupAPI.configHolder.getConfig().c4;
 
         switch (style) {
             case SOLO:
@@ -82,7 +82,7 @@ public class Palette {
     }
 
     public static ColorsStyle getStyle() {
-        return SoupAPI_Main.configHolder.get().paletteStyle;
+        return SoupAPI.configHolder.get().paletteStyle;
     }
 
     public static Color getColor(float position) {

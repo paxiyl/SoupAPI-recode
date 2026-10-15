@@ -177,7 +177,7 @@ public class TotemPopParticles extends ConfigurableModule {
             matrixStack.scale(renderScale, renderScale, renderScale);
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-Cameras.get().getYaw()));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Cameras.get().getPitch()));
-            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getMinecraft().getCurrentFps()) * rotationSpeed));
+            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getDebugFPS()) * rotationSpeed));
 
             if (glyphTexture != null) {
                 Render2D.drawGlyphs(matrixStack, glyphTexture, new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (alpha * 255)), scale);

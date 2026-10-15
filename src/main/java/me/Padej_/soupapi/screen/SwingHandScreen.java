@@ -118,7 +118,7 @@ public class SwingHandScreen extends SoupScreen {
         context.fill(buttonX, buttonY, buttonX + buttonWidth, buttonY + buttonHeight,
                 buttonHovered ? 0xFF5A5A5A : 0xFF3C3C3C);
         context.drawBorder(buttonX, buttonY, buttonWidth, buttonHeight, 0xFF000000);
-        context.drawCenteredTextWithShadow(this.textRenderer, "Swing Hand",
+        context.drawCenteredTextWithShadow(this.fontRendererObj, "Swing Hand",
                 buttonX + buttonWidth / 2, buttonY + (buttonHeight - 8) / 2, 0xFFFFFFFF);
     }
 
@@ -228,7 +228,7 @@ public class SwingHandScreen extends SoupScreen {
             context.drawBorder(x, y, width, height, 0xFF000000);
 
             String text = label + ": " + String.format("%.1f", min + value * (max - min));
-            context.drawCenteredTextWithShadow(SwingHandScreen.this.textRenderer, text,
+            context.drawCenteredTextWithShadow(SwingHandScreen.this.fontRendererObj, text,
                     x + width / 2, y + (height - 8) / 2, 0xFFFFFFFF);
         }
 

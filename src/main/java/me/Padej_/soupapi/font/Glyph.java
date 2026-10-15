@@ -7,7 +7,7 @@ final class Glyph {
     private final char value;
     private final GlyphMap owner;
 
-    Glyph(int u, int v, int width, int height, char value, GlyphMap owner) {
+    public Glyph(int u, int v, int width, int height, char value, GlyphMap owner) {
         this.u = u;
         this.v = v;
         this.width = width;

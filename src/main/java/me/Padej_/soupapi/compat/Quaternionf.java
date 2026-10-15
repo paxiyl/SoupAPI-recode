@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.compat;
 
+import me.Padej_.soupapi.compat.Mat4;
+
 /**
  * Replacement for {@code org.joml.Quaternionf}, which 1.8.9 has no equivalent of.
  *

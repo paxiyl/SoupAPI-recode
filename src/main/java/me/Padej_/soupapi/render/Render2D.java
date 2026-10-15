@@ -262,7 +262,7 @@ public class Render2D {
             BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(content));
             if (image == null) return;
             DynamicTexture tex = new DynamicTexture(image);
-            tex.upload();
+            tex.updateDynamicTexture();
             mc.getTextureManager().loadTexture(i.getId(), tex);
         } catch (Exception ignored) {
         }
@@ -486,7 +486,7 @@ public static final class Rectangle {
     private final float x1;
     private final float y1;
 
-    Rectangle(float x, float y, float x1, float y1) {
+    public Rectangle(float x, float y, float x1, float y1) {
         this.x = x;
         this.y = y;
         this.x1 = x1;

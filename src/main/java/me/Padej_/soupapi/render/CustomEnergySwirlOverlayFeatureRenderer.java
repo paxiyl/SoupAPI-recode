@@ -2,8 +2,6 @@ package me.Padej_.soupapi.render;
 
 import net.minecraft.client.renderer.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.model.ModelBase;
@@ -26,13 +24,12 @@ import org.lwjgl.opengl.GL11;
  * global, so a leaked texture matrix or blend func would corrupt everything drawn afterwards in the
  * frame.
  */
-@Environment(EnvType.CLIENT)
 public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends EntityLivingBase>
         implements LayerRenderer<E> {
 
     @Override
-    public void render(E entity, float limbAngle, float limbDistance, float tickDelta,
-                       float age, float headYaw, float headPitch, float scale) {
+    public void doRenderLayer(E entity, float limbAngle, float limbDistance, float tickDelta,
+                              float age, float headYaw, float headPitch, float scale) {
         if (!shouldRender(entity)) return;
 
         ModelBase model = getEnergySwirlModel();
@@ -73,7 +70,7 @@ public abstract class CustomEnergySwirlOverlayFeatureRenderer<E extends EntityLi
     }
 
     @Override
-    public boolean combineTextures() {
+    public boolean shouldCombineTextures() {
         return false;
     }
 

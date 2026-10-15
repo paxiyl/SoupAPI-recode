@@ -24,9 +24,9 @@ public class Trail {
 
     public Vec3 interpolate(float pt) {
         Vec3 cameraPos = new net.minecraft.util.Vec3(mc.getRenderManager().viewerPosX, mc.getRenderManager().viewerPosY, mc.getRenderManager().viewerPosZ);
-        double x = from.xCoord + ((to.xCoord - from.xCoord) * pt) - cameraPos.x;
-        double y = from.yCoord + ((to.yCoord - from.yCoord) * pt) - cameraPos.y;
-        double z = from.zCoord + ((to.zCoord - from.zCoord) * pt) - cameraPos.z;
+        double x = from.xCoord + ((to.xCoord - from.xCoord) * pt) - cameraPos.xCoord;
+        double y = from.yCoord + ((to.yCoord - from.yCoord) * pt) - cameraPos.yCoord;
+        double z = from.zCoord + ((to.zCoord - from.zCoord) * pt) - cameraPos.zCoord;
         return new Vec3(x, y, z);
     }
 

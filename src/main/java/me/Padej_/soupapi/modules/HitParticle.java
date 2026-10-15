@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.font.FontRenderers;
+
 import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.compat.Maths;
@@ -45,17 +47,17 @@ public class HitParticle extends ConfigurableModule {
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
             if (!CONFIG.hitParticlesEnabled || playerEntity != mc.thePlayer) {
-                return ActionResult.PASS;
+                return AttackEntityCallback.Result.PASS;
             }
             if (!(entity instanceof EntityLivingBase)) {
-                return ActionResult.PASS;
+                return AttackEntityCallback.Result.PASS;
             }
             EntityLivingBase target = (EntityLivingBase) entity;
-            if (!target.isAlive()) {
-                return ActionResult.PASS;
+            if (!target.isEntityAlive()) {
+                return AttackEntityCallback.Result.PASS;
             }
             if (CONFIG.hitParticlesCritOnly && !EntityUtils.isCrit()) {
-                return ActionResult.PASS;
+                return AttackEntityCallback.Result.PASS;
             }
 
             damagedEntity = target; // Отмечаем пораженную сущность
@@ -97,7 +99,7 @@ public class HitParticle extends ConfigurableModule {
                 }
             }
 
-            return ActionResult.PASS;
+            return AttackEntityCallback.Result.PASS;
         });
     }
 
@@ -115,10 +117,10 @@ public class HitParticle extends ConfigurableModule {
                 for (Entity entity : mc.theWorld.loadedEntityList) {
                     if (!(entity instanceof EntityLivingBase)) continue;
                     EntityLivingBase lent = (EntityLivingBase) entity;
-                    if (mc.thePlayer.getDistanceSqToEntity(entity) <= 256f && lent.isAlive()) {
+                    if (mc.thePlayer.getDistanceSqToEntity(entity) <= 256f && lent.isEntityAlive()) {
                         float health = lent.getHealth() + lent.getAbsorptionAmount();
-                        float lastHealth = healthMap.getOrDefault(entity.getId(), health);
-                        healthMap.put(entity.getId(), health);
+                        float lastHealth = healthMap.getOrDefault(entity.getEntityId(), health);
+                        healthMap.put(entity.getEntityId(), health);
                         if (lastHealth == health) continue;
 
                         float delta = health - lastHealth;
@@ -307,7 +309,7 @@ public class HitParticle extends ConfigurableModule {
             if (isText) {
                 matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
             } else {
-                matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getMinecraft().getCurrentFps()) * rotationSpeed));
+                matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getDebugFPS()) * rotationSpeed));
             }
 
             matrixStack.translate(-size / 2f, -size / 2f, -size / 2f);
@@ -322,18 +324,7 @@ public class HitParticle extends ConfigurableModule {
                         Math.max(1, (int) (alpha * 255))
                 ).getRGB();
 
-                Minecraft.getMinecraft().fontRendererObj.draw(
-                        Texts.literal(hpString),
-                        0,
-                        0,
-                        fadedColor,
-                        false,
-                        matrixStack.peek().getPositionMatrix(),
-                        vertexConsumerProvider,
-                        FontRenderer.TextLayerType.NORMAL,
-                        0,
-                        LightmapTextureManager.pack(15, 15)
-                );
+                FontRenderers.sf_bold_mini.drawString(matrixStack, hpString, 0, 0, fadedColor);
             } else {
                 if (glyphTexture != null) {
                     Render2D.drawGlyphs(matrixStack, glyphTexture, new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (alpha * 255)), size);

@@ -54,6 +54,11 @@ public final class Camera {
         return new Vec3(x, y + e.getEyeHeight(), z);
     }
 
+    /** Alias of {@link #getPos()}; MCP spells Entity's equivalent {@code getPositionVector}. */
+    public Vec3 getPositionVector() {
+        return getPos();
+    }
+
     public float getYaw() {
         Entity e = getFocusedEntity();
         if (e == null) return 0f;

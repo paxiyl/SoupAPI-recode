@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.Padej_.soupapi.compat.SoupLog;
 import me.Padej_.soupapi.config.annotation.Config;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +46,8 @@ public final class GsonConfigSerializer<T extends ConfigData> implements ConfigS
 
         Config annotation = type.getAnnotation(Config.class);
         String name = annotation != null ? annotation.name() : type.getSimpleName().toLowerCase();
-        this.file = new File(FabricLoader.getInstance().getConfigDir().toFile(), name + ".json");
+        // Forge has no config-dir API; the game directory's config/ folder is the convention.
+        this.file = new File(new File(Minecraft.getMinecraft().mcDataDir, "config"), name + ".json");
     }
 
     public File getFile() {

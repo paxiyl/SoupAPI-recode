@@ -99,8 +99,8 @@ public class Render3D_Shapes {
             RenderSystem.disableCull();
             RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
             DEBUG_LINE_QUEUE.forEach(action -> {
-                MatrixStack matrices = matrixFrom(action.start.x, action.start.y, action.start.z);
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.x - action.start.x), (float) (action.end.y - action.start.y), (float) (action.end.z - action.start.z), action.color);
+                MatrixStack matrices = matrixFrom(action.start.xCoord, action.start.yCoord, action.start.zCoord);
+                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.xCoord - action.start.xCoord), (float) (action.end.yCoord - action.start.yCoord), (float) (action.end.zCoord - action.start.zCoord), action.color);
             });
             Render2D.endBuilding(buffer);
             RenderSystem.enableCull();
@@ -118,8 +118,8 @@ public class Render3D_Shapes {
             RenderSystem.disableDepthTest();
             BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
             LINE_QUEUE.forEach(action -> { // !!!
-                MatrixStack matrices = matrixFrom(action.start.x, action.start.y, action.start.z);
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.x - action.start.x), (float) (action.end.y - action.start.y), (float) (action.end.z - action.start.z), action.color);
+                MatrixStack matrices = matrixFrom(action.start.xCoord, action.start.yCoord, action.start.zCoord);
+                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.xCoord - action.start.xCoord), (float) (action.end.yCoord - action.start.yCoord), (float) (action.end.zCoord - action.start.zCoord), action.color);
             });
             Render2D.endBuilding(buffer);
             RenderSystem.enableCull();
@@ -204,7 +204,7 @@ public class Render3D_Shapes {
 
         Camera camera = Cameras.get();
 
-        matrices.translate(x - camera.getPositionVector().x, y - camera.getPositionVector().y, z - camera.getPositionVector().z);
+        matrices.translate(x - camera.getPositionVector().xCoord, y - camera.getPositionVector().yCoord, z - camera.getPositionVector().zCoord);
 
         return matrices;
     }
@@ -246,7 +246,7 @@ public class Render3D_Shapes {
         float xNormal = x2 - x1;
         float yNormal = y2 - y1;
         float zNormal = z2 - z1;
-        float normalSqrt = MathHelper.sqrt(xNormal * xNormal + yNormal * yNormal + zNormal * zNormal);
+        float normalSqrt = MathHelper.sqrt_float(xNormal * xNormal + yNormal * yNormal + zNormal * zNormal);
 
         return new Vector3f(xNormal / normalSqrt, yNormal / normalSqrt, zNormal / normalSqrt);
     }
@@ -414,7 +414,7 @@ public static final class FillAction {
     private final AxisAlignedBB box;
     private final Color color;
 
-    FillAction(AxisAlignedBB box, Color color) {
+    public FillAction(AxisAlignedBB box, Color color) {
         this.box = box;
         this.color = color;
     }
@@ -455,7 +455,7 @@ public static final class OutlineAction {
     private final Color color;
     private final float lineWidth;
 
-    OutlineAction(AxisAlignedBB box, Color color, float lineWidth) {
+    public OutlineAction(AxisAlignedBB box, Color color, float lineWidth) {
         this.box = box;
         this.color = color;
         this.lineWidth = lineWidth;
@@ -503,7 +503,7 @@ public static final class FadeAction {
     private final Color color;
     private final Color color2;
 
-    FadeAction(AxisAlignedBB box, Color color, Color color2) {
+    public FadeAction(AxisAlignedBB box, Color color, Color color2) {
         this.box = box;
         this.color = color;
         this.color2 = color2;
@@ -551,7 +551,7 @@ public static final class FillSideAction {
     private final Color color;
     private final EnumFacing side;
 
-    FillSideAction(AxisAlignedBB box, Color color, EnumFacing side) {
+    public FillSideAction(AxisAlignedBB box, Color color, EnumFacing side) {
         this.box = box;
         this.color = color;
         this.side = side;
@@ -600,7 +600,7 @@ public static final class OutlineSideAction {
     private final float lineWidth;
     private final EnumFacing side;
 
-    OutlineSideAction(AxisAlignedBB box, Color color, float lineWidth, EnumFacing side) {
+    public OutlineSideAction(AxisAlignedBB box, Color color, float lineWidth, EnumFacing side) {
         this.box = box;
         this.color = color;
         this.lineWidth = lineWidth;
@@ -655,7 +655,7 @@ public static final class DebugLineAction {
     private final Vec3 end;
     private final Color color;
 
-    DebugLineAction(Vec3 start, Vec3 end, Color color) {
+    public DebugLineAction(Vec3 start, Vec3 end, Color color) {
         this.start = start;
         this.end = end;
         this.color = color;
@@ -703,7 +703,7 @@ public static final class LineAction {
     private final Vec3 end;
     private final Color color;
 
-    LineAction(Vec3 start, Vec3 end, Color color) {
+    public LineAction(Vec3 start, Vec3 end, Color color) {
         this.start = start;
         this.end = end;
         this.color = color;
