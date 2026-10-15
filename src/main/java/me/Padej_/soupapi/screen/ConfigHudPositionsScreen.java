@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Windows;
+
 import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -7,7 +9,7 @@ import me.Padej_.soupapi.utils.CursorUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import me.Padej_.soupapi.compat.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
+import me.Padej_.soupapi.compat.SoupScreen;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
@@ -16,7 +18,7 @@ import java.util.List;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
-public class ConfigHudPositionsScreen extends Screen {
+public class ConfigHudPositionsScreen extends SoupScreen {
     private final Frame targetHudFrame;
     private final Frame potionsHudFrame;
     private final Frame watermarkFrame;
@@ -24,8 +26,8 @@ public class ConfigHudPositionsScreen extends Screen {
 
     public ConfigHudPositionsScreen() {
         super(Texts.literal("SoupAPI config screen"));
-        int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+        int centerX = Windows.scaledWidth() / 2;
+        int centerY = Windows.scaledHeight() / 2;
         targetHudFrame = new Frame(
                 centerX + CONFIG.targetHudOffsetX,
                 centerY - CONFIG.targetHudOffsetY,
@@ -110,8 +112,8 @@ public class ConfigHudPositionsScreen extends Screen {
             if (targetHudFrame.isDragging()) {
                 Point snapped = applySnappingOffsets(targetHudFrame, mouseX, mouseY);
                 targetHudFrame.setPosition(snapped.x, snapped.y);
-                int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-                int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+                int centerX = Windows.scaledWidth() / 2;
+                int centerY = Windows.scaledHeight() / 2;
                 CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
                 CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
                 return true;
@@ -154,8 +156,8 @@ public class ConfigHudPositionsScreen extends Screen {
 
     @Override
     public void close() {
-        int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+        int centerX = Windows.scaledWidth() / 2;
+        int centerY = Windows.scaledHeight() / 2;
         CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
         CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
         CONFIG.hudBetterPotionsHudX = potionsHudFrame.getOffsetX(0);
@@ -170,8 +172,8 @@ public class ConfigHudPositionsScreen extends Screen {
     }
 
     private void renderSnapGuides(DrawContext context, Frame movingFrame) {
-        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        int screenWidth = Windows.scaledWidth();
+        int screenHeight = Windows.scaledHeight();
 
         int snapThreshold = 5;
         boolean drawVertical = false, drawHorizontal = false;
@@ -228,8 +230,8 @@ public class ConfigHudPositionsScreen extends Screen {
     }
 
     private Point applySnappingOffsets(Frame frame, double mouseX, double mouseY) {
-        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        int screenWidth = Windows.scaledWidth();
+        int screenHeight = Windows.scaledHeight();
         int snapThreshold = 5;
 
         int newX = (int)(mouseX - frame.dragOffsetX);
@@ -335,8 +337,8 @@ public class ConfigHudPositionsScreen extends Screen {
 
         public void updatePosition(double mouseX, double mouseY) {
             if (isDragging) {
-                int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-                int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+                int screenWidth = Windows.scaledWidth();
+                int screenHeight = Windows.scaledHeight();
 
                 int newX = (int)(mouseX - dragOffsetX);
                 int newY = (int)(mouseY - dragOffsetY);

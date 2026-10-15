@@ -34,7 +34,7 @@ public class ConfigManager {
         // Собираем настройки модулей
         Map<String, Map<String, Object>> modulesConfig = new HashMap<>();
         for (SoupModule module : SoupSettingsScreen.getAllModules()) {
-            modulesConfig.put(module.getDisplayName().getString(), getStringObjectMap(module));
+            modulesConfig.put(module.getDisplayName().asUnformattedString(), getStringObjectMap(module));
         }
 
         fullData.put("modules", modulesConfig);

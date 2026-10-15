@@ -1,69 +1,165 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.SoupScreen;
 import me.Padej_.soupapi.compat.Texts;
-
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.modules.SwingHand;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.Text;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
-public class SwingHandScreen extends Screen {
+/**
+ * Live editor for the first-person hand transform.
+ *
+ * <p>Rewritten with self-contained sliders. The 1.21.4 version used
+ * {@code SliderWidget}'s {@code applyValue}/{@code updateMessage} hooks and
+ * {@code ButtonWidget.builder(...).dimensions(...).build()}, none of which exist in 1.8.9 — its
+ * {@code SliderWidget} is hard-wired to a {@code GameOptions} entry and its {@code ButtonWidget}
+ * is an id-plus-message object dispatched through {@code buttonClicked}. Drawing and hit-testing
+ * the sliders directly is both shorter than adapting those and behaves the same under
+ * PojavLauncher's touch input, which synthesises ordinary click and drag events.
+ */
+public class SwingHandScreen extends SoupScreen {
+
+    private static final int SLIDER_WIDTH = 100;
+    private static final int SLIDER_HEIGHT = 20;
+    private static final int PADDING = 5;
+
+    private final List<Slider> sliders = new ArrayList<Slider>();
+    private Slider dragging;
+
+    private int buttonX, buttonY, buttonWidth, buttonHeight;
 
     public SwingHandScreen() {
         super(Texts.literal("Swing Hand Screen"));
     }
 
     @Override
-    protected void init() {
-        MinecraftClient mc = MinecraftClient.getInstance();
+    public void init() {
+        sliders.clear();
+
         int centerX = this.width / 2;
         int centerY = this.height / 2;
-
-        int sliderWidth = 100;
-        int sliderHeight = 20;
-        int padding = 5;
-        int rowSpacing = sliderHeight + padding;
-        int colSpacing = sliderWidth + padding;
-
-        // Теперь полностью рассчитываем начало таблицы
-        int totalWidth = sliderWidth * 3 + padding * 2; // 3 слайдера + 2 промежутка
+        int rowSpacing = SLIDER_HEIGHT + PADDING;
+        int totalWidth = SLIDER_WIDTH * 3 + PADDING * 2;
         int startX = centerX - totalWidth / 2;
-        int startY = centerY - 90;
+        int y = centerY - 90;
 
-        int y = startY;
-
-        // Первая строка: Позиция
-        addSlider(startX, y, "X Pos", -2.0F, 2.0F, () -> SwingHand.xPos, v -> SwingHand.xPos = v);
-        addSlider(startX + sliderWidth + padding, y, "Y Pos", -2.0F, 2.0F, () -> SwingHand.yPos, v -> SwingHand.yPos = v);
-        addSlider(startX + (sliderWidth + padding) * 2, y, "Z Pos", -2.0F, 2.0F, () -> SwingHand.zPos, v -> SwingHand.zPos = v);
+        // Position
+        addSlider(startX, y, SLIDER_WIDTH, "X Pos", -2.0F, 2.0F, SwingHand.xPos, new Setter() {
+            public void accept(float v) { SwingHand.xPos = v; }
+        });
+        addSlider(startX + SLIDER_WIDTH + PADDING, y, SLIDER_WIDTH, "Y Pos", -2.0F, 2.0F, SwingHand.yPos, new Setter() {
+            public void accept(float v) { SwingHand.yPos = v; }
+        });
+        addSlider(startX + (SLIDER_WIDTH + PADDING) * 2, y, SLIDER_WIDTH, "Z Pos", -2.0F, 2.0F, SwingHand.zPos, new Setter() {
+            public void accept(float v) { SwingHand.zPos = v; }
+        });
         y += rowSpacing;
 
-        // Вторая строка: Обычная ротация
-        addSlider(startX, y, "X Rot", -180.0F, 180.0F, () -> SwingHand.rotX, v -> SwingHand.rotX = (int) v);
-        addSlider(startX + sliderWidth + padding, y, "Y Rot", -180.0F, 180.0F, () -> SwingHand.rotY, v -> SwingHand.rotY = (int) v);
-        addSlider(startX + (sliderWidth + padding) * 2, y, "Z Rot", -180.0F, 180.0F, () -> SwingHand.rotZ, v -> SwingHand.rotZ = (int) v);
+        // Rotation
+        addSlider(startX, y, SLIDER_WIDTH, "X Rot", -180.0F, 180.0F, SwingHand.rotX, new Setter() {
+            public void accept(float v) { SwingHand.rotX = (int) v; }
+        });
+        addSlider(startX + SLIDER_WIDTH + PADDING, y, SLIDER_WIDTH, "Y Rot", -180.0F, 180.0F, SwingHand.rotY, new Setter() {
+            public void accept(float v) { SwingHand.rotY = (int) v; }
+        });
+        addSlider(startX + (SLIDER_WIDTH + PADDING) * 2, y, SLIDER_WIDTH, "Z Rot", -180.0F, 180.0F, SwingHand.rotZ, new Setter() {
+            public void accept(float v) { SwingHand.rotZ = (int) v; }
+        });
         y += rowSpacing;
 
-        // Третья строка: Swing ротация
-        addSlider(startX, y, "X Swing Rot", -90.0F, 90.0F, () -> SwingHand.xSwingRot, v -> SwingHand.xSwingRot = (int) v);
-        addSlider(startX + sliderWidth + padding, y, "Y Swing Rot", -90.0F, 90.0F, () -> SwingHand.ySwingRot, v -> SwingHand.ySwingRot = (int) v);
-        addSlider(startX + (sliderWidth + padding) * 2, y, "Z Swing Rot", -90.0F, 90.0F, () -> SwingHand.zSwingRot, v -> SwingHand.zSwingRot = (int) v);
+        // Swing rotation
+        addSlider(startX, y, SLIDER_WIDTH, "X Swing Rot", -90.0F, 90.0F, SwingHand.xSwingRot, new Setter() {
+            public void accept(float v) { SwingHand.xSwingRot = (int) v; }
+        });
+        addSlider(startX + SLIDER_WIDTH + PADDING, y, SLIDER_WIDTH, "Y Swing Rot", -90.0F, 90.0F, SwingHand.ySwingRot, new Setter() {
+            public void accept(float v) { SwingHand.ySwingRot = (int) v; }
+        });
+        addSlider(startX + (SLIDER_WIDTH + PADDING) * 2, y, SLIDER_WIDTH, "Z Swing Rot", -90.0F, 90.0F, SwingHand.zSwingRot, new Setter() {
+            public void accept(float v) { SwingHand.zSwingRot = (int) v; }
+        });
         y += rowSpacing;
 
-        // Scale и Speed слайдеры рядом друг с другом
-        addSliderX2W((int) (centerX - sliderWidth * 1.5f) - padding, y, "Scale", 0.0F, 2.0F, () -> SwingHand.scale, v -> SwingHand.scale = v);
-        addSliderX2W(centerX + padding, y, "Speed", 0.0F, 100.0F, () -> SwingHand.speed, v -> SwingHand.speed = (int) v);
-        y += rowSpacing + 10; // дополнительный отступ перед кнопкой
+        // Scale and speed, each one and a half slots wide.
+        int wideWidth = (int) (SLIDER_WIDTH * 1.5f);
+        addSlider((int) (centerX - SLIDER_WIDTH * 1.5f) - PADDING, y, wideWidth, "Scale", 0.0F, 2.0F,
+                SwingHand.scale, new Setter() {
+                    public void accept(float v) { SwingHand.scale = v; }
+                });
+        addSlider(centerX + PADDING, y, wideWidth, "Speed", 0.0F, 100.0F, SwingHand.speed, new Setter() {
+            public void accept(float v) { SwingHand.speed = (int) v; }
+        });
+        y += rowSpacing + 10;
 
-        this.addDrawableChild(ButtonWidget.builder(Texts.literal("Swing Hand"), button -> {
-            if (mc.player == null) return;
-            mc.player.swingHand(mc.player.getActiveHand());
-        }).dimensions(centerX - 50, y, 100, 20).build());
+        buttonX = centerX - 50;
+        buttonY = y;
+        buttonWidth = 100;
+        buttonHeight = 20;
+    }
+
+    private void addSlider(int x, int y, int width, String label, float min, float max,
+                           float current, Setter setter) {
+        sliders.add(new Slider(x, y, width, SLIDER_HEIGHT, label, min, max, current, setter));
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        for (int i = 0; i < sliders.size(); i++) {
+            sliders.get(i).render(context, mouseX, mouseY);
+        }
+
+        boolean buttonHovered = mouseX >= buttonX && mouseX <= buttonX + buttonWidth
+                && mouseY >= buttonY && mouseY <= buttonY + buttonHeight;
+        context.fill(buttonX, buttonY, buttonX + buttonWidth, buttonY + buttonHeight,
+                buttonHovered ? 0xFF5A5A5A : 0xFF3C3C3C);
+        context.drawBorder(buttonX, buttonY, buttonWidth, buttonHeight, 0xFF000000);
+        context.drawCenteredTextWithShadow(this.textRenderer, "Swing Hand",
+                buttonX + buttonWidth / 2, buttonY + (buttonHeight - 8) / 2, 0xFFFFFFFF);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0) return false;
+
+        for (int i = 0; i < sliders.size(); i++) {
+            Slider slider = sliders.get(i);
+            if (slider.isOver(mouseX, mouseY)) {
+                dragging = slider;
+                slider.setFromMouse(mouseX);
+                return true;
+            }
+        }
+
+        if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth
+                && mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.player != null) {
+                // 1.8.9 has only one hand, so swingHand() takes no argument.
+                mc.player.swingHand();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (dragging != null) {
+            dragging.setFromMouse(mouseX);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        dragging = null;
+        return false;
     }
 
     @Override
@@ -88,44 +184,56 @@ public class SwingHandScreen extends Screen {
         return false;
     }
 
-    private void addSlider(int x, int y, String label, float min, float max, FloatSupplier getter, FloatConsumer setter) {
-        this.addDrawableChild(new SliderWidget(x, y, 100, 20, Texts.literal(label), (getter.get() - min) / (max - min)) {
-            @Override
-            protected void updateMessage() {
-                this.setMessage(Texts.literal(label + ": " + String.format("%.1f", min + this.value * (max - min))));
-            }
-
-            @Override
-            protected void applyValue() {
-                setter.accept(min + (float) (this.value * (max - min)));
-            }
-        });
-    }
-
-    private void addSliderX2W(int x, int y, String label, float min, float max, FloatSupplier getter, FloatConsumer setter) {
-        this.addDrawableChild(new SliderWidget(x, y, (int) (100 * 1.5f), 20, Texts.literal(label), (getter.get() - min) / (max - min)) {
-            @Override
-            protected void updateMessage() {
-                this.setMessage(Texts.literal(label + ": " + String.format("%.1f", min + this.value * (max - min))));
-            }
-
-            @Override
-            protected void applyValue() {
-                setter.accept(min + (float) (this.value * (max - min)));
-            }
-        });
-    }
-
-    @FunctionalInterface
-    private interface FloatSupplier {
-        float get();
-    }
-
-    @FunctionalInterface
-    private interface FloatConsumer {
+    /** Receives a slider's value as it changes. */
+    private interface Setter {
         void accept(float value);
     }
+
+    /** A horizontal slider that draws and hit-tests itself. */
+    private final class Slider {
+        private final int x, y, width, height;
+        private final String label;
+        private final float min, max;
+        private final Setter setter;
+        /** Normalised position in [0, 1]. */
+        private float value;
+
+        Slider(int x, int y, int width, int height, String label,
+               float min, float max, float current, Setter setter) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.label = label;
+            this.min = min;
+            this.max = max;
+            this.setter = setter;
+            this.value = max == min ? 0f : clamp01((current - min) / (max - min));
+        }
+
+        boolean isOver(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        }
+
+        void setFromMouse(double mouseX) {
+            value = clamp01((float) ((mouseX - x) / (double) width));
+            setter.accept(min + value * (max - min));
+        }
+
+        void render(DrawContext context, int mouseX, int mouseY) {
+            context.fill(x, y, x + width, y + height, 0xFF2B2B2B);
+            int handleX = x + (int) (value * (width - 8));
+            context.fill(handleX, y, handleX + 8, y + height,
+                    isOver(mouseX, mouseY) ? 0xFFAAAAAA : 0xFF8B8B8B);
+            context.drawBorder(x, y, width, height, 0xFF000000);
+
+            String text = label + ": " + String.format("%.1f", min + value * (max - min));
+            context.drawCenteredTextWithShadow(SwingHandScreen.this.textRenderer, text,
+                    x + width / 2, y + (height - 8) / 2, 0xFFFFFFFF);
+        }
+
+        private float clamp01(float v) {
+            return v < 0f ? 0f : (v > 1f ? 1f : v);
+        }
+    }
 }
-
-
-

@@ -35,7 +35,7 @@ public abstract class ButtonWidgetMixin extends PressableWidget {
     @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
     private void onPress(CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
-        switch (this.getMessage().getString()) {
+        switch (this.getMessage().asUnformattedString()) {
             case "CONFIG_POS":
                 {
                     mc.setScreen(new ConfigHudPositionsScreen());

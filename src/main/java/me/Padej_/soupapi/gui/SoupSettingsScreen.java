@@ -10,12 +10,12 @@ import me.Padej_.soupapi.settings.Setting;
 import me.Padej_.soupapi.settings.impl.*;
 import net.minecraft.client.MinecraftClient;
 import me.Padej_.soupapi.compat.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
+import me.Padej_.soupapi.compat.SoupScreen;
 import net.minecraft.text.Text;
 
 import java.util.*;
 
-public class SoupSettingsScreen extends Screen {
+public class SoupSettingsScreen extends SoupScreen {
 
     private final Map<SoupModule.Category, List<SoupModule>> modulesByCategory;
     private final Map<Setting<?>, SettingComponent<?>> settingComponents = new HashMap<>();
@@ -136,7 +136,7 @@ public class SoupSettingsScreen extends Screen {
         if (hoveredDescription != null && !hoveredDescription.isEmpty()) {
             int screenWidth = this.width;
             int screenHeight = this.height;
-            int textWidth = MinecraftClient.getInstance().textRenderer.getWidth(hoveredDescription);
+            int textWidth = MinecraftClient.getInstance().textRenderer.getStringWidth(hoveredDescription);
             int textX = (screenWidth - textWidth) / 2;
             int textY = screenHeight - 80;
 
@@ -281,7 +281,7 @@ public class SoupSettingsScreen extends Screen {
     @Override
     public void close() {
         ConfigManager.setMetadata("selectedCategory", selectedCategory.name());
-        ConfigManager.setMetadata("selectedModule", selectedModule != null ? selectedModule.getDisplayName().getString() : null);
+        ConfigManager.setMetadata("selectedModule", selectedModule != null ? selectedModule.getDisplayName().asUnformattedString() : null);
         ConfigManager.saveConfig();
         super.close();
     }

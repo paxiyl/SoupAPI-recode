@@ -6,16 +6,15 @@ import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.modules.Capes;
 import net.minecraft.client.MinecraftClient;
 import me.Padej_.soupapi.compat.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
+import me.Padej_.soupapi.compat.SoupScreen;
 import me.Padej_.soupapi.compat.RenderLayer;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 import static me.Padej_.soupapi.config.ConfigurableModule.saveConfig;
 
-public class CapeSelectScreen extends Screen {
+public class CapeSelectScreen extends SoupScreen {
     private static final int TEXTURE_RENDER_WIDTH = 20;
     private static final int TEXTURE_RENDER_HEIGHT = 32;
     private static final int PADDING = 8;
@@ -37,7 +36,9 @@ public class CapeSelectScreen extends Screen {
         for (String category : categories) {
             context.drawText(
                     MinecraftClient.getInstance().textRenderer,
-                    Texts.literal(category).copy().formatted(Formatting.BOLD),
+                    // 1.8.9 has no Text.formatted(); the legacy bold code is the
+                    // equivalent and renders identically.
+                    Texts.literal("\u00A7l" + category),
                     x,
                     categoryY, 0xFFFFFFFF, true
             );
@@ -111,6 +112,8 @@ public class CapeSelectScreen extends Screen {
     }
 
     private void drawTexture(DrawContext context, Identifier texture, int x, int y) {
-        context.drawTexture(RenderLayer::getGuiTextured, texture, x, y, 2, 2, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT, 128, 64);
+        // 1.8.9 has no render-layer parameter: DrawContext binds the texture itself.
+        context.drawTexture(texture, x, y, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT,
+                2, 2, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT, 128, 64);
     }
 }
