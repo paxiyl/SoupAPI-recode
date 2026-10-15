@@ -1,8 +1,5 @@
 package me.Padej_.soupapi.modules;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.font.FontRenderers;
 import me.Padej_.soupapi.render.Render2D;
@@ -16,20 +13,15 @@ import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 
 import java.awt.*;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 
 public class PotionsHud extends ConfigurableModule {
     private static final Map<Potion, Float> effectAlphas = new HashMap<>();
     private static final Map<Potion, Integer> maxDurations = new HashMap<>();
-    private static final Map<String, String> enUsTranslations = new HashMap<>();
-
     /** Vanilla's inventory sheet, which carries the 18x18 status-effect icons at y=198. */
     private static final ResourceLocation INVENTORY_ICONS =
             new ResourceLocation("textures/gui/container/inventory.png");
@@ -37,32 +29,19 @@ public class PotionsHud extends ConfigurableModule {
     private static float currentWidth = 0f;
     private static float currentHeight = 0f;
 
-    static {
-        IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
-        ResourceLocation enUsId = new ResourceLocation("lang/en_us.json");
-
-        try (InputStream input = resourceManager.getResource(enUsId).getInputStream()) {
-            String json = new String(readAll(input), StandardCharsets.UTF_8);
-            JsonObject langJson = new JsonParser().parse(json).getAsJsonObject();
-
-            for (Map.Entry<String, JsonElement> entry : langJson.entrySet()) {
-                enUsTranslations.put(entry.getKey(), entry.getValue().getAsString());
-            }
-        } catch (Exception e) {
-            System.err.println("[PotionsHud] Failed to load en_us.json");
-            e.printStackTrace();
-        }
-    }
-
-    /** Java 8 has no {@code InputStream.readAllBytes}. */
-    private static byte[] readAll(InputStream in) throws java.io.IOException {
-        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        byte[] buf = new byte[8192];
-        int read;
-        while ((read = in.read(buf)) != -1) {
-            out.write(buf, 0, read);
-        }
-        return out.toByteArray();
+    /**
+     * Localised name for an effect.
+     *
+     * <p>The 1.21.4 version parsed {@code lang/en_us.json} out of the resource manager to get
+     * English names regardless of the player's language. 1.8.9 has no such file — it ships
+     * {@code lang/en_US.lang} — so that load always failed and the HUD fell back to raw keys like
+     * {@code potion.moveSpeed}. Vanilla's own localisation is used instead, which also means the
+     * HUD follows the player's selected language.
+     */
+    private static String effectName(Potion potion) {
+        String key = potion.getName();
+        String name = net.minecraft.client.resources.I18n.format(key);
+        return name == null || name.equals(key) ? key : name;
     }
 
     public static void render(DrawContext context) {
@@ -75,10 +54,7 @@ public class PotionsHud extends ConfigurableModule {
         float targetHeight;
 
         List<PotionEffect> rawEffects = new ArrayList<PotionEffect>(mc.thePlayer.getActivePotionEffects());
-        rawEffects.sort(Comparator.comparing(a -> {
-            String key = potionOf(a).getName();
-            return enUsTranslations.getOrDefault(key, key);
-        }));
+        rawEffects.sort(Comparator.comparing(a -> effectName(potionOf(a))));
 
         if (rawEffects.isEmpty()) {
             currentWidth = fast(currentWidth, 0, 15f);
@@ -203,8 +179,7 @@ public class PotionsHud extends ConfigurableModule {
             int amplifier = instance.getAmplifier();
 
             // Получение англоязычного имени эффекта (en_us)
-            String key = potionOf(instance).getName();
-            String name = PotionsHud.enUsTranslations.getOrDefault(key, key);
+            String name = effectName(potionOf(instance));
 
             String levelPart = amplifier > 0
                     ? " " + (CONFIG.hudBetterPotionsHudToRoman ? toRoman(amplifier + 1) : amplifier + 1)

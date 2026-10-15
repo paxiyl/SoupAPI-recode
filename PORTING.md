@@ -110,6 +110,48 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Global GL state, the shared vertex buffer, and white models
+
+Two faults showed up together on PojavLauncher: held items and block models rendered
+white, and the client crashed in another mod's overlay handler with
+`IllegalStateException: Already building!`. Both come from the same place — 1.8.9's
+rendering state is global and sticky, where 1.21.4's is per-draw.
+
+- **`RenderSystem.setShader` disabled texturing and nothing turned it back on.** Selecting
+  a core shader in 1.21.4 changes no global state; the 1.8.9 equivalent for an untextured
+  key (`POSITION_COLOR`, `RENDERTYPE_LINES`) is `glDisable(GL_TEXTURE_2D)`. Every rounded
+  rect, trail and HUD background left texturing off, so the next thing vanilla drew
+  sampled no texture and came out white. Every draw funnels through `BufferRenderer`,
+  which now re-enables it after the draw.
+- **A half-built buffer is fatal for whoever begins next.** 1.8.9 has one shared
+  tessellator. A module that threw part-way through a draw — or any code path that began
+  without drawing — left it "building", and the next `begin()` threw. The next `begin()`
+  is usually another mod's, which is why the crash report named MbMotionblur rather than
+  this mod. `Tessellator.begin` now discards an orphaned buffer and retries,
+  `BufferRenderer` tolerates a draw with no begin, the event bridge flushes any open layer
+  at the end of each pass, and `guard(...)` discards the buffer and restores state before
+  it returns.
+- **`RenderSystem.restoreDefaults()`** runs at the end of the world and HUD handlers:
+  texture unit 0, texturing on, colour white, default blend func off, cull on, depth on,
+  depth mask on, alpha test on, scissor off, line width 1. Lighting and the projection are
+  left alone — those belong to whichever pass is running.
+
+## Opening the settings screen
+
+Default **Right Shift**, registered as a proper Forge `KeyBinding` so it appears in
+Options → Controls under "SoupAPI" and can be rebound — the 1.21.4 version only had a
+hard-coded Right Ctrl + Right Alt combination, which is close to unusable on PojavLauncher
+where the modifiers live behind an on-screen keyboard. That combination still works.
+
+The screen's labels needed the lang files converting: 1.8.9's `Locale` reads
+`assets/<namespace>/lang/<xx_YY>.lang` as `key=value` and has no JSON loader, so every
+`text.autoconfig.soupapi.*` key was invisible and the screen showed raw keys.
+`tools/lang_to_1_8_9.py` generates `en_US.lang` and `ru_RU.lang` from the JSONs, which stay
+the source of truth. For the same reason `PotionsHud` no longer parses `lang/en_us.json`
+out of the resource manager (a file 1.8.9 does not have, so effect names fell back to keys
+like `potion.moveSpeed`); it uses vanilla's own `I18n`, and therefore follows the player's
+language.
+
 ## Discord rich presence and native loading
 
 The first Pojav run crashed on the client tick with

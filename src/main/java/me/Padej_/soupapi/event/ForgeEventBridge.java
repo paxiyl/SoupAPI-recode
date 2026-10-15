@@ -90,6 +90,11 @@ public final class ForgeEventBridge {
         } catch (ThreadDeath | VirtualMachineError fatal) {
             throw fatal;
         } catch (Throwable t) {
+            // A module that threw part-way through a draw leaves the shared vertex buffer building
+            // and whatever GL state it had set still applied. Both have to go back, or the next
+            // thing to draw - vanilla, or another mod - fails instead.
+            me.Padej_.soupapi.compat.Tessellator.discardPending();
+            RenderSystem.restoreDefaults();
             if (REPORTED.add(label)) {
                 me.Padej_.soupapi.compat.SoupLog.error(
                         "[SoupAPI] " + label + " threw; it is being skipped for this frame. "
@@ -161,6 +166,14 @@ public final class ForgeEventBridge {
         guard("Render3D_Shapes", () -> Render3D_Shapes.render(context));
 
         guard("worldRenderLast", () -> SoupEvents.WORLD_RENDER_LAST.invoke(context));
+
+        // Flush any layer a module left open, then hand the world pass back as it was found.
+        // 1.8.9 has one shared vertex buffer: a layer left open is a buffer left "building", and
+        // the next mod to begin one crashes with "Already building!" - which is how this first
+        // showed up, in MbMotionblur's overlay handler rather than here.
+        guard("flushLayers", () -> me.Padej_.soupapi.compat.VertexConsumerProvider.immediate().draw());
+        me.Padej_.soupapi.compat.Tessellator.discardPending();
+        RenderSystem.restoreDefaults();
     }
 
     /**
@@ -195,6 +208,12 @@ public final class ForgeEventBridge {
         guard("MouseMove", () -> MouseMove.render(context));
 
         guard("hudRender", () -> SoupEvents.HUD_RENDER.invoke(hud));
+
+        // The next thing to touch the shared buffer is the following frame's overlay pass, which
+        // may well belong to another mod; leave nothing of ours applied.
+        guard("flushLayers", () -> me.Padej_.soupapi.compat.VertexConsumerProvider.immediate().draw());
+        me.Padej_.soupapi.compat.Tessellator.discardPending();
+        RenderSystem.restoreDefaults();
     }
 
     /**

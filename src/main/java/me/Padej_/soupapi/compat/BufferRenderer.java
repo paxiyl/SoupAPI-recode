@@ -17,8 +17,22 @@ public final class BufferRenderer {
         if (buffer != null) {
             buffer.end();
         }
-        net.minecraft.client.renderer.Tessellator.getInstance().draw();
+        try {
+            net.minecraft.client.renderer.Tessellator.getInstance().draw();
+        } catch (IllegalStateException notBuilding) {
+            // "Not building!" - a draw with no matching begin, which 1.8.9 treats as fatal. It is
+            // not worth taking the client down for, and swallowing it here keeps the shared buffer
+            // in a sane state for whatever draws next.
+            if (REPORTED_NOT_BUILDING.compareAndSet(false, true)) {
+                SoupLog.warn("[SoupAPI] draw() without a matching begin(); skipped", notBuilding);
+            }
+        } finally {
+            RenderSystem.afterDraw();
+        }
     }
+
+    private static final java.util.concurrent.atomic.AtomicBoolean REPORTED_NOT_BUILDING =
+            new java.util.concurrent.atomic.AtomicBoolean();
 
     /** Convenience for the common "finish the shared buffer and draw it" case. */
     public static void draw() {

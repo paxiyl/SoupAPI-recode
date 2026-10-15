@@ -80,6 +80,49 @@ public final class RenderSystem {
         return currentShader;
     }
 
+    /**
+     * Undoes the texture-enable that {@link #setShader} turned off for an untextured draw.
+     *
+     * <p>In 1.21.4 selecting a core shader changes nothing global; in 1.8.9 the equivalent is
+     * {@code glDisable(GL_TEXTURE_2D)}, which is sticky. Left disabled, everything drawn afterwards
+     * samples no texture and comes out white — which is what happened to held items and block models
+     * after the mod drew any colour-only geometry (rounded rects, trails, the HUD backgrounds). Every
+     * draw funnels through {@link BufferRenderer}, so restoring it there means texturing can never
+     * stay off past one of the mod's draws.
+     */
+    static void afterDraw() {
+        if (!currentShader.isTextured()) {
+            GlStateManager.enableTexture2D();
+            currentShader = ShaderKey.POSITION_TEX_COLOR;
+        }
+    }
+
+    /**
+     * Puts the global fixed-function state back to what vanilla expects between passes.
+     *
+     * <p>Called at the end of each of the mod's event handlers, and after any module that threw, so
+     * no half-applied state escapes into vanilla's or another mod's rendering. Lighting and the
+     * projection are deliberately left alone: those belong to whichever pass is running.
+     */
+    public static void restoreDefaults() {
+        try {
+            GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+            GlStateManager.enableTexture2D();
+            currentShader = ShaderKey.POSITION_TEX_COLOR;
+            setShaderColor(1f, 1f, 1f, 1f);
+            defaultBlendFunc();
+            GlStateManager.disableBlend();
+            GlStateManager.enableCull();
+            GlStateManager.enableDepth();
+            GlStateManager.depthMask(true);
+            GlStateManager.enableAlpha();
+            GlCompat.disableScissor();
+            GlCompat.lineWidth(1f);
+        } catch (Throwable ignored) {
+            // Restoring state must never be the thing that throws.
+        }
+    }
+
     public static void setShaderTexture(int unit, ResourceLocation texture) {
         if (unit != 0) {
             GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + unit);

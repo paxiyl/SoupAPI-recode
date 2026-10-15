@@ -54,6 +54,7 @@ public class SoupAPI {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         ForgeEventBridge.register();
+        me.Padej_.soupapi.screen.SoupSettingsShortcut.register();
 
         HitBubbles.registerOnHit();
         HitSound.registerOnHit();
