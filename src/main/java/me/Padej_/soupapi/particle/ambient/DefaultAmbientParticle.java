@@ -91,7 +91,7 @@ public class DefaultAmbientParticle {
 
     private static Vec3 interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Vec3 cameraPos = Cameras.get().getPos();
+        Vec3 cameraPos = Cameras.get().getPositionVector();
         double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.xCoord;
         double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.yCoord;
         double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.zCoord;

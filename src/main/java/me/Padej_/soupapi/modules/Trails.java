@@ -36,7 +36,7 @@ public class Trails extends ConfigurableModule {
         for (EntityPlayer player : mc.theWorld.playerEntities) {
             // Добавляем сегмент, если есть любое движение
             Vec3 prevPos = new Vec3(player.prevPosX, player.prevPosY, player.prevPosZ);
-            Vec3 currentPos = player.getPos();
+            Vec3 currentPos = player.getPositionVector();
             if (prevPos.distanceTo(currentPos) > minStep) { // Минимальный порог для избежания дребезга
                 ((TrailEntity) player).soupAPI$getTrails().add(new TrailSegment(
                         prevPos,
@@ -58,7 +58,7 @@ public class Trails extends ConfigurableModule {
                 }
 
                 Vec3 prevPos = new Vec3(entity.prevPosX, entity.prevPosY, entity.prevPosZ);
-                Vec3 currentPos = entity.getPos();
+                Vec3 currentPos = entity.getPositionVector();
                 float yOffset = entity.height / 2;
                 if (prevPos.distanceTo(currentPos) > minStep) {
                     ((TrailEntity) entity).soupAPI$getTrails().add(new TrailSegment(
@@ -95,7 +95,7 @@ public class Trails extends ConfigurableModule {
                     (!CONFIG.trailsForGliders && entity != mc.thePlayer && !(entity instanceof EntityPlayer)))
                 continue;
 
-            if (entity == mc.thePlayer && mc.gameSettings.perspective == 0 && !CONFIG.trailsFirstPerson)
+            if (entity == mc.thePlayer && mc.gameSettings.thirdPersonView == 0 && !CONFIG.trailsFirstPerson)
                 continue;
             if (!(entity instanceof EntityLivingBase) || !mc.thePlayer.canEntityBeSeen(entity)) continue;
 
@@ -208,9 +208,9 @@ public class Trails extends ConfigurableModule {
         }
 
         public Vec3 interpolate(float pt) {
-            double x = from.xCoord + ((to.xCoord - from.x) * pt) - mc.getRenderManager().cameraX;
-            double y = from.yCoord + ((to.yCoord - from.y) * pt) - mc.getRenderManager().cameraY;
-            double z = from.zCoord + ((to.zCoord - from.z) * pt) - mc.getRenderManager().cameraZ;
+            double x = from.xCoord + ((to.xCoord - from.x) * pt) - mc.getRenderManager().viewerPosX;
+            double y = from.yCoord + ((to.yCoord - from.y) * pt) - mc.getRenderManager().viewerPosY;
+            double z = from.zCoord + ((to.zCoord - from.z) * pt) - mc.getRenderManager().viewerPosZ;
             return new Vec3(x, y, z);
         }
 

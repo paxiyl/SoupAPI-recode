@@ -292,9 +292,9 @@ public class HitParticle extends ConfigurableModule {
             Color healColor = new Color(0x76cf41);
             Color damageColor = new Color(0xd42d2d);
 
-            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().cameraX;
-            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().cameraY;
-            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().cameraZ;
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().viewerPosX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().viewerPosY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().viewerPosZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);

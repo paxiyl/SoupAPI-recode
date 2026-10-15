@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.compat.BlendFactor;
 import me.Padej_.soupapi.compat.ShaderKey;
 import me.Padej_.soupapi.compat.Windows;
@@ -95,7 +97,7 @@ public class Render2D {
     }
 
     public static Color injectAlpha(final Color color, final int alpha) {
-        return new Color(color.getRed(), color.getGreen(), color.getBlue(), MathHelper.clamp(alpha, 0, 255));
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), Maths.clamp(alpha, 0, 255));
     }
 
     public static Color applyOpacity(Color color, float opacity) {
@@ -308,7 +310,7 @@ public class Render2D {
         RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShader(ShaderKey.POSITION_TEX);
         if (TargetHUD_N.target instanceof EntityPlayer) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) TargetHUD_N.target).getSkinId());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) TargetHUD_N.target).getLocationSkin());
         }
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         buffer.vertex(matrix, (float) x0, (float) y1, (float) z).texture((u) / (float) textureWidth, (v + (float) regionHeight) / (float) textureHeight);

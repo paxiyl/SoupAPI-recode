@@ -35,7 +35,7 @@ public class JumpParticles extends ConfigurableModule {
         updateAvailableTextures();
 
         boolean isJumping = !mc.thePlayer.onGround;
-        if (isJumping && !wasJumping && mc.gameSettings.jumpKey.isPressed()) {
+        if (isJumping && !wasJumping && mc.gameSettings.keyBindJump.isKeyDown()) {
             spawnParticles();
         }
         wasJumping = isJumping;
@@ -70,7 +70,7 @@ public class JumpParticles extends ConfigurableModule {
 
     private static void spawnParticles() {
         if (mc.thePlayer == null) return;
-        Vec3 pos = mc.thePlayer.getPos();
+        Vec3 pos = mc.thePlayer.getPositionVector();
         for (int i = 0; i < CONFIG.jumpParticlesCount; i++) {
             Color color = Palette.getRandomColor();
             particles.add(new Particle(
@@ -172,16 +172,16 @@ public class JumpParticles extends ConfigurableModule {
             float baseScale = 0.07f;
             float renderScale = baseScale * scale;
 
-            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().cameraX;
-            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().cameraY;
-            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().cameraZ;
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().viewerPosX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().viewerPosY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().viewerPosZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);
             matrixStack.scale(renderScale, renderScale, renderScale);
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-Cameras.get().getYaw()));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Cameras.get().getPitch()));
-            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / mc.getCurrentFps()) * rotationSpeed));
+            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / net.minecraft.client.Minecraft.getDebugFPS()) * rotationSpeed));
 
             if (glyphTexture != null) {
                 Render2D.drawGlyphs(matrixStack, glyphTexture, new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (alpha * 255)), 1f);

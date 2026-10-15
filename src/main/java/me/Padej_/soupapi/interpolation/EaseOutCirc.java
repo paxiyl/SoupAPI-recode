@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.interpolation;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 
@@ -18,7 +20,7 @@ public class EaseOutCirc {
 
     public void update(float delta) {
         progress += delta / (duration * 60f); // delta нормализовано для 60 FPS
-        progress = MathHelper.clamp(progress, 0f, 1f);
+        progress = Maths.clamp(progress, 0f, 1f);
     }
 
     public static double createAnimation(double value) {

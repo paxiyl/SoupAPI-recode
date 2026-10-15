@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.compat.BlendFactor;
@@ -46,8 +48,8 @@ public class JumpCircles extends ConfigurableModule {
             EntityPlayer player = mc.thePlayer;
             boolean isJumping = !player.onGround;
 
-            if (isJumping && !wasJumping && mc.gameSettings.jumpKey.isPressed()) {
-                CIRCLES.add(new JumpCircle(player.getPos()));
+            if (isJumping && !wasJumping && mc.gameSettings.keyBindJump.isKeyDown()) {
+                CIRCLES.add(new JumpCircle(player.getPositionVector()));
             }
 
             wasJumping = isJumping;
@@ -60,9 +62,9 @@ public class JumpCircles extends ConfigurableModule {
             return;
         }
 
-        double cameraX = Cameras.get().getPos().x;
-        double cameraY = Cameras.get().getPos().y;
-        double cameraZ = Cameras.get().getPos().z;
+        double cameraX = Cameras.get().getPositionVector().x;
+        double cameraY = Cameras.get().getPositionVector().y;
+        double cameraZ = Cameras.get().getPositionVector().z;
 
         CIRCLES.removeIf(JumpCircle::isExpired);
         for (JumpCircle circle : CIRCLES) {
@@ -113,7 +115,7 @@ public class JumpCircles extends ConfigurableModule {
 
             float totalLifetime = CONFIG.jumpCirclesLiveTime;
             float elapsedTime = (currentTime - startTime) / 1000f;
-            float remainingFraction = MathHelper.clamp((totalLifetime - elapsedTime) / totalLifetime, 0, 1);
+            float remainingFraction = Maths.clamp((totalLifetime - elapsedTime) / totalLifetime, 0, 1);
 
             // Вращение до начала исчезания
             if (remainingFraction > 0.3f) {
@@ -147,9 +149,9 @@ public class JumpCircles extends ConfigurableModule {
             float ageFraction = elapsedTime / (liveTime / 3);
             ageFraction *= 3;
             float scaleMultiplier = CONFIG.jumpCirclesScale / 100f;
-            ageFraction = MathHelper.clamp(ageFraction * scaleMultiplier, 0, scaleMultiplier);
+            ageFraction = Maths.clamp(ageFraction * scaleMultiplier, 0, scaleMultiplier);
 
-            float remainingFraction = MathHelper.clamp((liveTime - elapsedTime) / liveTime, 0, 1);
+            float remainingFraction = Maths.clamp((liveTime - elapsedTime) / liveTime, 0, 1);
 
             if (remainingFraction < 0.3f) {
                 float shrinkFactor = remainingFraction / 0.3f;

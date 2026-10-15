@@ -36,7 +36,7 @@ public class Trajectories extends ConfigurableModule {
 
     public static void render(WorldRenderContext context) {
         if (mc.gameSettings.hudHidden) return;
-        if (mc.thePlayer == null || mc.theWorld == null || !mc.gameSettings.perspective == 0 || !CONFIG.trajectoriesPreviewEnabled) return;
+        if (mc.thePlayer == null || mc.theWorld == null || !mc.gameSettings.thirdPersonView == 0 || !CONFIG.trajectoriesPreviewEnabled) return;
         Hand hand;
         float tickDelta = context.tickCounter().getTickDelta(true);
 
@@ -49,8 +49,8 @@ public class Trajectories extends ConfigurableModule {
             hand = Hand.OFF_HAND;
         } else return;
 
-        boolean prev_bob = mc.gameSettings.getBobView().getValue();
-        mc.gameSettings.getBobView().setValue(false);
+        boolean prev_bob = mc.gameSettings.gameSettings.viewBobbing.getValue();
+        mc.gameSettings.gameSettings.viewBobbing.setValue(false);
 
         RegistryWrapper.Impl<Enchantment> enchantmentWrapper =
                 mc.theWorld.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
@@ -68,7 +68,7 @@ public class Trajectories extends ConfigurableModule {
 
         } else
             calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.thePlayer.rotationYaw, tickDelta);
-        mc.gameSettings.getBobView().setValue(prev_bob);
+        mc.gameSettings.gameSettings.viewBobbing.setValue(prev_bob);
     }
 
     private static boolean isThrowable(Item item) {

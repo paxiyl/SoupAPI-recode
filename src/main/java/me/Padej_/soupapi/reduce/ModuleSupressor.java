@@ -7,8 +7,8 @@ public class ModuleSupressor extends ConfigurableModule {
 
     public static boolean disableItemOverlay() {
         // 1.8.9 keeps the connected server on the client, not the network handler.
-        if (mc.getCurrentServerData() == null || mc.getCurrentServerData().address == null) return false;
-        String ip = mc.getCurrentServerData().address.toLowerCase();
+        if (mc.getCurrentServerData() == null || mc.getCurrentServerData().serverIP == null) return false;
+        String ip = mc.getCurrentServerData().serverIP.toLowerCase();
         return
                 // servers
                 ip.contains("minefun") ||
@@ -25,8 +25,8 @@ public class ModuleSupressor extends ConfigurableModule {
 
     public static boolean disableHPBar() {
         // 1.8.9 keeps the connected server on the client, not the network handler.
-        if (mc.getCurrentServerData() == null || mc.getCurrentServerData().address == null) return false;
-        String ip = mc.getCurrentServerData().address.toLowerCase();
+        if (mc.getCurrentServerData() == null || mc.getCurrentServerData().serverIP == null) return false;
+        String ip = mc.getCurrentServerData().serverIP.toLowerCase();
         return
                 // servers
                 ip.contains(".minehub.") ||

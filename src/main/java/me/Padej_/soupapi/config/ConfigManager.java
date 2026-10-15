@@ -10,7 +10,6 @@ import me.Padej_.soupapi.settings.impl.EnumSetting;
 import me.Padej_.soupapi.settings.impl.MinMaxSliderSetting;
 import me.Padej_.soupapi.settings.impl.SliderSetting;
 import net.minecraft.client.Minecraft;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -48,7 +47,7 @@ public class ConfigManager {
         }
     }
 
-    private static @NotNull Map<String, Object> getStringObjectMap(SoupModule module) {
+    private static Map<String, Object> getStringObjectMap(SoupModule module) {
         Map<String, Object> moduleSettings = new HashMap<>();
         for (Setting<?> setting : module.getSettings()) {
             Object value = setting.getValue();

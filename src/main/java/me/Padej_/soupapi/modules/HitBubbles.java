@@ -59,9 +59,9 @@ public class HitBubbles extends ConfigurableModule {
         for (HitBubble b : copy) {
             matrixStack.push();
             matrixStack.translate(
-                    b.x - Cameras.get().getPos().getX(),
-                    b.y - Cameras.get().getPos().getY(),
-                    b.z - Cameras.get().getPos().getZ()
+                    b.x - Cameras.get().getPositionVector().getX(),
+                    b.y - Cameras.get().getPositionVector().getY(),
+                    b.z - Cameras.get().getPositionVector().getZ()
             );
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(b.yaw));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(b.pitch));
@@ -97,7 +97,7 @@ public class HitBubbles extends ConfigurableModule {
     }
 
     private static Vec3 getRtxPoint(float yaw, float pitch, double distance) {
-        Vec3 from = mc.thePlayer.getPos().add(0, mc.thePlayer.getEyeHeight(mc.thePlayer.getPose()), 0);
+        Vec3 from = mc.thePlayer.getPositionVector().add(0, mc.thePlayer.getEyeHeight(mc.thePlayer.getPose()), 0);
         Vec3 direction = getRotationVector(pitch, yaw);
         Vec3 to = from.add(direction.multiply(distance));
         double distanceSq = distance * distance;
@@ -113,7 +113,7 @@ public class HitBubbles extends ConfigurableModule {
         );
 
         if (result != null && result.getEntity() instanceof EntityLivingBase) {
-            return result.getPos();
+            return result.getPositionVector();
         }
         return null;
     }

@@ -101,8 +101,8 @@ public class RPC extends ConfigurableModule {
 
             case IP:
                 if (mc.getNetHandler() != null && mc.getCurrentServerData() != null
-                && mc.getCurrentServerData().address != null) {
-                return mc.getCurrentServerData().address.toLowerCase();
+                && mc.getCurrentServerData().serverIP != null) {
+                return mc.getCurrentServerData().serverIP.toLowerCase();
                 } else {
                 return "Offline";
                 }

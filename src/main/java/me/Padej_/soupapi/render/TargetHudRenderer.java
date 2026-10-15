@@ -61,12 +61,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         int headScale = 25;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof EntityPlayer) {
-            texture = ((AbstractClientPlayer) target).getSkinId();
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -120,7 +120,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 2);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.getInventory().armor;
+        java.util.List<ItemStack> armor = target.inventory.armorInventory;
         ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
         float xItemOffset = x + 25;
@@ -166,12 +166,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 94, 34, 7, Palette.getBackColor());
 
         // Голова игрока
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof EntityPlayer) {
-            texture = ((AbstractClientPlayer) target).getSkinId();
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
             displayName = target.getName();
         }
         context.getMatrices().push();
@@ -196,7 +196,7 @@ public class TargetHudRenderer extends ConfigurableModule {
 
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -235,7 +235,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold_mini.drawString(context.getMatrices(), displayName, x + 38, y + 5, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.getInventory().armor;
+        List<ItemStack> armor = target.inventory.armorInventory;
         ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
         float xItemOffset = x + 38;
@@ -265,12 +265,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 136, 46, 9, Palette.getBackColor());
 
         // Голова игрока
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof EntityPlayer) {
-            texture = ((AbstractClientPlayer) target).getSkinId();
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
             displayName = target.getName();
         }
         context.getMatrices().push();
@@ -296,7 +296,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -335,7 +335,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold.drawString(context.getMatrices(), displayName, x + 48, y + 7, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.getInventory().armor;
+        List<ItemStack> armor = target.inventory.armorInventory;
         ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
         float xItemOffset = x + 48;
@@ -359,12 +359,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Color c1 = Palette.getColor(0f);
         Color c3 = Palette.getColor(0.66f);
 
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof EntityPlayer) {
-            texture = ((AbstractClientPlayer) target).getSkinId();
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
             displayName = target.getName();
         }
 
@@ -401,7 +401,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -466,13 +466,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         int headScale = 20;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof EntityPlayer) {
-            texture = ((AbstractClientPlayer) target).getSkinId();
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
             displayName = target.getName();
         }
         context.getMatrices().push();
@@ -529,7 +529,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 1);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.getInventory().armor;
+        java.util.List<ItemStack> armor = target.inventory.armorInventory;
         ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
         float xItemOffset = x + 20;

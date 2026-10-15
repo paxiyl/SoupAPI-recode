@@ -66,7 +66,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderHead(DrawContext context, float x, float y) {
-        ResourceLocation texture = mc.thePlayer.getSkinId();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         float scale = 0.3f;
         float r = 9;
 

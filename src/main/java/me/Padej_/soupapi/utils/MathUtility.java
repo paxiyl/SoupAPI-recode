@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.utils;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
@@ -116,11 +118,11 @@ public final class MathUtility {
     }
 
     public static float wrapDegrees(float value) {
-        return MathHelper.wrapDegrees(value);
+        return Maths.wrapDegrees(value);
     }
 
     public static double wrapDegrees(double value) {
-        return MathHelper.wrapDegrees(value);
+        return Maths.wrapDegrees(value);
     }
 
     public static double square(double input) {

@@ -154,7 +154,7 @@ public class TotemPopParticles extends ConfigurableModule {
             if (!CONFIG.totemPopParticlesEnabled) return;
 
             float age = (System.currentTimeMillis() - time) / (float) (CONFIG.totemPopParticlesRenderTime * 1000L);
-            age = MathHelper.clamp(age, 0f, 1f);
+            age = Maths.clamp(age, 0f, 1f);
 
             float alpha = 1f;
             float scale = CONFIG.totemPopParticlesScale;
@@ -168,9 +168,9 @@ public class TotemPopParticles extends ConfigurableModule {
             if (alpha <= 0f || scale <= 0f) return;
 
             float renderScale = 0.07f;
-            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().cameraX;
-            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().cameraY;
-            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().cameraZ;
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().viewerPosX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().viewerPosY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().viewerPosZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);

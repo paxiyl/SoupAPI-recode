@@ -45,8 +45,18 @@ public final class SoupEvents {
     }
 
     public static void fireHudRender(float tickDelta) {
-        HUD_CONTEXT.begin(tickDelta);
+        HUD_CONTEXT.begin(tickDelta, new DrawContext(Minecraft.getMinecraft()));
         HUD_RENDER.invoke(HUD_CONTEXT);
+    }
+
+    /** The reused world-render context, for the Forge bridge to fill and dispatch. */
+    public static WorldRenderContext worldContext() {
+        return WORLD_CONTEXT;
+    }
+
+    /** The reused HUD context, for the Forge bridge to fill and dispatch. */
+    public static HudRenderContext hudContext() {
+        return HUD_CONTEXT;
     }
 
     /** What a HUD listener receives: a fresh {@link DrawContext} and the frame's tick delta. */
@@ -54,10 +64,10 @@ public final class SoupEvents {
         private DrawContext drawContext;
         private final RenderTickCounter tickCounter = new RenderTickCounter(0f);
 
-        void begin(float tickDelta) {
+        /** Called once per frame by the Forge bridge before listeners run. */
+        public void begin(float tickDelta, DrawContext context) {
             tickCounter.setTickDelta(tickDelta);
-            // A fresh DrawContext per frame: it caches the window size, which changes on resize.
-            drawContext = new DrawContext(Minecraft.getMinecraft());
+            this.drawContext = context;
         }
 
         public DrawContext drawContext() {

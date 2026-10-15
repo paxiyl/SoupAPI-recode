@@ -18,8 +18,7 @@ import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
 import me.Padej_.soupapi.compat.MatrixStack;
-import net.minecraft.util.math.*;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.util.*;
 import me.Padej_.soupapi.compat.Mat4;
 import me.Padej_.soupapi.compat.Vector3f;
 
@@ -200,12 +199,12 @@ public class Render3D_Shapes {
         }
     }
 
-    public static @NotNull MatrixStack matrixFrom(double x, double y, double z) {
+    public static MatrixStack matrixFrom(double x, double y, double z) {
         MatrixStack matrices = new MatrixStack();
 
         Camera camera = Cameras.get();
 
-        matrices.translate(x - camera.getPos().x, y - camera.getPos().y, z - camera.getPos().z);
+        matrices.translate(x - camera.getPositionVector().x, y - camera.getPositionVector().y, z - camera.getPositionVector().z);
 
         return matrices;
     }
@@ -235,7 +234,7 @@ public class Render3D_Shapes {
         vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
     }
 
-    public static void vertexLine(@NotNull MatrixStack matrices, @NotNull VertexConsumer buffer, float x1, float y1, float z1, float x2, float y2, float z2, @NotNull Color lineColor) {
+    public static void vertexLine(MatrixStack matrices, VertexConsumer buffer, float x1, float y1, float z1, float x2, float y2, float z2, Color lineColor) {
         Mat4 model = matrices.peek().getPositionMatrix();
         MatrixStack.Entry entry = matrices.peek();
         Vector3f normalVec = getNormal(x1, y1, z1, x2, y2, z2);
@@ -243,7 +242,7 @@ public class Render3D_Shapes {
         buffer.vertex(model, x2, y2, z2).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(normalVec.x(), normalVec.y(), normalVec.z());
     }
 
-    public static @NotNull Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {
+    public static Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {
         float xNormal = x2 - x1;
         float yNormal = y2 - y1;
         float zNormal = z2 - z1;
@@ -253,12 +252,12 @@ public class Render3D_Shapes {
     }
 
     public static void setFilledSidePoints(BufferBuilder buffer, Mat4 matrix, AxisAlignedBB box, Color c, EnumFacing dir) {
-        float minX = (float) (box.minX - mc.getRenderManager().cameraX);
-        float minY = (float) (box.minY - mc.getRenderManager().cameraY);
-        float minZ = (float) (box.minZ - mc.getRenderManager().cameraZ);
-        float maxX = (float) (box.maxX - mc.getRenderManager().cameraX);
-        float maxY = (float) (box.maxY - mc.getRenderManager().cameraY);
-        float maxZ = (float) (box.maxZ - mc.getRenderManager().cameraZ);
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
         if (dir == EnumFacing.DOWN) {
             buffer.vertex(matrix, minX, minY, minZ).color(c.getRGB());
@@ -303,12 +302,12 @@ public class Render3D_Shapes {
     }
 
     public static void setFilledFadePoints(AxisAlignedBB box, BufferBuilder buffer, Mat4 posMatrix, Color c, Color c1) {
-        float minX = (float) (box.minX - mc.getRenderManager().cameraX);
-        float minY = (float) (box.minY - mc.getRenderManager().cameraY);
-        float minZ = (float) (box.minZ - mc.getRenderManager().cameraZ);
-        float maxX = (float) (box.maxX - mc.getRenderManager().cameraX);
-        float maxY = (float) (box.maxY - mc.getRenderManager().cameraY);
-        float maxZ = (float) (box.maxZ - mc.getRenderManager().cameraZ);
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
         buffer.vertex(posMatrix, minX, minY, minZ).color(c.getRGB());
         buffer.vertex(posMatrix, minX, maxY, minZ).color(c1.getRGB());
@@ -336,13 +335,13 @@ public class Render3D_Shapes {
         buffer.vertex(posMatrix, maxX, maxY, minZ).color(c1.getRGB());
     }
 
-    public static void setFilledBoxVertexes(@NotNull BufferBuilder bufferBuilder, Mat4 m, @NotNull AxisAlignedBB box, @NotNull Color c) {
-        float minX = (float) (box.minX - mc.getRenderManager().cameraX);
-        float minY = (float) (box.minY - mc.getRenderManager().cameraY);
-        float minZ = (float) (box.minZ - mc.getRenderManager().cameraZ);
-        float maxX = (float) (box.maxX - mc.getRenderManager().cameraX);
-        float maxY = (float) (box.maxY - mc.getRenderManager().cameraY);
-        float maxZ = (float) (box.maxZ - mc.getRenderManager().cameraZ);
+    public static void setFilledBoxVertexes(BufferBuilder bufferBuilder, Mat4 m, AxisAlignedBB box, Color c) {
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
         bufferBuilder.vertex(m, minX, minY, minZ).color(c.getRGB());
         bufferBuilder.vertex(m, maxX, minY, minZ).color(c.getRGB());
@@ -388,19 +387,19 @@ public class Render3D_Shapes {
         FILLED_QUEUE.add(new FillAction(box, c));
     }
 
-    public static void drawBoxOutline(@NotNull AxisAlignedBB box, Color color, float lineWidth) {
+    public static void drawBoxOutline(AxisAlignedBB box, Color color, float lineWidth) {
         OUTLINE_QUEUE.add(new OutlineAction(box, color, lineWidth));
     }
 
-    public static void drawFilledFadeBox(@NotNull MatrixStack stack, @NotNull AxisAlignedBB box, @NotNull Color c, @NotNull Color c1) {
+    public static void drawFilledFadeBox(MatrixStack stack, AxisAlignedBB box, Color c, Color c1) {
         FADE_QUEUE.add(new FadeAction(box, c, c1));
     }
 
-    public static void drawFilledSide(MatrixStack stack, @NotNull AxisAlignedBB box, Color c, EnumFacing dir) {
+    public static void drawFilledSide(MatrixStack stack, AxisAlignedBB box, Color c, EnumFacing dir) {
         FILLED_SIDE_QUEUE.add(new FillSideAction(box, c, dir));
     }
 
-    public static void drawSideOutline(@NotNull AxisAlignedBB box, Color color, float lineWidth, EnumFacing dir) {
+    public static void drawSideOutline(AxisAlignedBB box, Color color, float lineWidth, EnumFacing dir) {
         OUTLINE_SIDE_QUEUE.add(new OutlineSideAction(box, color, lineWidth, dir));
     }
 
@@ -408,7 +407,7 @@ public class Render3D_Shapes {
         DEBUG_LINE_QUEUE.add(new DebugLineAction(start, end, color));
     }
 
-    public static void drawLine(@NotNull Vec3 start, @NotNull Vec3 end, @NotNull Color color) {
+    public static void drawLine(Vec3 start, Vec3 end, Color color) {
         LINE_QUEUE.add(new LineAction(start, end, color));
     }
 public static final class FillAction {

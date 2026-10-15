@@ -61,7 +61,7 @@ public class PotionsHud extends ConfigurableModule {
 
         List<PotionEffect> rawEffects = new ArrayList<>(mc.thePlayer.getStatusEffects());
         rawEffects.sort(Comparator.comparing(a -> {
-            String key = a.getEffectType().value().getTranslationKey();
+            String key = a.getPotionID().value().getTranslationKey();
             return enUsTranslations.getOrDefault(key, key);
         }));
 
@@ -80,7 +80,7 @@ public class PotionsHud extends ConfigurableModule {
 
         List<EffectElement> effects = new ArrayList<>();
         for (PotionEffect instance : rawEffects) {
-            Potion effect = instance.getEffectType().value();
+            Potion effect = instance.getPotionID().value();
             maxDurations.putIfAbsent(effect, instance.getDuration());
             effects.add(new EffectElement(instance));
         }
@@ -161,7 +161,7 @@ public class PotionsHud extends ConfigurableModule {
     }
 
     private static float fast(float end, float start, float multiple) {
-        float clampedDelta = MathUtility.clamp((1f / mc.getCurrentFps()) * multiple, 0f, 1f);
+        float clampedDelta = MathUtility.clamp((1f / net.minecraft.client.Minecraft.getDebugFPS()) * multiple, 0f, 1f);
         return (1f - clampedDelta) * end + clampedDelta * start;
     }
 
@@ -175,7 +175,7 @@ public class PotionsHud extends ConfigurableModule {
             int amplifier = instance.getAmplifier();
 
             // Получение англоязычного имени эффекта (en_us)
-            String key = instance.getEffectType().value().getTranslationKey();
+            String key = instance.getPotionID().value().getTranslationKey();
             String name = PotionsHud.enUsTranslations.getOrDefault(key, key);
 
             String levelPart = amplifier > 0
@@ -194,14 +194,14 @@ public class PotionsHud extends ConfigurableModule {
             matrices.push();
             matrices.translate(x + (1 + scale), y + (1 + scale), 0);
             matrices.scale(scale, scale, 0);
-            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(instance.getEffectType()), 0, 0, 18, 18);
+            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(instance.getPotionID()), 0, 0, 18, 18);
             matrices.pop();
 
             FontRenderers.sf_bold_mini.drawString(matrices, displayText, x + 20, y + 2, Palette.getTextColor());
             FontRenderers.sf_bold_mini.drawString(matrices, "§7" + getDuration(instance), x + 20, y + 9, Palette.getTextColor());
 
             if (!instance.isInfinite()) {
-                Potion effect = instance.getEffectType().value();
+                Potion effect = instance.getPotionID().value();
                 int maxDuration = maxDurations.getOrDefault(effect, instance.getDuration());
                 float progress = MathUtility.clamp(instance.getDuration() / (float) maxDuration, 0f, 1f);
 
@@ -225,7 +225,7 @@ public class PotionsHud extends ConfigurableModule {
         }
 
         public Potion getEffect() {
-            return instance.getEffectType().value();
+            return instance.getPotionID().value();
         }
     }
 }

@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.compat;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
@@ -66,7 +68,7 @@ public final class Camera {
 
     /** Horizontal look direction, matching 1.21.4's {@code getHorizontalPlane()} usage. */
     public Vec3 getHorizontalPlane() {
-        float yawRad = -MathHelper.wrapDegrees(getYaw()) * ((float) Math.PI / 180f);
+        float yawRad = -Maths.wrapDegrees(getYaw()) * ((float) Math.PI / 180f);
         return new Vec3(MathHelper.sin(yawRad), 0.0, MathHelper.cos(yawRad));
     }
 }

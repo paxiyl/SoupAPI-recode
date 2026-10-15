@@ -32,7 +32,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
 import me.Padej_.soupapi.compat.RotationAxis;
 import net.minecraft.util.Vec3;
-import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 import org.lwjgl.opengl.GL11;
 
@@ -147,7 +146,7 @@ public class Render3D extends ConfigurableModule {
         double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevPosY, targetEntity.posY) + (double) (targetEntity.height / 2.0F);
         double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevPosZ, targetEntity.posZ);
         Vec3 entityPos = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
-        return entityPos.subtract(camera.getPos());
+        return entityPos.subtract(camera.getPositionVector());
     }
 
     public static void drawLegacy(float tickDelta, Entity targetEntity) {
@@ -381,7 +380,7 @@ public class Render3D extends ConfigurableModule {
         matrices.pop();
     }
 
-    public static void drawSpiralsEsp(MatrixStack stack, @NotNull Entity target) {
+    public static void drawSpiralsEsp(MatrixStack stack, Entity target) {
 
         float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
 
@@ -392,9 +391,9 @@ public class Render3D extends ConfigurableModule {
         float alphaDivider = 100f;
 
         // Интерполяция позиции цели относительно камеры
-        double x = Maths.lerp(tickDelta, target.prevPosX, target.getX()) - mc.getRenderManager().cameraX;
-        double y = Maths.lerp(tickDelta, target.prevPosY, target.getY()) - mc.getRenderManager().cameraY;
-        double z = Maths.lerp(tickDelta, target.prevPosZ, target.getZ()) - mc.getRenderManager().cameraZ;
+        double x = Maths.lerp(tickDelta, target.prevPosX, target.getX()) - mc.getRenderManager().viewerPosX;
+        double y = Maths.lerp(tickDelta, target.prevPosY, target.getY()) - mc.getRenderManager().viewerPosY;
+        double z = Maths.lerp(tickDelta, target.prevPosZ, target.getZ()) - mc.getRenderManager().viewerPosZ;
         double height = target.height;
 
         // Генерация трёх спиралей с разными угловыми сдвигами
@@ -507,9 +506,9 @@ public class Render3D extends ConfigurableModule {
 
         float radius = CONFIG.targetRenderTopkaRadius / 100f;
 
-        double x = Maths.lerp(tickDelta, target.prevPosX, target.posX) - mc.getRenderManager().cameraX;
-        double y = Maths.lerp(tickDelta, target.prevPosY, target.posY) - mc.getRenderManager().cameraY;
-        double z = Maths.lerp(tickDelta, target.prevPosZ, target.posZ) - mc.getRenderManager().cameraZ;
+        double x = Maths.lerp(tickDelta, target.prevPosX, target.posX) - mc.getRenderManager().viewerPosX;
+        double y = Maths.lerp(tickDelta, target.prevPosY, target.posY) - mc.getRenderManager().viewerPosY;
+        double z = Maths.lerp(tickDelta, target.prevPosZ, target.posZ) - mc.getRenderManager().viewerPosZ;
         double height = target.height;
 
         float time = (System.currentTimeMillis() % 1000000) / 1000.0f;

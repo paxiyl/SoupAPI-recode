@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.compat.Windows;
 
 import me.Padej_.soupapi.compat.Texts;
@@ -282,8 +284,8 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         }
 
         // Ограничения
-        newX = MathHelper.clamp(newX, 0, screenWidth - frame.width);
-        newY = MathHelper.clamp(newY, 0, screenHeight - frame.height);
+        newX = Maths.clamp(newX, 0, screenWidth - frame.width);
+        newY = Maths.clamp(newY, 0, screenHeight - frame.height);
 
         return new Point(newX, newY);
     }
@@ -343,8 +345,8 @@ public class ConfigHudPositionsScreen extends SoupScreen {
                 int newX = (int)(mouseX - dragOffsetX);
                 int newY = (int)(mouseY - dragOffsetY);
 
-                newX = MathHelper.clamp(newX, 0, screenWidth - width);
-                newY = MathHelper.clamp(newY, 0, screenHeight - height);
+                newX = Maths.clamp(newX, 0, screenWidth - width);
+                newY = Maths.clamp(newY, 0, screenHeight - height);
 
                 x = newX;
                 y = newY;

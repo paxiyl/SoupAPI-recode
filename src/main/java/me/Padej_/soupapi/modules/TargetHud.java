@@ -174,7 +174,7 @@ public class TargetHud extends ConfigurableModule {
             context.getMatrices().translate(-centerX, -centerY, 0);
 
             if (CONFIG.targetHudFollow) {
-                float depthFactor = MathHelper.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f);
+                float depthFactor = Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f);
                 float adjustedOffsetX = CONFIG.targetHudEntityOffsetX * 10 * depthFactor;
                 float adjustedOffsetY = CONFIG.targetHudEntityOffsetY * 10 * depthFactor;
                 context.getMatrices().translate(adjustedOffsetX, -adjustedOffsetY, 0);
@@ -283,9 +283,9 @@ public class TargetHud extends ConfigurableModule {
         Vector3f target = new Vector3f();
         double scale = Windows.scaleFactor();
 
-        double deltaX = pos.xCoord - camera.getPos().x;
-        double deltaY = pos.yCoord - camera.getPos().y;
-        double deltaZ = pos.zCoord - camera.getPos().z;
+        double deltaX = pos.xCoord - camera.getPositionVector().x;
+        double deltaY = pos.yCoord - camera.getPositionVector().y;
+        double deltaZ = pos.zCoord - camera.getPositionVector().z;
 
         Vector4f transformedCoordinates = new Vector4f((float) deltaX, (float) deltaY, (float) deltaZ, 1.f).mul(lastWorldSpaceMatrix);
         Mat4 matrixProj = new Mat4(lastProjMat);

@@ -21,7 +21,33 @@ public final class Maths {
     }
 
     public static float lerpAngleDegrees(float delta, float start, float end) {
-        return start + delta * net.minecraft.util.math.MathHelper.wrapDegrees(end - start);
+        return start + delta * net.minecraft.util.MathHelper.wrapAngleTo180_float(end - start);
+    }
+
+    /**
+     * MCP suffixes its clamps by type ({@code clamp_int}, {@code clamp_float},
+     * {@code clamp_double}), so these overloads let the ported call sites keep writing
+     * {@code clamp(...)} and let javac pick.
+     */
+    public static int clamp(int value, int min, int max) {
+        return net.minecraft.util.MathHelper.clamp_int(value, min, max);
+    }
+
+    public static float clamp(float value, float min, float max) {
+        return net.minecraft.util.MathHelper.clamp_float(value, min, max);
+    }
+
+    public static double clamp(double value, double min, double max) {
+        return net.minecraft.util.MathHelper.clamp_double(value, min, max);
+    }
+
+    /** Likewise for angle wrapping, which MCP suffixes by type. */
+    public static float wrapDegrees(float degrees) {
+        return net.minecraft.util.MathHelper.wrapAngleTo180_float(degrees);
+    }
+
+    public static double wrapDegrees(double degrees) {
+        return net.minecraft.util.MathHelper.wrapAngleTo180_double(degrees);
     }
 
     /** Inverse lerp, clamped to [0,1]. */

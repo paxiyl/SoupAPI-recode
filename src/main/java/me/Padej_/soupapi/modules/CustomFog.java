@@ -37,6 +37,19 @@ public class CustomFog extends SoupModule {
         super("Custom Fog", Category.WORLD);
     }
 
+    /**
+     * Whether custom fog should replace vanilla's this frame.
+     *
+     * <p>Blindness suppresses it, as before. 1.21.4 also checked the Darkness effect, which does
+     * not exist in 1.8.9 (added in 1.19).
+     */
+    public static boolean shouldApply() {
+        if (!enabled.getValue()) return false;
+        net.minecraft.client.entity.EntityPlayerSP player =
+                net.minecraft.client.Minecraft.getMinecraft().thePlayer;
+        return player != null && !player.isPotionActive(net.minecraft.potion.Potion.blindness);
+    }
+
     /** The configured fog colour, from the active palette. */
     public static Color getFogColor() {
         return Palette.getColor(0);

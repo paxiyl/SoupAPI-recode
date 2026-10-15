@@ -19,9 +19,6 @@ import me.Padej_.soupapi.compat.Camera;
 import me.Padej_.soupapi.compat.RenderTickCounter;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.ResourceLocation;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
@@ -83,7 +80,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
      */
     private final boolean useVanillaFallback;
 
-    public FontRenderer(Font font, float sizePx, int charactersPerPage, int paddingBetweenCharacters, @Nullable String prebakeCharacters) {
+    public FontRenderer(Font font, float sizePx, int charactersPerPage, int paddingBetweenCharacters, String prebakeCharacters) {
         this.originalSize = sizePx;
         this.charsPerPage = charactersPerPage;
         this.padding = paddingBetweenCharacters;
@@ -184,7 +181,6 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         return glyphMap.getGlyph(glyph);
     }
 
-    @Nullable
     private Glyph locateGlyph1(char glyph) {
         Character key = Character.valueOf(glyph);
         Glyph cached = allGlyphs.get(key);
@@ -458,8 +454,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         }
     }
 
-    @Contract(value = "-> new", pure = true)
-    public static @NotNull ResourceLocation randomIdentifier() {
+    public static ResourceLocation randomIdentifier() {
         return new ResourceLocation("soupapi", "temp/" + randomString());
     }
 
@@ -472,8 +467,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         return sb.toString();
     }
 
-    @Contract(value = "_ -> new", pure = true)
-    public static int @NotNull [] RGBIntToRGB(int in) {
+    public static int [] RGBIntToRGB(int in) {
         int red = in >> 8 * 2 & 0xFF;
         int green = in >> 8 & 0xFF;
         int blue = in & 0xFF;

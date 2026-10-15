@@ -3,7 +3,6 @@ package me.Padej_.soupapi.font;
 import me.Padej_.soupapi.compat.Caps;
 import me.Padej_.soupapi.compat.SoupLog;
 import me.Padej_.soupapi.main.SoupAPI_Main;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.Font;
 import java.awt.FontFormatException;
@@ -76,7 +75,7 @@ public class FontRenderers {
         minecraft = sf_bold;
     }
 
-    public static @NotNull FontRenderer create(float size, String name) throws IOException, FontFormatException {
+    public static FontRenderer create(float size, String name) throws IOException, FontFormatException {
         String path = "assets/soupapi/fonts/" + name + ".ttf";
         InputStream in = SoupAPI_Main.class.getClassLoader().getResourceAsStream(path);
         if (in == null) {

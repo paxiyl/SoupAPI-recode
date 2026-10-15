@@ -133,10 +133,10 @@ public final class DrawContext {
         if (ItemStacks.isEmpty(stack)) return;
         matrices.applyToGl();
         try {
-            RenderHelper.enable();
-            client.getRenderItem().zOffset = 0f;
+            RenderHelper.enableGUIStandardItemLighting();
+            client.getRenderItem().zLevel = 0f;
             client.getRenderItem().renderItemAndEffectIntoGUI(stack, x, y);
-            RenderHelper.disable();
+            RenderHelper.disableStandardItemLighting();
         } finally {
             matrices.undoGl();
         }
@@ -157,7 +157,7 @@ public final class DrawContext {
         if (ItemStacks.isEmpty(stack)) return;
         matrices.applyToGl();
         try {
-            client.getRenderItem().renderItemOverlays(renderer, stack, x, y, countLabel);
+            client.getRenderItem().renderItemOverlayIntoGUI(renderer, stack, x, y, countLabel);
         } finally {
             matrices.undoGl();
         }
@@ -175,6 +175,6 @@ public final class DrawContext {
 
     /** Kept so ported code that only needed vanilla's helper still compiles. */
     public static void vanillaFill(int x1, int y1, int x2, int y2, int color) {
-        Gui.fill(x1, y1, x2, y2, color);
+        Gui.drawRect(x1, y1, x2, y2, color);
     }
 }

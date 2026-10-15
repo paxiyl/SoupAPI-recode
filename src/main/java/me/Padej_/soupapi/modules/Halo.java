@@ -17,7 +17,7 @@ public class Halo extends ConfigurableModule {
 
         if (mc.theWorld == null || mc.thePlayer == null || !CONFIG.haloEnabled) return;
 
-        boolean isFirstPerson = mc.gameSettings.perspective == 0;
+        boolean isFirstPerson = mc.gameSettings.thirdPersonView == 0;
 
         for (Entity entity : mc.theWorld.loadedEntityList) {
             if (EntityUtils.isFriend(entity) || entity.equals(mc.thePlayer)) {
