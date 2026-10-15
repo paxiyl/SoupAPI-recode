@@ -41,15 +41,24 @@ public class HitSound extends ConfigurableModule {
     }
 
     private static SoundEvent getSound() {
-        return switch (CONFIG.hitSoundType) {
-            case CustomSounds.SoundType.ON -> CustomSounds.ON;
-            case CustomSounds.SoundType.OFF -> CustomSounds.OFF;
-            case CustomSounds.SoundType.GET -> CustomSounds.GET;
-            case CustomSounds.SoundType.BUBBLE -> CustomSounds.BUBBLE;
-            case CustomSounds.SoundType.BELL -> CustomSounds.BELL;
-            case CustomSounds.SoundType.BONK -> CustomSounds.BONK;
-            case CustomSounds.SoundType.POK -> CustomSounds.POK;
-            case CustomSounds.SoundType.MAGIC_POK -> CustomSounds.MAGIC_POK;
-        };
+        switch (CONFIG.hitSoundType) {
+            case ON:
+                return CustomSounds.ON;
+            case OFF:
+                return CustomSounds.OFF;
+            case GET:
+                return CustomSounds.GET;
+            case BUBBLE:
+                return CustomSounds.BUBBLE;
+            case BELL:
+                return CustomSounds.BELL;
+            case BONK:
+                return CustomSounds.BONK;
+            case POK:
+                return CustomSounds.POK;
+            case MAGIC_POK:
+                return CustomSounds.MAGIC_POK;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.hitSoundType);
     }
 }

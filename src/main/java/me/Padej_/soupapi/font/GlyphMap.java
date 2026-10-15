@@ -138,15 +138,25 @@ class GlyphMap {
             ColorModel _cm = bi.getColorModel();
             int nbands = _ra.getNumBands();
             int dataType = _ra.getDataBuffer().getDataType();
-            _d = switch (dataType) {
-                case DataBuffer.TYPE_BYTE -> new byte[nbands];
-                case DataBuffer.TYPE_USHORT -> new short[nbands];
-                case DataBuffer.TYPE_INT -> new int[nbands];
-                case DataBuffer.TYPE_FLOAT -> new float[nbands];
-                case DataBuffer.TYPE_DOUBLE -> new double[nbands];
-                default -> throw new IllegalArgumentException("Unknown data buffer type: " +
-                        dataType);
-            };
+            switch (dataType) {
+                case DataBuffer.TYPE_BYTE:
+                    _d = new byte[nbands];
+                    break;
+                case DataBuffer.TYPE_USHORT:
+                    _d = new short[nbands];
+                    break;
+                case DataBuffer.TYPE_INT:
+                    _d = new int[nbands];
+                    break;
+                case DataBuffer.TYPE_FLOAT:
+                    _d = new float[nbands];
+                    break;
+                case DataBuffer.TYPE_DOUBLE:
+                    _d = new double[nbands];
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown data buffer type: " + dataType);
+            }
 
             for (int y = 0; y < oh; y++) {
                 for (int x = 0; x < ow; x++) {

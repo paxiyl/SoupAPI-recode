@@ -26,7 +26,8 @@ public class KillEffect extends ConfigurableModule {
         ClientWorld world = (ClientWorld) mc.player.getWorld();
         for (Entity entity : world.getEntities()) {
             // Проверяем, что сущность - живое существо
-            if (!(entity instanceof LivingEntity liv)) continue;
+            if (!(entity instanceof LivingEntity)) continue;
+            LivingEntity liv = (LivingEntity) entity;
 
             // Пропускаем сущности, с которыми уже работаем
             if (entity == mc.player || renderEntities.containsKey(entity) || lightingEntities.containsKey(entity))

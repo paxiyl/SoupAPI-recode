@@ -52,9 +52,10 @@ public class ConfigManager {
         Map<String, Object> moduleSettings = new HashMap<>();
         for (Setting<?> setting : module.getSettings()) {
             Object value = setting.getValue();
-            if (setting instanceof EnumSetting<?> enumSetting) {
+            if (setting instanceof EnumSetting<?>) {
                 value = value.toString();
-            } else if (setting instanceof MinMaxSliderSetting minMaxSetting) {
+            } else if (setting instanceof MinMaxSliderSetting) {
+                MinMaxSliderSetting minMaxSetting = (MinMaxSliderSetting) setting;
                 value = new float[]{minMaxSetting.getMinValue(), minMaxSetting.getMaxValue()};
             }
             moduleSettings.put(setting.getName(), value);
@@ -91,26 +92,23 @@ public class ConfigManager {
                     Object value = moduleSettings.get(setting.getName());
                     if (value != null) {
                         try {
-                            switch (setting) {
-                                case BooleanSetting booleanSetting -> booleanSetting.setValue((Boolean) value);
-                                case SliderSetting sliderSetting ->
-                                        sliderSetting.setValue(((Double) value).floatValue());
-                                case EnumSetting<?> enumSetting -> {
-                                    Enum<?>[] values = enumSetting.getValues();
-                                    for (Enum<?> enumValue : values) {
-                                        if (enumValue.toString().equals(value)) {
-                                            ((EnumSetting) enumSetting).setValue(enumValue);
-                                            break;
-                                        }
+                            if (setting instanceof BooleanSetting) {
+                                ((BooleanSetting) setting).setValue((Boolean) value);
+                            } else if (setting instanceof SliderSetting) {
+                                ((SliderSetting) setting).setValue(((Double) value).floatValue());
+                            } else if (setting instanceof EnumSetting<?>) {
+                                EnumSetting<?> enumSetting = (EnumSetting<?>) setting;
+                                for (Enum<?> enumValue : enumSetting.getValues()) {
+                                    if (enumValue.toString().equals(value)) {
+                                        ((EnumSetting) enumSetting).setValue(enumValue);
+                                        break;
                                     }
                                 }
-                                case MinMaxSliderSetting minMaxSetting -> {
-                                    double[] array = (double[]) value;
-                                    minMaxSetting.setMinValue((float) array[0]);
-                                    minMaxSetting.setMaxValue((float) array[1]);
-                                }
-                                default -> {
-                                }
+                            } else if (setting instanceof MinMaxSliderSetting) {
+                                MinMaxSliderSetting minMaxSetting = (MinMaxSliderSetting) setting;
+                                double[] array = (double[]) value;
+                                minMaxSetting.setMinValue((float) array[0]);
+                                minMaxSetting.setMaxValue((float) array[1]);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

@@ -182,12 +182,13 @@ public class SoupSettingsScreen extends Screen {
                     comp.y = i;
                     if (comp.isHovered(mouseX, mouseY)) {
                         comp.mouseClicked(mouseX, mouseY, button);
-                        if (comp instanceof StringComponent sc) {
-                            sc.setFocused(true);  // Вот здесь ставим фокус при клике по полю
+                        if (comp instanceof StringComponent) {
+                            // Focus the field that was clicked.
+                            ((StringComponent) comp).setFocused(true);
                         }
                         clickedOnComponent = true;
-                    } else if (comp instanceof StringComponent sc) {
-                        sc.setFocused(false);
+                    } else if (comp instanceof StringComponent) {
+                        ((StringComponent) comp).setFocused(false);
                     }
                 }
                 i += 25;
@@ -239,20 +240,25 @@ public class SoupSettingsScreen extends Screen {
     }
 
     private SettingComponent<?> createComponent(Setting<?> setting, int x, int y) {
-        return switch (setting) {
-            case BooleanSetting bs -> new BooleanComponent(bs, x, y, 150, 20);
-            case SliderSetting ss -> new SliderComponent(ss, x, y, 150, 20);
-            case EnumSetting<?> es -> new EnumComponent<>(es, x, y, 150, 20);
-            case ButtonSetting bs -> new ButtonComponent(bs, x, y, 150, 20);
-            case StringSetting ss -> new StringComponent(ss, x, y, 150, 20);
-            case null, default -> null;
-        };
+        if (setting instanceof BooleanSetting) {
+            return new BooleanComponent((BooleanSetting) setting, x, y, 150, 20);
+        } else if (setting instanceof SliderSetting) {
+            return new SliderComponent((SliderSetting) setting, x, y, 150, 20);
+        } else if (setting instanceof EnumSetting<?>) {
+            return new EnumComponent((EnumSetting<?>) setting, x, y, 150, 20);
+        } else if (setting instanceof ButtonSetting) {
+            return new ButtonComponent((ButtonSetting) setting, x, y, 150, 20);
+        } else if (setting instanceof StringSetting) {
+            return new StringComponent((StringSetting) setting, x, y, 150, 20);
+        }
+        return null;
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         for (SettingComponent<?> comp : settingComponents.values()) {
-            if (comp instanceof StringComponent sc && sc.keyPressed(keyCode, scanCode, modifiers)) {
+            if (comp instanceof StringComponent
+                    && ((StringComponent) comp).keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
         }
@@ -262,7 +268,8 @@ public class SoupSettingsScreen extends Screen {
     @Override
     public boolean charTyped(char chr, int modifiers) {
         for (SettingComponent<?> comp : settingComponents.values()) {
-            if (comp instanceof StringComponent sc && sc.charTyped(chr, modifiers)) {
+            if (comp instanceof StringComponent
+                    && ((StringComponent) comp).charTyped(chr, modifiers)) {
                 return true;
             }
         }

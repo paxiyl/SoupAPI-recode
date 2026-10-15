@@ -88,51 +88,83 @@ public class TexturesManager extends ConfigurableModule {
     };
 
     public static Identifier getJumpCircle() {
-        return switch (CONFIG.jumpCirclesStyle) {
-            case CIRCLE -> CIRCLE;
-            case PORTAL -> PORTAL;
-            case HEXAGON -> HEXAGON;
-            case CIRCLE_BOLD -> CIRCLE_BOLD;
-            case SOUP -> SOUP;
-        };
+        switch (CONFIG.jumpCirclesStyle) {
+            case CIRCLE:
+                return CIRCLE;
+            case PORTAL:
+                return PORTAL;
+            case HEXAGON:
+                return HEXAGON;
+            case CIRCLE_BOLD:
+                return CIRCLE_BOLD;
+            case SOUP:
+                return SOUP;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.jumpCirclesStyle);
     }
 
     public static Identifier getTargetRenderTexture() {
-        return switch (CONFIG.targetRenderLegacyTexture) {
-            case LEGACY -> LEGACY;
-            case MARKER -> MARKER;
-            case BO -> BO;
-            case SIMPLE -> SIMPLE;
-            case SCIFI -> SCIFI;
-            case JEKA -> JEKA;
-            case AMONGUS -> AMOGUS;
-            case SKULL -> SKULL;
-            case VEGAS -> VEGAS;
-        };
+        switch (CONFIG.targetRenderLegacyTexture) {
+            case LEGACY:
+                return LEGACY;
+            case MARKER:
+                return MARKER;
+            case BO:
+                return BO;
+            case SIMPLE:
+                return SIMPLE;
+            case SCIFI:
+                return SCIFI;
+            case JEKA:
+                return JEKA;
+            case AMONGUS:
+                return AMOGUS;
+            case SKULL:
+                return SKULL;
+            case VEGAS:
+                return VEGAS;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.targetRenderLegacyTexture);
     }
 
     public static Identifier getHitBubbleTexture() {
-        return switch (CONFIG.hitBubblesStyle) {
-            case CIRCLE -> CIRCLE;
-            case CIRCLE_BOLD -> CIRCLE_BOLD;
-            case HEXAGON -> HEXAGON;
-            case PORTAL -> PORTAL;
-            case PORTAL_2 -> PORTAL_2;
-        };
+        switch (CONFIG.hitBubblesStyle) {
+            case CIRCLE:
+                return CIRCLE;
+            case CIRCLE_BOLD:
+                return CIRCLE_BOLD;
+            case HEXAGON:
+                return HEXAGON;
+            case PORTAL:
+                return PORTAL;
+            case PORTAL_2:
+                return PORTAL_2;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.hitBubblesStyle);
     }
 
     public static Identifier getMC_TiersGameModeTexture() {
-        return switch (CONFIG.mctiersGameMode) {
-            case LTMs -> LTMS;
-            case AXE -> AXE;
-            case MACE -> MACE;
-            case NETHER_OP -> NETHOP;
-            case POT -> POT;
-            case SMP -> SMP;
-            case SWORD -> SWORD;
-            case UHC -> UHC;
-            case VANILLA -> VANILLA;
-        };
+        switch (CONFIG.mctiersGameMode) {
+            case LTMs:
+                return LTMS;
+            case AXE:
+                return AXE;
+            case MACE:
+                return MACE;
+            case NETHER_OP:
+                return NETHOP;
+            case POT:
+                return POT;
+            case SMP:
+                return SMP;
+            case SWORD:
+                return SWORD;
+            case UHC:
+                return UHC;
+            case VANILLA:
+                return VANILLA;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.mctiersGameMode);
     }
 
     public static Identifier getRandomGlyphParticle() {
@@ -141,9 +173,12 @@ public class TexturesManager extends ConfigurableModule {
     }
 
     public static Identifier getSoulTexture() {
-        return switch (CONFIG.targetRenderSoulTexture) {
-            case FIREFLY -> FIREFLY;
-            case ALT -> FIREFLY_ALT;
-        };
+        switch (CONFIG.targetRenderSoulTexture) {
+            case FIREFLY:
+                return FIREFLY;
+            case ALT:
+                return FIREFLY_ALT;
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.targetRenderSoulTexture);
     }
 }

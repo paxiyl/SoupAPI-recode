@@ -366,8 +366,77 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     public void drawGradientCenteredString(MatrixStack matrices, String s, float x, float y, int i) {
         drawGradientString(matrices, s, x - getStringWidth(s) / 2f, y, i);
     }
+static final class DrawEntry {
+    private final float atX;
+    private final float atY;
+    private final float r;
+    private final float g;
+    private final float b;
+    private final Glyph toDraw;
 
-    record DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
+    DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
+        this.atX = atX;
+        this.atY = atY;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.toDraw = toDraw;
+    }
+
+    public float atX() {
+        return atX;
+    }
+
+    public float atY() {
+        return atY;
+    }
+
+    public float r() {
+        return r;
+    }
+
+    public float g() {
+        return g;
+    }
+
+    public float b() {
+        return b;
+    }
+
+    public Glyph toDraw() {
+        return toDraw;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DrawEntry)) return false;
+        DrawEntry other = (DrawEntry) o;
+        if (Float.compare(atX, other.atX) != 0) return false;
+        if (Float.compare(atY, other.atY) != 0) return false;
+        if (Float.compare(r, other.r) != 0) return false;
+        if (Float.compare(g, other.g) != 0) return false;
+        if (Float.compare(b, other.b) != 0) return false;
+        if (toDraw == null ? other.toDraw != null : !toDraw.equals(other.toDraw)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + Float.floatToIntBits(atX);
+        result = 31 * result + Float.floatToIntBits(atY);
+        result = 31 * result + Float.floatToIntBits(r);
+        result = 31 * result + Float.floatToIntBits(g);
+        result = 31 * result + Float.floatToIntBits(b);
+        result = 31 * result + (toDraw == null ? 0 : toDraw.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DrawEntry[" + "atX=" + atX + ", " + "atY=" + atY + ", " + "r=" + r + ", " + "g=" + g + ", " + "b=" + b + ", " + "toDraw=" + toDraw + "]";
+    }
     }
 
     private static double roundToDecimal(double n, int point) {

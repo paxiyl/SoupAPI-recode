@@ -18,11 +18,15 @@ public class AspectRatio extends SoupModule {
 
     public static float getRatioByPreset() {
         if (usePreset.getValue()) {
-            return switch (preset.getValue()) {
-                case _16_9_ -> 16f / 9f;
-                case _5_4_ -> 5f / 4f;
-                case _4_3_ -> 4f / 3f;
-            };
+            switch (preset.getValue()) {
+            case _16_9_:
+                return 16f / 9f;
+            case _5_4_:
+                return 5f / 4f;
+            case _4_3_:
+                return 4f / 3f;
+        }
+        throw new IllegalStateException("Unexpected value: " + preset.getValue());
         } else {
             return factor.getValue() / 100f;
         }

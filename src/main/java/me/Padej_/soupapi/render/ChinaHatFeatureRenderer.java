@@ -63,7 +63,8 @@ public abstract class ChinaHatFeatureRenderer<S extends LivingEntityRenderState,
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
-        if (state instanceof PlayerEntityRenderState playerState) {
+        if (state instanceof PlayerEntityRenderState) {
+            PlayerEntityRenderState playerState = (PlayerEntityRenderState) state;
             // Проверяем, является ли это локальным игроком или другом
             String localPlayerName = client.player.getName().getString();
             String stateName = playerState.name;

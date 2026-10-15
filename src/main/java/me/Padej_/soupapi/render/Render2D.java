@@ -178,14 +178,18 @@ public class Render2D {
                 float sin = (float) (Math.sin(rad1) * rad);
                 float cos = (float) (Math.cos(rad1) * rad);
                 switch (i) {
-                    case 0 ->
-                            bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr1, cg1, cb1, ca1);
-                    case 1 ->
-                            bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr, cg, cb, ca);
-                    case 2 ->
-                            bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr2, cg2, cb2, ca2);
-                    default ->
-                            bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr3, cg3, cb3, ca3);
+                    case 0:
+                        bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr1, cg1, cb1, ca1);
+                        break;
+                    case 1:
+                        bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr, cg, cb, ca);
+                        break;
+                    case 2:
+                        bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr2, cg2, cb2, ca2);
+                        break;
+                    default:
+                        bufferBuilder.vertex(matrix, (float) current[0] + sin, (float) current[1] + cos, 0.0F).color(cr3, cg3, cb3, ca3);
+                        break;
                 }
             }
         }
@@ -453,8 +457,61 @@ public class Render2D {
             RenderSystem.setShaderTexture(0, id.getId());
         }
     }
+public static final class Rectangle {
+    private final float x;
+    private final float y;
+    private final float x1;
+    private final float y1;
 
-    public record Rectangle(float x, float y, float x1, float y1) {
+    Rectangle(float x, float y, float x1, float y1) {
+        this.x = x;
+        this.y = y;
+        this.x1 = x1;
+        this.y1 = y1;
+    }
+
+    public float x() {
+        return x;
+    }
+
+    public float y() {
+        return y;
+    }
+
+    public float x1() {
+        return x1;
+    }
+
+    public float y1() {
+        return y1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rectangle)) return false;
+        Rectangle other = (Rectangle) o;
+        if (Float.compare(x, other.x) != 0) return false;
+        if (Float.compare(y, other.y) != 0) return false;
+        if (Float.compare(x1, other.x1) != 0) return false;
+        if (Float.compare(y1, other.y1) != 0) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + Float.floatToIntBits(x);
+        result = 31 * result + Float.floatToIntBits(y);
+        result = 31 * result + Float.floatToIntBits(x1);
+        result = 31 * result + Float.floatToIntBits(y1);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Rectangle[" + "x=" + x + ", " + "y=" + y + ", " + "x1=" + x1 + ", " + "y1=" + y1 + "]";
+    }
         public boolean contains(double x, double y) {
             return x >= this.x && x <= x1 && y >= this.y && y <= y1;
         }

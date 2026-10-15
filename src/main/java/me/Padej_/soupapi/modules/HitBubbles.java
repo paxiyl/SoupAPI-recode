@@ -127,7 +127,76 @@ public class HitBubbles extends ConfigurableModule {
     public enum Style {
         CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, PORTAL_2
     }
+public static final class HitBubble {
+    private final float x;
+    private final float y;
+    private final float z;
+    private final float yaw;
+    private final float pitch;
+    private final Timer life;
 
-    public record HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
+    HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.life = life;
+    }
+
+    public float x() {
+        return x;
+    }
+
+    public float y() {
+        return y;
+    }
+
+    public float z() {
+        return z;
+    }
+
+    public float yaw() {
+        return yaw;
+    }
+
+    public float pitch() {
+        return pitch;
+    }
+
+    public Timer life() {
+        return life;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HitBubble)) return false;
+        HitBubble other = (HitBubble) o;
+        if (Float.compare(x, other.x) != 0) return false;
+        if (Float.compare(y, other.y) != 0) return false;
+        if (Float.compare(z, other.z) != 0) return false;
+        if (Float.compare(yaw, other.yaw) != 0) return false;
+        if (Float.compare(pitch, other.pitch) != 0) return false;
+        if (life == null ? other.life != null : !life.equals(other.life)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + Float.floatToIntBits(x);
+        result = 31 * result + Float.floatToIntBits(y);
+        result = 31 * result + Float.floatToIntBits(z);
+        result = 31 * result + Float.floatToIntBits(yaw);
+        result = 31 * result + Float.floatToIntBits(pitch);
+        result = 31 * result + (life == null ? 0 : life.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "HitBubble[" + "x=" + x + ", " + "y=" + y + ", " + "z=" + z + ", " + "yaw=" + yaw + ", " + "pitch=" + pitch + ", " + "life=" + life + "]";
+    }
     }
 }

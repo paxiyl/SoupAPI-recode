@@ -43,7 +43,11 @@ public class HitParticle extends ConfigurableModule {
             if (!CONFIG.hitParticlesEnabled || playerEntity != mc.player) {
                 return ActionResult.PASS;
             }
-            if (!(entity instanceof LivingEntity target) || !target.isAlive()) {
+            if (!(entity instanceof LivingEntity)) {
+                return ActionResult.PASS;
+            }
+            LivingEntity target = (LivingEntity) entity;
+            if (!target.isAlive()) {
                 return ActionResult.PASS;
             }
             if (CONFIG.hitParticlesCritOnly && !EntityUtils.isCrit()) {
@@ -105,7 +109,9 @@ public class HitParticle extends ConfigurableModule {
         if (!CONFIG.hitParticlesTextMode.equals(HitTextMode.DISABLED)) {
             if (CONFIG.hitParticlesTextMode == HitTextMode.ALL_ENTITIES) {
                 for (Entity entity : mc.world.getEntities()) {
-                    if (entity instanceof LivingEntity lent && mc.player.squaredDistanceTo(entity) <= 256f && lent.isAlive()) {
+                    if (!(entity instanceof LivingEntity)) continue;
+                    LivingEntity lent = (LivingEntity) entity;
+                    if (mc.player.squaredDistanceTo(entity) <= 256f && lent.isAlive()) {
                         float health = lent.getHealth() + lent.getAbsorptionAmount();
                         float lastHealth = healthMap.getOrDefault(entity.getId(), health);
                         healthMap.put(entity.getId(), health);

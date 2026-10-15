@@ -130,42 +130,60 @@ public class Render3D_Shapes {
         float z2 = (float) box.maxZ;
 
         switch (dir) {
-            case UP -> {
-                vertexLine(matrices, buffer, x1, y2, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y2, z1, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y2, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
-            }
-            case DOWN -> {
-                vertexLine(matrices, buffer, x1, y1, z1, x2, y1, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y1, z2, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x1, y1, z2, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
-            }
-            case EAST -> {
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y2, z2, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y1, z1, color);
-            }
-            case WEST -> {
-                vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
-            }
-            case NORTH -> {
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z1, x1, y1, z1, color);
-                vertexLine(matrices, buffer, x2, y2, z1, x1, y2, z1, color);
-            }
-            case SOUTH -> {
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x2, y1, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x2, y2, z2, color);
-            }
+            case UP:
+                {
+                    vertexLine(matrices, buffer, x1, y2, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y2, z1, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y2, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
+
+                }
+                break;
+            case DOWN:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z1, x2, y1, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y1, z2, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x1, y1, z2, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
+
+                }
+                break;
+            case EAST:
+                {
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y2, z2, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y1, z1, color);
+
+                }
+                break;
+            case WEST:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
+
+                }
+                break;
+            case NORTH:
+                {
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z1, x1, y1, z1, color);
+                    vertexLine(matrices, buffer, x2, y2, z1, x1, y2, z1, color);
+
+                }
+                break;
+            case SOUTH:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x2, y1, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x2, y2, z2, color);
+
+                }
+                break;
         }
     }
 
@@ -379,25 +397,340 @@ public class Render3D_Shapes {
     public static void drawLine(@NotNull Vec3d start, @NotNull Vec3d end, @NotNull Color color) {
         LINE_QUEUE.add(new LineAction(start, end, color));
     }
+public static final class FillAction {
+    private final Box box;
+    private final Color color;
 
-    public record FillAction(Box box, Color color) {
+    FillAction(Box box, Color color) {
+        this.box = box;
+        this.color = color;
     }
 
-    public record OutlineAction(Box box, Color color, float lineWidth) {
+    public Box box() {
+        return box;
     }
 
-    public record FadeAction(Box box, Color color, Color color2) {
+    public Color color() {
+        return color;
     }
 
-    public record FillSideAction(Box box, Color color, Direction side) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FillAction)) return false;
+        FillAction other = (FillAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
     }
 
-    public record OutlineSideAction(Box box, Color color, float lineWidth, Direction side) {
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
     }
 
-    public record DebugLineAction(Vec3d start, Vec3d end, Color color) {
+    @Override
+    public String toString() {
+        return "FillAction[" + "box=" + box + ", " + "color=" + color + "]";
+    }
+    }
+public static final class OutlineAction {
+    private final Box box;
+    private final Color color;
+    private final float lineWidth;
+
+    OutlineAction(Box box, Color color, float lineWidth) {
+        this.box = box;
+        this.color = color;
+        this.lineWidth = lineWidth;
     }
 
-    public record LineAction(Vec3d start, Vec3d end, Color color) {
+    public Box box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public float lineWidth() {
+        return lineWidth;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OutlineAction)) return false;
+        OutlineAction other = (OutlineAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (Float.compare(lineWidth, other.lineWidth) != 0) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + Float.floatToIntBits(lineWidth);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "OutlineAction[" + "box=" + box + ", " + "color=" + color + ", " + "lineWidth=" + lineWidth + "]";
+    }
+    }
+public static final class FadeAction {
+    private final Box box;
+    private final Color color;
+    private final Color color2;
+
+    FadeAction(Box box, Color color, Color color2) {
+        this.box = box;
+        this.color = color;
+        this.color2 = color2;
+    }
+
+    public Box box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public Color color2() {
+        return color2;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FadeAction)) return false;
+        FadeAction other = (FadeAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (color2 == null ? other.color2 != null : !color2.equals(other.color2)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + (color2 == null ? 0 : color2.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FadeAction[" + "box=" + box + ", " + "color=" + color + ", " + "color2=" + color2 + "]";
+    }
+    }
+public static final class FillSideAction {
+    private final Box box;
+    private final Color color;
+    private final Direction side;
+
+    FillSideAction(Box box, Color color, Direction side) {
+        this.box = box;
+        this.color = color;
+        this.side = side;
+    }
+
+    public Box box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public Direction side() {
+        return side;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FillSideAction)) return false;
+        FillSideAction other = (FillSideAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (side == null ? other.side != null : !side.equals(other.side)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + (side == null ? 0 : side.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FillSideAction[" + "box=" + box + ", " + "color=" + color + ", " + "side=" + side + "]";
+    }
+    }
+public static final class OutlineSideAction {
+    private final Box box;
+    private final Color color;
+    private final float lineWidth;
+    private final Direction side;
+
+    OutlineSideAction(Box box, Color color, float lineWidth, Direction side) {
+        this.box = box;
+        this.color = color;
+        this.lineWidth = lineWidth;
+        this.side = side;
+    }
+
+    public Box box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public float lineWidth() {
+        return lineWidth;
+    }
+
+    public Direction side() {
+        return side;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OutlineSideAction)) return false;
+        OutlineSideAction other = (OutlineSideAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (Float.compare(lineWidth, other.lineWidth) != 0) return false;
+        if (side == null ? other.side != null : !side.equals(other.side)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + Float.floatToIntBits(lineWidth);
+        result = 31 * result + (side == null ? 0 : side.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "OutlineSideAction[" + "box=" + box + ", " + "color=" + color + ", " + "lineWidth=" + lineWidth + ", " + "side=" + side + "]";
+    }
+    }
+public static final class DebugLineAction {
+    private final Vec3d start;
+    private final Vec3d end;
+    private final Color color;
+
+    DebugLineAction(Vec3d start, Vec3d end, Color color) {
+        this.start = start;
+        this.end = end;
+        this.color = color;
+    }
+
+    public Vec3d start() {
+        return start;
+    }
+
+    public Vec3d end() {
+        return end;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DebugLineAction)) return false;
+        DebugLineAction other = (DebugLineAction) o;
+        if (start == null ? other.start != null : !start.equals(other.start)) return false;
+        if (end == null ? other.end != null : !end.equals(other.end)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (start == null ? 0 : start.hashCode());
+        result = 31 * result + (end == null ? 0 : end.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DebugLineAction[" + "start=" + start + ", " + "end=" + end + ", " + "color=" + color + "]";
+    }
+    }
+public static final class LineAction {
+    private final Vec3d start;
+    private final Vec3d end;
+    private final Color color;
+
+    LineAction(Vec3d start, Vec3d end, Color color) {
+        this.start = start;
+        this.end = end;
+        this.color = color;
+    }
+
+    public Vec3d start() {
+        return start;
+    }
+
+    public Vec3d end() {
+        return end;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LineAction)) return false;
+        LineAction other = (LineAction) o;
+        if (start == null ? other.start != null : !start.equals(other.start)) return false;
+        if (end == null ? other.end != null : !end.equals(other.end)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (start == null ? 0 : start.hashCode());
+        result = 31 * result + (end == null ? 0 : end.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "LineAction[" + "start=" + start + ", " + "end=" + end + ", " + "color=" + color + "]";
+    }
     }
 }

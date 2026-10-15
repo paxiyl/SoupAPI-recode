@@ -33,10 +33,13 @@ public class CustomFog extends SoupModule {
     }
 
     private static FogShape getCustomFogShape() {
-        return switch (shape.getValue()) {
-            case SPHERE -> FogShape.SPHERE;
-            case CYLINDER -> FogShape.CYLINDER;
-        };
+        switch (shape.getValue()) {
+            case SPHERE:
+                return FogShape.SPHERE;
+            case CYLINDER:
+                return FogShape.CYLINDER;
+        }
+        throw new IllegalStateException("Unexpected value: " + shape.getValue());
     }
 
     public enum CustomFogShape {

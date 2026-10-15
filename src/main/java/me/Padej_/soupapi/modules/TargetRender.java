@@ -33,7 +33,7 @@ public class TargetRender extends ConfigurableModule {
         if (currentTarget != null && client.player.canSee(currentTarget)) {
             if (!currentTarget.isInvisible()) {
                 visibleNow = true;
-            } else if (currentTarget.isGlowing() || (currentTarget instanceof LivingEntity living && hasAnyArmor(living))) {
+            } else if (currentTarget.isGlowing() || (currentTarget instanceof LivingEntity && hasAnyArmor((LivingEntity) currentTarget))) {
                 visibleNow = true;
             }
         }
@@ -78,10 +78,18 @@ public class TargetRender extends ConfigurableModule {
         float tickDelta = context.tickCounter().getTickDelta(true);
 
         switch (CONFIG.targetRenderStyle) {
-            case SOUL -> Render3D.renderSoulsEsp(tickDelta, lastTargetEntity);
-            case SPIRAL -> Render3D.drawSpiralsEsp(context.matrixStack(), lastTargetEntity);
-            case TOPKA -> Render3D.drawScanEsp(context.matrixStack(), lastTargetEntity);
-            case LEGACY -> Render3D.drawLegacy(tickDelta, lastTargetEntity);
+            case SOUL:
+                Render3D.renderSoulsEsp(tickDelta, lastTargetEntity);
+                break;
+            case SPIRAL:
+                Render3D.drawSpiralsEsp(context.matrixStack(), lastTargetEntity);
+                break;
+            case TOPKA:
+                Render3D.drawScanEsp(context.matrixStack(), lastTargetEntity);
+                break;
+            case LEGACY:
+                Render3D.drawLegacy(tickDelta, lastTargetEntity);
+                break;
         }
     }
 
@@ -101,10 +109,20 @@ public class TargetRender extends ConfigurableModule {
         SMOKE, PLASMA;
 
         public static void setupBlendFunc() {
-            switch (CONFIG.targetRenderSoulStyle) {
-                case SMOKE -> RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
-                case PLASMA -> RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
-                case null, default -> RenderSystem.defaultBlendFunc();
+            if (CONFIG.targetRenderSoulStyle == null) {
+                RenderSystem.defaultBlendFunc();
+            } else {
+    switch (CONFIG.targetRenderSoulStyle) {
+                    case SMOKE:
+                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+                        break;
+                    case PLASMA:
+                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+                        break;
+                    default:
+                        RenderSystem.defaultBlendFunc();
+                        break;
+                }
             }
         }
     }

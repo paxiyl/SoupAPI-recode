@@ -293,7 +293,7 @@ public class Render3D extends ConfigurableModule {
         float layerSpacing = 2;
 
         if (targetEntity == null) return;
-        if (targetEntity instanceof PlayerEntity playerEntity && playerEntity.isGliding()) return;
+        if (targetEntity instanceof PlayerEntity && ((PlayerEntity) targetEntity).isGliding()) return;
         Vec3d newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
         float entityAge = targetEntity.age + tickDelta;
 

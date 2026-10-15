@@ -50,26 +50,39 @@ public abstract class MixinHeldItemRenderer {
 
         if (usingItem) {
             switch (item.getUseAction()) {
-                case EAT, DRINK -> {
-                    this.applyEatOrDrinkTransformation(matrices, tickDelta, arm, item, player);
-                    this.applyEquipOffset(matrices, arm, equipProgress);
-                    isVanillaAction = true;
-                }
-                case BOW -> {
-                    this.applyEquipOffset(matrices, arm, equipProgress);
-                    applyBowTransform(matrices, player, item, tickDelta, arm);
-                    isVanillaAction = true;
-                }
-                case SPEAR -> {
-                    this.applyEquipOffset(matrices, arm, equipProgress);
-                    applySpearTransform(matrices, player, item, tickDelta, arm);
-                    isVanillaAction = true;
-                }
-                case CROSSBOW -> {
-                    this.applyEquipOffset(matrices, arm, equipProgress);
-                    applyCrossbowTransform(matrices, player, item, tickDelta, arm);
-                    isVanillaAction = true;
-                }
+                case EAT:
+                case DRINK:
+                    {
+                        this.applyEatOrDrinkTransformation(matrices, tickDelta, arm, item, player);
+                        this.applyEquipOffset(matrices, arm, equipProgress);
+                        isVanillaAction = true;
+
+                    }
+                    break;
+                case BOW:
+                    {
+                        this.applyEquipOffset(matrices, arm, equipProgress);
+                        applyBowTransform(matrices, player, item, tickDelta, arm);
+                        isVanillaAction = true;
+
+                    }
+                    break;
+                case SPEAR:
+                    {
+                        this.applyEquipOffset(matrices, arm, equipProgress);
+                        applySpearTransform(matrices, player, item, tickDelta, arm);
+                        isVanillaAction = true;
+
+                    }
+                    break;
+                case CROSSBOW:
+                    {
+                        this.applyEquipOffset(matrices, arm, equipProgress);
+                        applyCrossbowTransform(matrices, player, item, tickDelta, arm);
+                        isVanillaAction = true;
+
+                    }
+                    break;
             }
         }
 

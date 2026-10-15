@@ -91,24 +91,26 @@ public class RPC extends ConfigurableModule {
     }
 
     private static String getState() {
-        return switch (CONFIG.rpcState) {
-            case NAME -> {
+        switch (CONFIG.rpcState) {
+            case NAME:
                 if (mc.getGameProfile() != null && mc.getGameProfile().getName() != null) {
-                    yield mc.getGameProfile().getName();
+                return mc.getGameProfile().getName();
                 } else {
-                    yield "Bruh -_-. Name is Null";
+                return "Bruh -_-. Name is Null";
                 }
-            }
-            case IP -> {
+
+            case IP:
                 if (mc.getNetworkHandler() != null && mc.getNetworkHandler().getServerInfo() != null
-                        && mc.getNetworkHandler().getServerInfo().address != null) {
-                    yield mc.getNetworkHandler().getServerInfo().address.toLowerCase();
+                && mc.getNetworkHandler().getServerInfo().address != null) {
+                return mc.getNetworkHandler().getServerInfo().address.toLowerCase();
                 } else {
-                    yield "Offline";
+                return "Offline";
                 }
-            }
-            case CUSTOM -> CONFIG.rpcCustomStateText != null ? CONFIG.rpcCustomStateText : "No state";
-        };
+
+            case CUSTOM:
+                return CONFIG.rpcCustomStateText != null ? CONFIG.rpcCustomStateText : "No state";
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.rpcState);
     }
 
     public enum State {

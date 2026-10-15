@@ -29,12 +29,17 @@ public class Palette {
     }
 
     public static int getColorsCount() {
-        return switch (getStyle()) {
-            case SOLO -> 1;
-            case DUO -> 2;
-            case TRIO -> 3;
-            case QUARTET -> 4;
-        };
+        switch (getStyle()) {
+            case SOLO:
+                return 1;
+            case DUO:
+                return 2;
+            case TRIO:
+                return 3;
+            case QUARTET:
+                return 4;
+        }
+        throw new IllegalStateException("Unexpected value: " + getStyle());
     }
 
     public static Color getInterpolatedPaletteColor(float progress) {
@@ -83,12 +88,17 @@ public class Palette {
     public static Color getColor(float position) {
         ColorsStyle style = getStyle();
 
-        return switch (style) {
-            case SOLO -> new Color(getRawColor1());
-            case DUO -> OklabUtils.interpolate(new Color(getRawColor1()), new Color(getRawColor2()), position);
-            case TRIO -> interpolate3(position, new Color(getRawColor1()), new Color(getRawColor2()), new Color(getRawColor3()));
-            case QUARTET -> interpolate4(position, new Color(getRawColor1()), new Color(getRawColor2()), new Color(getRawColor3()), new Color(getRawColor4()));
-        };
+        switch (style) {
+            case SOLO:
+                return new Color(getRawColor1());
+            case DUO:
+                return OklabUtils.interpolate(new Color(getRawColor1()), new Color(getRawColor2()), position);
+            case TRIO:
+                return interpolate3(position, new Color(getRawColor1()), new Color(getRawColor2()), new Color(getRawColor3()));
+            case QUARTET:
+                return interpolate4(position, new Color(getRawColor1()), new Color(getRawColor2()), new Color(getRawColor3()), new Color(getRawColor4()));
+        }
+        throw new IllegalStateException("Unexpected value: " + style);
     }
 
     private static Color interpolate3(float t, Color c1, Color c2, Color c3) {

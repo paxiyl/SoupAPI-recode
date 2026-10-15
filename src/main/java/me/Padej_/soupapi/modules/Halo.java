@@ -31,10 +31,20 @@ public class Halo extends ConfigurableModule {
         SMOKE, PLASMA;
 
         public static void setupBlendFunc() {
-            switch (CONFIG.haloSoulRenderSoulStyle) {
-                case SMOKE -> RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
-                case PLASMA -> RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
-                case null, default -> RenderSystem.defaultBlendFunc();
+            if (CONFIG.haloSoulRenderSoulStyle == null) {
+                RenderSystem.defaultBlendFunc();
+            } else {
+    switch (CONFIG.haloSoulRenderSoulStyle) {
+                    case SMOKE:
+                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+                        break;
+                    case PLASMA:
+                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+                        break;
+                    default:
+                        RenderSystem.defaultBlendFunc();
+                        break;
+                }
             }
         }
     }

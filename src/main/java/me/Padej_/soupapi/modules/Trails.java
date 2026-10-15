@@ -48,7 +48,11 @@ public class Trails extends ConfigurableModule {
 
         if (CONFIG.trailsForGliders) {
             for (Entity entity : mc.world.getEntities()) {
-                if (entity == mc.player || !(entity instanceof LivingEntity livingEntity) || !livingEntity.isGliding()) {
+                if (entity == mc.player || !(entity instanceof LivingEntity)) {
+                    continue;
+                }
+                LivingEntity livingEntity = (LivingEntity) entity;
+                if (!livingEntity.isGliding()) {
                     continue;
                 }
 

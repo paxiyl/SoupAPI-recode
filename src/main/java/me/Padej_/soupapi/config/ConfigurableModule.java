@@ -15,8 +15,8 @@ public abstract class ConfigurableModule {
     }
 
     public static void saveAll(Screen screen) {
-        if (screen instanceof ConfigScreen configScreen) {
-            configScreen.saveAll(false);
+        if (screen instanceof ConfigScreen) {
+            ((ConfigScreen) screen).saveAll(false);
         }
     }
 }

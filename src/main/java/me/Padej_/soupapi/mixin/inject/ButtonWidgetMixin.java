@@ -36,27 +36,39 @@ public abstract class ButtonWidgetMixin extends PressableWidget {
     private void onPress(CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
         switch (this.getMessage().getString()) {
-            case "CONFIG_POS" -> {
-                mc.setScreen(new ConfigHudPositionsScreen());
-                ci.cancel();
-            }
-            case "CONFIG_HANDS" -> {
-                mc.setScreen(new SwingHandScreen());
-                ci.cancel();
-            }
-            case "SELECT_CAPE" -> {
-                mc.setScreen(new CapeSelectScreen());
-                ci.cancel();
-            }
-            case "UPDATE_CAPE" -> {
-                if (CONFIG.customCapesEnabled && CONFIG.customCapesLink != null) {
+            case "CONFIG_POS":
+                {
+                    mc.setScreen(new ConfigHudPositionsScreen());
+                    ci.cancel();
+
+                }
+                break;
+            case "CONFIG_HANDS":
+                {
+                    mc.setScreen(new SwingHandScreen());
+                    ci.cancel();
+
+                }
+                break;
+            case "SELECT_CAPE":
+                {
+                    mc.setScreen(new CapeSelectScreen());
+                    ci.cancel();
+
+                }
+                break;
+            case "UPDATE_CAPE":
+                {
+                    if (CONFIG.customCapesEnabled && CONFIG.customCapesLink != null) {
                     Identifier textureId = Identifier.of("soupapi", "custom_cape_" + CONFIG.customCapesLink.hashCode());
                     if (MinecraftClient.getInstance().getTextureManager().getTexture(textureId) == null) {
-                        updateCapeFromUrl(CONFIG.customCapesLink, textureId);
+                    updateCapeFromUrl(CONFIG.customCapesLink, textureId);
                     }
+                    }
+                    ci.cancel();
+
                 }
-                ci.cancel();
-            }
+                break;
         }
     }
 

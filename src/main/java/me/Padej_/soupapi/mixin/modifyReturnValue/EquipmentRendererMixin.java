@@ -24,7 +24,7 @@ public class EquipmentRendererMixin {
     )
     private static int modifyNetheriteArmorColor(int original, EquipmentModel.Layer layer, int dyeColor) {
         Entity entity = CaptureArmoredEntity.get();
-        if ((entity instanceof PlayerEntity player && player == MinecraftClient.getInstance().player || EntityUtils.isFriend(entity)) && CONFIG.friendsHighlight) {
+        if ((entity instanceof PlayerEntity && entity == MinecraftClient.getInstance().player || EntityUtils.isFriend(entity)) && CONFIG.friendsHighlight) {
             int customColor = CONFIG.friendCustomColor;
 //            int syncColor = ColorUtils.getMaxSaturationColor(TargetHudRenderer.bottomRight.getRGB());
             int syncColor = TargetHudRenderer.bottomRight.getRGB();

@@ -172,16 +172,21 @@ public class TargetHud extends ConfigurableModule {
 
             float animationFactor = MathUtility.clamp(hudScale, 0, 1f);
             switch (CONFIG.targetHudStyle) {
-                case MINI ->
-                        TargetHudRenderer.renderMiniHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
-                case TINY ->
-                        TargetHudRenderer.renderTinyHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
-                case ARES ->
-                        TargetHudRenderer.renderAresHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
-                case ALT_1 ->
-                        TargetHudRenderer.renderAlt_1_HUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
-                default ->
-                        TargetHudRenderer.renderNormalHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                case MINI:
+                    TargetHudRenderer.renderMiniHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    break;
+                case TINY:
+                    TargetHudRenderer.renderTinyHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    break;
+                case ARES:
+                    TargetHudRenderer.renderAresHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    break;
+                case ALT_1:
+                    TargetHudRenderer.renderAlt_1_HUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    break;
+                default:
+                    TargetHudRenderer.renderNormalHUD(context, normalizedDelta, displayedHealth, animationFactor, (PlayerEntity) lastTarget, (int) smoothedScreenX, (int) smoothedScreenY, screenPos);
+                    break;
             }
 
             context.getMatrices().pop();
