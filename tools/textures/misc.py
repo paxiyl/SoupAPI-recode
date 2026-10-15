@@ -80,16 +80,17 @@ def swirl(n=128):
     t = (np.arange(n) + 0.5) / n
     u, v = np.meshgrid(t, t)
     TAU = 2 * math.pi
-    f = (np.sin(TAU * (2 * u + 3 * v)) +
-         np.sin(TAU * (3 * u - 2 * v) + 1.7) +
-         np.sin(TAU * (1 * u - 4 * v) + 0.4) +
-         0.6 * np.sin(TAU * (5 * u + 1 * v) + 2.3))
-    f = (f - f.min()) / (f.max() - f.min())
-    # thin bright filaments
-    band = np.clip((f - 0.62) / 0.26, 0, 1) ** 1.6
-    haze = np.clip((f - 0.30) / 0.45, 0, 1) ** 2.2 * 0.28
+    # Phase-warped sine fields: the warp bends the bands into long curving
+    # filaments, and every spatial frequency is an integer so the tile is
+    # seamless in both axes.
+    warp = 0.22 * np.sin(TAU * (u - 2 * v)) + 0.16 * np.sin(TAU * (3 * u + v) + 0.9)
+    f = np.sin(TAU * (2 * u + 3 * v) + TAU * warp)
+    g = np.sin(TAU * (4 * u - 1 * v) + TAU * warp * 1.3 + 2.1)
+    band = (np.clip((np.abs(f) - 0.78) / 0.22, 0, 1) ** 1.1
+            + 0.75 * np.clip((np.abs(g) - 0.86) / 0.14, 0, 1) ** 1.2)
+    haze = 0.22 * np.clip((np.abs(f) - 0.30) / 0.70, 0, 1) ** 2
     i = np.clip(band + haze, 0, 1)
-    # blue-cyan body going white in the core, like a charged-creeper swirl
+    # Blue-cyan body going white in the core, like a charged-creeper swirl.
     base = np.array([0.22, 0.52, 1.00])
     rgb = base[None, None, :] * i[..., None] + (1.0 - base)[None, None, :] * (i ** 4)[..., None]
     return np.clip(rgb, 0, 1), i
