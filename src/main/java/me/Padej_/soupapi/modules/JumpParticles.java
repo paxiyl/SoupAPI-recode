@@ -72,7 +72,7 @@ public class JumpParticles extends ConfigurableModule {
         for (int i = 0; i < CONFIG.jumpParticlesCount; i++) {
             Color color = Palette.getRandomColor();
             particles.add(new Particle(
-                    (float) pos.getX(), (float) pos.getY(), (float) pos.getZ(),
+                    (float) pos.x, (float) pos.y, (float) pos.z,
                     color,
                     MathUtility.random(0, 180),
                     MathUtility.random(10f, 60f)

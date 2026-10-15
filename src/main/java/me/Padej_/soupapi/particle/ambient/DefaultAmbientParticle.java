@@ -90,9 +90,9 @@ public class DefaultAmbientParticle {
     private static Vec3d interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
         float tickDelta = context.tickCounter().getTickDelta(true);
         Vec3d cameraPos = context.camera().getPos();
-        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.getX();
-        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.getY();
-        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.getZ();
+        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.x;
+        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.y;
+        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.z;
         return new Vec3d(x, y, z);
     }
 }

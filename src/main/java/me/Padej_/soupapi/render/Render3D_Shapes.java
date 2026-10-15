@@ -98,8 +98,8 @@ public class Render3D_Shapes {
             RenderSystem.disableCull();
             RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
             DEBUG_LINE_QUEUE.forEach(action -> {
-                MatrixStack matrices = matrixFrom(action.start.getX(), action.start.getY(), action.start.getZ());
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.getX() - action.start.getX()), (float) (action.end.getY() - action.start.getY()), (float) (action.end.getZ() - action.start.getZ()), action.color);
+                MatrixStack matrices = matrixFrom(action.start.x, action.start.y, action.start.z);
+                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.x - action.start.x), (float) (action.end.y - action.start.y), (float) (action.end.z - action.start.z), action.color);
             });
             Render2D.endBuilding(buffer);
             RenderSystem.enableCull();
@@ -117,8 +117,8 @@ public class Render3D_Shapes {
             RenderSystem.disableDepthTest();
             BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
             LINE_QUEUE.forEach(action -> { // !!!
-                MatrixStack matrices = matrixFrom(action.start.getX(), action.start.getY(), action.start.getZ());
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.getX() - action.start.getX()), (float) (action.end.getY() - action.start.getY()), (float) (action.end.getZ() - action.start.getZ()), action.color);
+                MatrixStack matrices = matrixFrom(action.start.x, action.start.y, action.start.z);
+                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.x - action.start.x), (float) (action.end.y - action.start.y), (float) (action.end.z - action.start.z), action.color);
             });
             Render2D.endBuilding(buffer);
             RenderSystem.enableCull();

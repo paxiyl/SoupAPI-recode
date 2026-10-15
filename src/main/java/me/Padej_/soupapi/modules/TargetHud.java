@@ -124,9 +124,9 @@ public class TargetHud extends ConfigurableModule {
             if (CONFIG.targetHudFollow) {
                 // Получаем экранные координаты сущности
                 float tickDelta = renderTickCounter.getTickDelta(true);
-                double x = lastTarget.prevX + (lastTarget.getX() - lastTarget.prevX) * tickDelta;
-                double y = lastTarget.prevY + (lastTarget.getY() - lastTarget.prevY) * tickDelta;
-                double z = lastTarget.prevZ + (lastTarget.getZ() - lastTarget.prevZ) * tickDelta;
+                double x = lastTarget.prevX + (lastTarget.x - lastTarget.prevX) * tickDelta;
+                double y = lastTarget.prevY + (lastTarget.y - lastTarget.prevY) * tickDelta;
+                double z = lastTarget.prevZ + (lastTarget.z - lastTarget.prevZ) * tickDelta;
                 Vec3d entityPos = new Vec3d(x, y + 1.1, z);
                 screenPos = worldSpaceToScreenSpace(entityPos);
 

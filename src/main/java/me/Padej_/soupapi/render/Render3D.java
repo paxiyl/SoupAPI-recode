@@ -141,9 +141,9 @@ public class Render3D extends ConfigurableModule {
     }
 
     private static Vec3d calculateEntityPositionRelativeToCamera(Camera camera, float tickDelta, Entity targetEntity) {
-        double interpolatedX = Maths.lerp(tickDelta, targetEntity.prevX, targetEntity.getX());
-        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevY, targetEntity.getY()) + (double) (targetEntity.getHeight() / 2.0F);
-        double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevZ, targetEntity.getZ());
+        double interpolatedX = Maths.lerp(tickDelta, targetEntity.prevX, targetEntity.x);
+        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevY, targetEntity.y) + (double) (targetEntity.getHeight() / 2.0F);
+        double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevZ, targetEntity.z);
         Vec3d entityPos = new Vec3d(interpolatedX, interpolatedY, interpolatedZ);
         return entityPos.subtract(camera.getPos());
     }
@@ -231,7 +231,7 @@ public class Render3D extends ConfigurableModule {
         matricesB.pop();
 
         matrices.push();
-        matrices.translate(newPos.getX(), newPos.getY(), newPos.getZ());
+        matrices.translate(newPos.x, newPos.y, newPos.z);
 
         Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
@@ -313,7 +313,7 @@ public class Render3D extends ConfigurableModule {
         matrices.push();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        matrices.translate(newPos.getX(), newPos.getY() + 1, newPos.getZ());
+        matrices.translate(newPos.x, newPos.y + 1, newPos.z);
 
         Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
@@ -505,9 +505,9 @@ public class Render3D extends ConfigurableModule {
 
         float radius = CONFIG.targetRenderTopkaRadius / 100f;
 
-        double x = Maths.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderManager().cameraX;
-        double y = Maths.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderManager().cameraY;
-        double z = Maths.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderManager().cameraZ;
+        double x = Maths.lerp(tickDelta, target.prevX, target.x) - mc.getEntityRenderManager().cameraX;
+        double y = Maths.lerp(tickDelta, target.prevY, target.y) - mc.getEntityRenderManager().cameraY;
+        double z = Maths.lerp(tickDelta, target.prevZ, target.z) - mc.getEntityRenderManager().cameraZ;
         double height = target.getHeight();
 
         float time = (System.currentTimeMillis() % 1000000) / 1000.0f;

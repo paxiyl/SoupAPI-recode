@@ -35,8 +35,8 @@ public class HitBubbles extends ConfigurableModule {
                 if (now - lastHitTime < 150) return ActionResult.PASS; // защита от спама (150мс)
                 lastHitTime = now;
 
-                float yaw = playerEntity.getYaw();
-                float pitch = playerEntity.getPitch();
+                float yaw = playerEntity.yaw;
+                float pitch = playerEntity.pitch;
                 double distance = 5.0;
                 Vec3d point = getRtxPoint(yaw, pitch, distance);
 

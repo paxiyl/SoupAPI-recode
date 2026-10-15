@@ -22,9 +22,9 @@ public final class MathUtility {
     }
 
     public static double getDistanceSq(double x, double y, double z) {
-        double d0 = mc.player.getX() - x;
-        double d1 = mc.player.getY() - y;
-        double d2 = mc.player.getZ() - z;
+        double d0 = mc.player.x - x;
+        double d1 = mc.player.y - y;
+        double d2 = mc.player.z - z;
         return d0 * d0 + d1 * d1 + d2 * d2;
     }
 
@@ -49,7 +49,7 @@ public final class MathUtility {
     }
 
     public static double getDistanceSq(Entity ent) {
-        return getDistanceSq(ent.getX(), ent.getY(), ent.getZ());
+        return getDistanceSq(ent.x, ent.y, ent.z);
     }
 
     public static double roundToDecimal(double n, int point) {

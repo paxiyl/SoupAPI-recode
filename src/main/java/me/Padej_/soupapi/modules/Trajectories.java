@@ -69,12 +69,12 @@ public class Trajectories extends ConfigurableModule {
         if (multishotEntry != null && ((offHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(multishotEntry, offHand) > 0) ||
                         (mainHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(multishotEntry, mainHand) > 0))) {
 
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw() - 10, tickDelta);
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw(), tickDelta);
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw() + 10, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw - 10, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw, tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw + 10, tickDelta);
 
         } else
-            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw(), tickDelta);
+            calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.yaw, tickDelta);
         mc.options.getBobView().setValue(prev_bob);
     }
 
@@ -102,9 +102,9 @@ public class Trajectories extends ConfigurableModule {
     private static void calcTrajectory(Item item, float yaw, float tickDelta) {
         ClientPlayerEntity player = mc.player;
         if (player == null) return;
-        double x = Render2D.interpolate(player.prevX, player.getX(), tickDelta);
-        double y = Render2D.interpolate(player.prevY, player.getY(), tickDelta);
-        double z = Render2D.interpolate(player.prevZ, player.getZ(), tickDelta);
+        double x = Render2D.interpolate(player.prevX, player.x, tickDelta);
+        double y = Render2D.interpolate(player.prevY, player.y, tickDelta);
+        double z = Render2D.interpolate(player.prevZ, player.z, tickDelta);
 
         y = y + player.getEyeHeight(player.getPose()) - 0.1000000014901161;
 
@@ -117,9 +117,9 @@ public class Trajectories extends ConfigurableModule {
         }
 
         final float maxDist = getDistance(item);
-        double motionX = -MathHelper.sin(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.getPitch() / 180.0f * 3.1415927f) * maxDist;
-        double motionY = -MathHelper.sin((player.getPitch() - getThrowPitch(item)) / 180.0f * 3.141593f) * maxDist;
-        double motionZ = MathHelper.cos(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.getPitch() / 180.0f * 3.1415927f) * maxDist;
+        double motionX = -MathHelper.sin(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.pitch / 180.0f * 3.1415927f) * maxDist;
+        double motionY = -MathHelper.sin((player.pitch - getThrowPitch(item)) / 180.0f * 3.141593f) * maxDist;
+        double motionZ = MathHelper.cos(yaw / 180.0f * 3.1415927f) * MathHelper.cos(player.pitch / 180.0f * 3.1415927f) * maxDist;
 
         float power = player.getItemUseTime() / 20.0f;
         power = (power * power + power * 2.0f) / 3.0f;

@@ -49,9 +49,9 @@ public class AmbientParticle extends SoupModule {
         updateAvailableTextures();
         for (int i = fireFlies.size(); i < particlesWitchTrailCount.getValue(); i++) {
             fireFlies.add(new FireFly(
-                    (float) (mc.player.getX() + MathUtility.random(-25f, 25f)),
-                    (float) (mc.player.getY() + MathUtility.random(2f, 15f)),
-                    (float) (mc.player.getZ() + MathUtility.random(-25f, 25f)),
+                    (float) (mc.player.x + MathUtility.random(-25f, 25f)),
+                    (float) (mc.player.y + MathUtility.random(2f, 15f)),
+                    (float) (mc.player.z + MathUtility.random(-25f, 25f)),
                     MathUtility.random(-0.2f, 0.2f),
                     MathUtility.random(-0.1f, 0.1f),
                     MathUtility.random(-0.2f, 0.2f)));
@@ -60,9 +60,9 @@ public class AmbientParticle extends SoupModule {
         boolean isFallPhysic = physic.getValue().equals(Physics.FALL);
         for (int j = particles.size(); j < particlesCount.getValue(); j++) {
             particles.add(new DefaultAmbientParticle(
-                    (float) (mc.player.getX() + MathUtility.random(-48f, 48f)),
-                    (float) (mc.player.getY() + MathUtility.random(2, 48f)),
-                    (float) (mc.player.getZ() + MathUtility.random(-48f, 48f)),
+                    (float) (mc.player.x + MathUtility.random(-48f, 48f)),
+                    (float) (mc.player.y + MathUtility.random(2, 48f)),
+                    (float) (mc.player.z + MathUtility.random(-48f, 48f)),
                     isFallPhysic ? MathUtility.random(-0.4f, 0.4f) : 0,
                     isFallPhysic ? MathUtility.random(-0.1f, 0.1f) : MathUtility.random(-0.2f, -0.05f),
                     isFallPhysic ? MathUtility.random(-0.4f, 0.4f) : 0));

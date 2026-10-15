@@ -91,7 +91,7 @@ public abstract class MixinClientPlayNetworkHandler {
         if (packet.getStatus() == 35) {
             Entity entity = packet.getEntity(this.world);
             if (entity != null) {
-                this.world.playSound(entity.getX(), entity.getY(), entity.getZ(),
+                this.world.playSound(entity.x, entity.y, entity.z,
                         SoundEvents.ITEM_TOTEM_USE,
                         entity.getSoundCategory(),
                         1.0F, 1.0F, false);
