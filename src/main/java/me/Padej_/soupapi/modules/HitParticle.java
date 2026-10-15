@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -114,7 +116,7 @@ public class HitParticle extends ConfigurableModule {
                     if (!(entity instanceof LivingEntity)) continue;
                     LivingEntity lent = (LivingEntity) entity;
                     if (mc.player.squaredDistanceTo(entity) <= 256f && lent.isAlive()) {
-                        float health = lent.getHealth() + lent.getAbsorptionAmount();
+                        float health = lent.getHealth() + lent.getAbsorption();
                         float lastHealth = healthMap.getOrDefault(entity.getId(), health);
                         healthMap.put(entity.getId(), health);
                         if (lastHealth == health) continue;
@@ -290,9 +292,9 @@ public class HitParticle extends ConfigurableModule {
             Color healColor = new Color(0x76cf41);
             Color damageColor = new Color(0xd42d2d);
 
-            double posX = MathHelper.lerp(tickDelta, px, x) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-            double posY = MathHelper.lerp(tickDelta, py, y) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-            double posZ = MathHelper.lerp(tickDelta, pz, z) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getEntityRenderManager().cameraX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getEntityRenderManager().cameraY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getEntityRenderManager().cameraZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);

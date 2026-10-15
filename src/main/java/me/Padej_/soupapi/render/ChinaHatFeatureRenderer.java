@@ -66,7 +66,7 @@ public abstract class ChinaHatFeatureRenderer<S extends LivingEntityRenderState,
         if (state instanceof PlayerEntityRenderState) {
             PlayerEntityRenderState playerState = (PlayerEntityRenderState) state;
             // Проверяем, является ли это локальным игроком или другом
-            String localPlayerName = client.player.getName().getString();
+            String localPlayerName = client.player.getName();
             String stateName = playerState.name;
             boolean isLocalPlayer = stateName.equals(localPlayerName);
             boolean isFriend = EntityUtils.isFriend(stateName);

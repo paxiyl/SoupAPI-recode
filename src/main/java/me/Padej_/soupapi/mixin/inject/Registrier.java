@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.inject;
 
+import me.Padej_.soupapi.compat.RenderSystem;
+
 import me.Padej_.soupapi.font.FontRenderers;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.RunArgs;

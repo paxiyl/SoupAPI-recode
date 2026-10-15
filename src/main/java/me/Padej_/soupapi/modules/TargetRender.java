@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.BlendFactor;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -114,10 +116,10 @@ public class TargetRender extends ConfigurableModule {
             } else {
     switch (CONFIG.targetRenderSoulStyle) {
                     case SMOKE:
-                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+                        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
                         break;
                     case PLASMA:
-                        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+                        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
                         break;
                     default:
                         RenderSystem.defaultBlendFunc();

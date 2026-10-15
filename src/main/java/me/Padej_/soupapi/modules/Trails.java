@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.ShaderKey;
+
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.interfaces.TrailEntity;
@@ -206,9 +208,9 @@ public class Trails extends ConfigurableModule {
         }
 
         public Vec3d interpolate(float pt) {
-            double x = from.x + ((to.x - from.x) * pt) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-            double y = from.y + ((to.y - from.y) * pt) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-            double z = from.z + ((to.z - from.z) * pt) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+            double x = from.x + ((to.x - from.x) * pt) - mc.getEntityRenderManager().cameraX;
+            double y = from.y + ((to.y - from.y) * pt) - mc.getEntityRenderManager().cameraY;
+            double z = from.z + ((to.z - from.z) * pt) - mc.getEntityRenderManager().cameraZ;
             return new Vec3d(x, y, z);
         }
 

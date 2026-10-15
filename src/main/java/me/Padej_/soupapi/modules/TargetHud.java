@@ -1,5 +1,8 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Maths;
+import me.Padej_.soupapi.compat.Windows;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.interpolation.EaseOutCirc;
 import me.Padej_.soupapi.particle.Particle2D;
@@ -65,7 +68,7 @@ public class TargetHud extends ConfigurableModule {
 
         if (lastTarget instanceof PlayerEntity) {
             float targetHealth = Math.min(lastTarget.getMaxHealth(), getHealth());
-            displayedHealth = MathHelper.lerp(healthChangeSpeed, displayedHealth, targetHealth);
+            displayedHealth = Maths.lerp(healthChangeSpeed, displayedHealth, targetHealth);
         }
 
         if (ModuleSupressor.disableHPBar()) {
@@ -94,11 +97,11 @@ public class TargetHud extends ConfigurableModule {
 
         // Плавная интерполяция масштаба HUD
         if (hudTimer > 0) {
-            hudScale = MathHelper.lerp(normalizedDelta * scaleSpeed, hudScale, 1.0f);
+            hudScale = Maths.lerp(normalizedDelta * scaleSpeed, hudScale, 1.0f);
             hudTimer -= deltaTime; // Уменьшаем таймер на основе реального времени
             if (hudTimer < 0) hudTimer = 0;
         } else {
-            hudScale = MathHelper.lerp(normalizedDelta * scaleSpeed, hudScale, 0.0f);
+            hudScale = Maths.lerp(normalizedDelta * scaleSpeed, hudScale, 0.0f);
         }
 
         // Обновляем частицы
@@ -141,8 +144,8 @@ public class TargetHud extends ConfigurableModule {
             }
 
             // Применяем сглаживание к экранным координатам
-            smoothedScreenX = MathHelper.lerp(normalizedDelta * smoothingFactor, smoothedScreenX, targetScreenX);
-            smoothedScreenY = MathHelper.lerp(normalizedDelta * smoothingFactor, smoothedScreenY, targetScreenY);
+            smoothedScreenX = Maths.lerp(normalizedDelta * smoothingFactor, smoothedScreenX, targetScreenX);
+            smoothedScreenY = Maths.lerp(normalizedDelta * smoothingFactor, smoothedScreenY, targetScreenY);
 
             context.getMatrices().push();
 
@@ -250,24 +253,24 @@ public class TargetHud extends ConfigurableModule {
         if (mc.getNetworkHandler() != null) {
             mc.getNetworkHandler().getServerInfo();
         }
-        return lastTarget.getHealth() + lastTarget.getAbsorptionAmount();
+        return lastTarget.getHealth() + lastTarget.getAbsorption();
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = MathHelper.lerp(progress, start.getRed(), end.getRed());
-        int g = MathHelper.lerp(progress, start.getGreen(), end.getGreen());
-        int b = MathHelper.lerp(progress, start.getBlue(), end.getBlue());
-        int a = MathHelper.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Maths.lerp(progress, start.getRed(), end.getRed());
+        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
+        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
+        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
         return new Color(r, g, b, a);
     }
 
     public static Vec3d worldSpaceToScreenSpace(Vec3d pos) {
-        Camera camera = mc.getEntityRenderDispatcher().camera;
-        int displayHeight = mc.getWindow().getHeight();
+        Camera camera = mc.getEntityRenderManager().camera;
+        int displayHeight = Windows.height();
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
         Vector3f target = new Vector3f();
-        double scale = mc.getWindow().getScaleFactor();
+        double scale = Windows.scaleFactor();
 
         double deltaX = pos.x - camera.getPos().x;
         double deltaY = pos.y - camera.getPos().y;

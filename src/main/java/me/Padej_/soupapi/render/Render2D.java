@@ -1,5 +1,9 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.BlendFactor;
+import me.Padej_.soupapi.compat.ShaderKey;
+import me.Padej_.soupapi.compat.Windows;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.utils.GaussianFilter;
@@ -24,7 +28,7 @@ import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL11;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -42,11 +46,11 @@ public class Render2D {
 
 
     public static void renderMiscTexture(MatrixStack matrices, Identifier textureId, float scale) {
-        int screenWidth = mc.getWindow().getScaledWidth();
-        int screenHeight = mc.getWindow().getScaledHeight();
+        int screenWidth = Windows.scaledWidth();
+        int screenHeight = Windows.scaledHeight();
 
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, textureId);
         RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
 
@@ -269,12 +273,12 @@ public class Render2D {
         Mat4 matrix = matrices.peek().getPositionMatrix();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
 
         drawRound(matrices, x, y, width, height, Radius, color1);
         setupRender();
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(matrix, x, y + height, 0.0F).color(color1.getRGB());
         bufferBuilder.vertex(matrix, x + width, y + height, 0.0F).color(color2.getRGB());
@@ -294,10 +298,10 @@ public class Render2D {
 
         drawRound(matrices, (float) x0, (float) y0, (float) width, (float) height, Radius, new Color(0xFFFF00FF, true));
         setupRender();
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShader(ShaderKey.POSITION_TEX);
         if (TargetHUD_N.target instanceof PlayerEntity) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayerEntity) TargetHUD_N.target).getSkinTextures().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayerEntity) TargetHUD_N.target).getSkinId());
         }
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         buffer.vertex(matrix, (float) x0, (float) y1, (float) z).texture((u) / (float) textureWidth, (v + (float) regionHeight) / (float) textureHeight);
@@ -424,7 +428,7 @@ public class Render2D {
 
         shadow.bind();
         setupRender();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         renderGradientTexture(matrices, x, y, width, height, 0, 0, width, height, width, height, color1, color2, color3, color4);
         endRender();
     }
@@ -433,7 +437,7 @@ public class Render2D {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, texture);
 
         RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);

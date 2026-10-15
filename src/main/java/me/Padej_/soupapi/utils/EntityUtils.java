@@ -48,7 +48,7 @@ public class EntityUtils {
     }
 
     public static boolean isFriend(Entity entity) {
-        String entityName = entity.getName().getString();
+        String entityName = entity.getName();
         for (String friend : SoupAPI_Main.configHolder.get().friends) {
             if (friend.equalsIgnoreCase(entityName)) {
                 return true;

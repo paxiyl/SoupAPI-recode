@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.font.FontRenderers;
@@ -18,7 +20,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -60,12 +62,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         int headScale = 25;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
+            texture = ((AbstractClientPlayerEntity) target).getSkinId();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -74,12 +76,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
@@ -165,13 +167,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 94, 34, 7, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+            texture = ((AbstractClientPlayerEntity) target).getSkinId();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -180,12 +182,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 2.5f, y + 2.5f, 30, 30, 5, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 2.5, y + 2.5, x + 2.5 + 30, y + 2.5 + 30, 5, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 40, 8, 8, 8, 64, 64);
@@ -264,13 +266,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 136, 46, 9, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+            texture = ((AbstractClientPlayerEntity) target).getSkinId();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 3.5f + 20, y + 3.5f + 20, 0);
@@ -279,12 +281,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 7, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + 40, y + 3.5f + 40, 7, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64);
@@ -358,13 +360,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Color c1 = Palette.getColor(0f);
         Color c3 = Palette.getColor(0.66f);
 
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+            texture = ((AbstractClientPlayerEntity) target).getSkinId();
+            displayName = target.getName();
         }
 
         int textWidth = (int) FontRenderers.sf_bold_17.getStringWidth(displayName);
@@ -384,12 +386,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 5, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + headScale * 2, y + 3.5f + headScale * 2, 5, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 40, 8, 8, 8, 64, 64);
@@ -465,14 +467,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         String displayName = "Invisible";
         int headScale = 20;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
         } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+            texture = ((AbstractClientPlayerEntity) target).getSkinId();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -481,12 +483,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
@@ -551,10 +553,10 @@ public class TargetHudRenderer extends ConfigurableModule {
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = MathHelper.lerp(progress, start.getRed(), end.getRed());
-        int g = MathHelper.lerp(progress, start.getGreen(), end.getGreen());
-        int b = MathHelper.lerp(progress, start.getBlue(), end.getBlue());
-        int a = MathHelper.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Maths.lerp(progress, start.getRed(), end.getRed());
+        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
+        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
+        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
         return new Color(r, g, b, a);
     }
 }

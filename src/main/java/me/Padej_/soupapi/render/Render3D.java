@@ -1,5 +1,10 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.BlendFactor;
+import me.Padej_.soupapi.compat.Maths;
+import me.Padej_.soupapi.compat.Quaternionf;
+import me.Padej_.soupapi.compat.ShaderKey;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -136,9 +141,9 @@ public class Render3D extends ConfigurableModule {
     }
 
     private static Vec3d calculateEntityPositionRelativeToCamera(Camera camera, float tickDelta, Entity targetEntity) {
-        double interpolatedX = MathHelper.lerp(tickDelta, targetEntity.prevX, targetEntity.getX());
-        double interpolatedY = MathHelper.lerp(tickDelta, targetEntity.prevY, targetEntity.getY()) + (double) (targetEntity.getHeight() / 2.0F);
-        double interpolatedZ = MathHelper.lerp(tickDelta, targetEntity.prevZ, targetEntity.getZ());
+        double interpolatedX = Maths.lerp(tickDelta, targetEntity.prevX, targetEntity.getX());
+        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevY, targetEntity.getY()) + (double) (targetEntity.getHeight() / 2.0F);
+        double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevZ, targetEntity.getZ());
         Vec3d entityPos = new Vec3d(interpolatedX, interpolatedY, interpolatedZ);
         return entityPos.subtract(camera.getPos());
     }
@@ -240,7 +245,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
         RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
@@ -322,7 +327,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
         RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
@@ -385,9 +390,9 @@ public class Render3D extends ConfigurableModule {
         float alphaDivider = 100f;
 
         // Интерполяция позиции цели относительно камеры
-        double x = MathHelper.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-        double y = MathHelper.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-        double z = MathHelper.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+        double x = Maths.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderManager().cameraX;
+        double y = Maths.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderManager().cameraY;
+        double z = Maths.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderManager().cameraZ;
         double height = target.getHeight();
 
         // Генерация трёх спиралей с разными угловыми сдвигами
@@ -500,9 +505,9 @@ public class Render3D extends ConfigurableModule {
 
         float radius = CONFIG.targetRenderTopkaRadius / 100f;
 
-        double x = MathHelper.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-        double y = MathHelper.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-        double z = MathHelper.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+        double x = Maths.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderManager().cameraX;
+        double y = Maths.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderManager().cameraY;
+        double z = Maths.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderManager().cameraZ;
         double height = target.getHeight();
 
         float time = (System.currentTimeMillis() % 1000000) / 1000.0f;

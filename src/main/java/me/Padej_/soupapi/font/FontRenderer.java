@@ -1,5 +1,8 @@
 package me.Padej_.soupapi.font;
 
+import me.Padej_.soupapi.compat.ShaderKey;
+import me.Padej_.soupapi.compat.Windows;
+
 import me.Padej_.soupapi.compat.RenderSystem;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
@@ -94,7 +97,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     private void sizeCheck() {
-        int gs = (int) mc.getWindow().getScaleFactor();
+        int gs = (int) Windows.scaleFactor();
         if (gs != this.previousGameScale) {
             close();
             init(this.font, this.originalSize);
@@ -104,7 +107,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     private void init(Font font, float sizePx) {
         if (initialized) throw new IllegalStateException("Double call to init()");
         initialized = true;
-        this.previousGameScale = (int) mc.getWindow().getScaleFactor();
+        this.previousGameScale = (int) Windows.scaleFactor();
         this.scaleMul = this.previousGameScale;
         this.font = font.deriveFont(sizePx * this.scaleMul);
         if (prebakeGlyphs != null && !prebakeGlyphs.isEmpty()) {

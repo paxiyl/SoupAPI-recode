@@ -77,7 +77,7 @@ public class PotionsHud extends ConfigurableModule {
 
         maxDurations.keySet().removeIf(effect -> {
             RegistryEntry<StatusEffect> entry = Registries.STATUS_EFFECT.getEntry(effect);
-            return mc.player.getStatusEffect(entry) == null;
+            return mc.player.getEffectInstance(entry) == null;
         });
 
         List<EffectElement> effects = new ArrayList<>();

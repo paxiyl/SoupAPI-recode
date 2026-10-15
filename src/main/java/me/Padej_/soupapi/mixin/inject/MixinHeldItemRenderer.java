@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.inject;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.modules.SwingHand;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import me.Padej_.soupapi.compat.VertexConsumerProvider;
@@ -111,9 +113,9 @@ public abstract class MixinHeldItemRenderer {
 
         matrices.translate(SwingHand.getxPos() * ad, SwingHand.getyPos(), SwingHand.getzPos());
 
-        float swingRotationX = MathHelper.lerp(swingAmount, 0.0F, SwingHand.getxSwingRot());
-        float swingRotationY = MathHelper.lerp(swingAmount, 0.0F, SwingHand.getySwingRot() * ad);
-        float swingRotationZ = MathHelper.lerp(swingAmount, 0.0F, SwingHand.getzSwingRot());
+        float swingRotationX = Maths.lerp(swingAmount, 0.0F, SwingHand.getxSwingRot());
+        float swingRotationY = Maths.lerp(swingAmount, 0.0F, SwingHand.getySwingRot() * ad);
+        float swingRotationZ = Maths.lerp(swingAmount, 0.0F, SwingHand.getzSwingRot());
 
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(SwingHand.getRotX() + swingRotationX));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(SwingHand.getRotY() + swingRotationY));

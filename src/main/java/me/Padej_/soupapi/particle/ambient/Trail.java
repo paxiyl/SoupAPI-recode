@@ -23,7 +23,7 @@ public class Trail {
     }
 
     public Vec3d interpolate(float pt) {
-        Vec3d cameraPos = mc.getEntityRenderDispatcher().camera.getPos();
+        Vec3d cameraPos = new net.minecraft.util.math.Vec3d(mc.getEntityRenderManager().cameraX, mc.getEntityRenderManager().cameraY, mc.getEntityRenderManager().cameraZ);
         double x = from.x + ((to.x - from.x) * pt) - cameraPos.getX();
         double y = from.y + ((to.y - from.y) * pt) - cameraPos.getY();
         double z = from.z + ((to.z - from.z) * pt) - cameraPos.getZ();

@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.redirect;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.compat.DrawContext;
@@ -120,10 +122,10 @@ public class ScoreboardStyleMixin {
 
     @Unique
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = MathHelper.lerp(progress, start.getRed(), end.getRed());
-        int g = MathHelper.lerp(progress, start.getGreen(), end.getGreen());
-        int b = MathHelper.lerp(progress, start.getBlue(), end.getBlue());
-        int a = MathHelper.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Maths.lerp(progress, start.getRed(), end.getRed());
+        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
+        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
+        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
         return new Color(r, g, b, a);
     }
 }

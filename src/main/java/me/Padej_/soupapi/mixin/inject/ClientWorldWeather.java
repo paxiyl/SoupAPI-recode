@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.inject;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.utils.Weather;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -33,6 +35,6 @@ public abstract class ClientWorldWeather extends World {
                 return 1.0f;
             }
         }
-        return MathHelper.lerp(delta, this.rainGradientPrev, this.rainGradient);
+        return Maths.lerp(delta, this.rainGradientPrev, this.rainGradient);
     }
 }

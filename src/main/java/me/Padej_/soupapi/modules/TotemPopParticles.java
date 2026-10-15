@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.MathUtility;
@@ -164,9 +166,9 @@ public class TotemPopParticles extends ConfigurableModule {
             if (alpha <= 0f || scale <= 0f) return;
 
             float renderScale = 0.07f;
-            double posX = MathHelper.lerp(tickDelta, px, x) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-            double posY = MathHelper.lerp(tickDelta, py, y) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-            double posZ = MathHelper.lerp(tickDelta, pz, z) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getEntityRenderManager().cameraX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getEntityRenderManager().cameraY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getEntityRenderManager().cameraZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);

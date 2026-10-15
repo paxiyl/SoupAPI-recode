@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.particle;
 
+import me.Padej_.soupapi.compat.BlendFactor;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.render.Render2D;
@@ -77,7 +79,7 @@ public class Particle2D {
         matrixStack.scale(particleScale * depthFactor, particleScale * depthFactor, particleScale);
 
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, texture);
         RenderSystem.setShaderColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, (float) (opacity / 255f));
 

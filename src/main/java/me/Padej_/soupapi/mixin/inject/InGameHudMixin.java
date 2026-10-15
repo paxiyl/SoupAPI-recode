@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.mixin.inject;
 
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.font.FontRenderers;
 import me.Padej_.soupapi.main.SoupAPI_Main;
 import me.Padej_.soupapi.modules.BetterHudStyles;
@@ -82,7 +84,7 @@ public abstract class InGameHudMixin {
 
         if (armor == 0) return;
         if (displayedArmor == 0f) displayedArmor = armor;
-        displayedArmor = MathHelper.lerp(0.2f, displayedArmor, armor);
+        displayedArmor = Maths.lerp(0.2f, displayedArmor, armor);
         Render2D.drawGradientRound(context.getMatrices(), x, y, barWidth - 1, barHeight, cornerRadius + 1,
                 isLBStyle ? new Color(0xaabebebe).darker().darker() : c2Hp.darker().darker(),
                 isLBStyle ? new Color(0xaabebebe).darker().darker().darker() : c2Hp.darker().darker().darker().darker(),
@@ -140,10 +142,10 @@ public abstract class InGameHudMixin {
 
     @Unique
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = MathHelper.lerp(progress, start.getRed(), end.getRed());
-        int g = MathHelper.lerp(progress, start.getGreen(), end.getGreen());
-        int b = MathHelper.lerp(progress, start.getBlue(), end.getBlue());
-        int a = MathHelper.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Maths.lerp(progress, start.getRed(), end.getRed());
+        int g = Maths.lerp(progress, start.getGreen(), end.getGreen());
+        int b = Maths.lerp(progress, start.getBlue(), end.getBlue());
+        int a = Maths.lerp(progress, start.getAlpha(), end.getAlpha());
         return new Color(r, g, b, a);
     }
 
@@ -175,15 +177,15 @@ public abstract class InGameHudMixin {
 
         float tickDelta = tickCounter.getTickDelta(true);
 
-        float targetHealth = Math.min(mc.player.getMaxHealth() + mc.player.getAbsorptionAmount(),
-                mc.player.getHealth() + mc.player.getAbsorptionAmount());
+        float targetHealth = Math.min(mc.player.getMaxHealth() + mc.player.getAbsorption(),
+                mc.player.getHealth() + mc.player.getAbsorption());
         if (displayedHealth == 0f) displayedHealth = targetHealth;
-        displayedHealth = MathHelper.lerp(tickDelta * healthChangeSpeed, displayedHealth, targetHealth);
+        displayedHealth = Maths.lerp(tickDelta * healthChangeSpeed, displayedHealth, targetHealth);
 
         HungerManager hungerManager = mc.player.getHungerManager();
         float targetHunger = hungerManager.getFoodLevel() + hungerManager.getSaturationLevel();
         if (displayedHunger == 0f) displayedHunger = targetHunger;
-        displayedHunger = MathHelper.lerp(tickDelta * healthChangeSpeed, displayedHunger, targetHunger);
+        displayedHunger = Maths.lerp(tickDelta * healthChangeSpeed, displayedHunger, targetHunger);
 
         float frameTime = 1.0f / 60.0f;
         float normalizedDelta = deltaTime / frameTime;
@@ -198,7 +200,7 @@ public abstract class InGameHudMixin {
             targetSlot = currentSlot;
             selectedSlotProgress = 0f;
         }
-        selectedSlotProgress = MathHelper.lerp(SLOT_ANIMATION_SPEED * deltaTime, selectedSlotProgress, 1.0f);
+        selectedSlotProgress = Maths.lerp(SLOT_ANIMATION_SPEED * deltaTime, selectedSlotProgress, 1.0f);
         selectedSlotProgress = MathHelper.clamp(selectedSlotProgress, 0.0f, 1.0f);
     }
 
@@ -414,7 +416,7 @@ public abstract class InGameHudMixin {
         if (BetterHudStyles.betterHotbarSmoothScroll.getValue()) {
             float startX = halfWidth - 90 + (lastSelectedSlot * 20);
             float targetX = halfWidth - 90 + (targetSlot * 20);
-            animatedX = MathHelper.lerp(selectedSlotProgress, startX, targetX);
+            animatedX = Maths.lerp(selectedSlotProgress, startX, targetX);
         } else {
             animatedX = halfWidth - 90 + (targetSlot * 20);
         }

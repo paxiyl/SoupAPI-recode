@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.ShaderKey;
+
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
@@ -247,12 +249,12 @@ public class Render3D_Shapes {
     }
 
     public static void setFilledSidePoints(BufferBuilder buffer, Mat4 matrix, Box box, Color c, Direction dir) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+        float minX = (float) (box.minX - mc.getEntityRenderManager().cameraX);
+        float minY = (float) (box.minY - mc.getEntityRenderManager().cameraY);
+        float minZ = (float) (box.minZ - mc.getEntityRenderManager().cameraZ);
+        float maxX = (float) (box.maxX - mc.getEntityRenderManager().cameraX);
+        float maxY = (float) (box.maxY - mc.getEntityRenderManager().cameraY);
+        float maxZ = (float) (box.maxZ - mc.getEntityRenderManager().cameraZ);
 
         if (dir == Direction.DOWN) {
             buffer.vertex(matrix, minX, minY, minZ).color(c.getRGB());
@@ -297,12 +299,12 @@ public class Render3D_Shapes {
     }
 
     public static void setFilledFadePoints(Box box, BufferBuilder buffer, Mat4 posMatrix, Color c, Color c1) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+        float minX = (float) (box.minX - mc.getEntityRenderManager().cameraX);
+        float minY = (float) (box.minY - mc.getEntityRenderManager().cameraY);
+        float minZ = (float) (box.minZ - mc.getEntityRenderManager().cameraZ);
+        float maxX = (float) (box.maxX - mc.getEntityRenderManager().cameraX);
+        float maxY = (float) (box.maxY - mc.getEntityRenderManager().cameraY);
+        float maxZ = (float) (box.maxZ - mc.getEntityRenderManager().cameraZ);
 
         buffer.vertex(posMatrix, minX, minY, minZ).color(c.getRGB());
         buffer.vertex(posMatrix, minX, maxY, minZ).color(c1.getRGB());
@@ -331,12 +333,12 @@ public class Render3D_Shapes {
     }
 
     public static void setFilledBoxVertexes(@NotNull BufferBuilder bufferBuilder, Mat4 m, @NotNull Box box, @NotNull Color c) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+        float minX = (float) (box.minX - mc.getEntityRenderManager().cameraX);
+        float minY = (float) (box.minY - mc.getEntityRenderManager().cameraY);
+        float minZ = (float) (box.minZ - mc.getEntityRenderManager().cameraZ);
+        float maxX = (float) (box.maxX - mc.getEntityRenderManager().cameraX);
+        float maxY = (float) (box.maxY - mc.getEntityRenderManager().cameraY);
+        float maxZ = (float) (box.maxZ - mc.getEntityRenderManager().cameraZ);
 
         bufferBuilder.vertex(m, minX, minY, minZ).color(c.getRGB());
         bufferBuilder.vertex(m, maxX, minY, minZ).color(c.getRGB());

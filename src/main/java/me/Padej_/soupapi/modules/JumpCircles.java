@@ -1,5 +1,8 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.BlendFactor;
+import me.Padej_.soupapi.compat.ShaderKey;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -131,7 +134,7 @@ public class JumpCircles extends ConfigurableModule {
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
-            RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+            RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
 
             RenderSystem.setShaderTexture(0, TexturesManager.getJumpCircle());
             RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);

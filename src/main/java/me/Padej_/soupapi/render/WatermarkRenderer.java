@@ -10,7 +10,7 @@ import me.Padej_.soupapi.compat.DrawContext;
 import me.Padej_.soupapi.compat.RenderLayer;
 import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.util.Identifier;
-import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 
@@ -36,7 +36,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderBackground(DrawContext context, float x, float y) {
-        float width = FontRenderers.sf_bold.getStringWidth(mc.player.getName().getString()) + 20;
+        float width = FontRenderers.sf_bold.getStringWidth(mc.player.getName()) + 20;
         float height = 14;
         x += 13;
         if (CONFIG.mctiersEnabled) width += 18;
@@ -48,13 +48,13 @@ public class WatermarkRenderer {
     }
 
     private static void renderName(DrawContext context, float x, float y) {
-        String displayName = mc.player.getName().getString();
+        String displayName = mc.player.getName();
         y += 21.5f;
         MatrixStack stack = context.getMatrices();
         FontRenderers.sf_bold.drawString(stack, displayName, x + 32, y, Palette.getTextColor());
 
         if (!CONFIG.mctiersEnabled) return;
-        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.player.getName().getString());
+        float textWidth = FontRenderers.sf_bold.getStringWidth(mc.player.getName());
 
         stack.push();
         stack.translate(x + 40 + textWidth, y - 3.7, 0);
@@ -66,7 +66,7 @@ public class WatermarkRenderer {
     }
 
     private static void renderHead(DrawContext context, float x, float y) {
-        Identifier texture = mc.player.getSkinTextures().texture();
+        Identifier texture = mc.player.getSkinId();
         float scale = 0.3f;
         float r = 9;
 
@@ -78,12 +78,12 @@ public class WatermarkRenderer {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(stack, x + 3.5f, y + 3.5f, 40, 40, r, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(stack.peek().getPositionMatrix(), 1, 1, 1, 1, x + 3.5f, y + 3.5f, x + 3.5f + 40, y + 3.5f + 40, r, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         Render2D.renderTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64);
