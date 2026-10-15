@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.ShaderKey;
 
 import me.Padej_.soupapi.compat.RenderSystem;
@@ -200,7 +202,7 @@ public class Render3D_Shapes {
     public static @NotNull MatrixStack matrixFrom(double x, double y, double z) {
         MatrixStack matrices = new MatrixStack();
 
-        Camera camera = mc.gameRenderer.getCamera();
+        Camera camera = Cameras.get();
 
         matrices.translate(x - camera.getPos().x, y - camera.getPos().y, z - camera.getPos().z);
 

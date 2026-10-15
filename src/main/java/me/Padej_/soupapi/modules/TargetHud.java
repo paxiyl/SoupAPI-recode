@@ -251,7 +251,7 @@ public class TargetHud extends ConfigurableModule {
     public static float getHealth() {
         if (lastTarget == null) return 0f;
         if (mc.getNetworkHandler() != null) {
-            mc.getNetworkHandler().getServerInfo();
+            mc.getCurrentServerEntry();
         }
         return lastTarget.getHealth() + lastTarget.getAbsorption();
     }

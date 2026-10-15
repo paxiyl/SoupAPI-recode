@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.particle.ambient;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
@@ -71,7 +73,7 @@ public class DefaultAmbientParticle {
     }
 
     public void render(WorldRenderContext context) {
-        Camera camera = context.camera();
+        Camera camera = Cameras.get();
         Color color = TargetHudRenderer.topLeft;
         Vec3d pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
 
@@ -89,7 +91,7 @@ public class DefaultAmbientParticle {
 
     private static Vec3d interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Vec3d cameraPos = context.camera().getPos();
+        Vec3d cameraPos = Cameras.get().getPos();
         double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.x;
         double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.y;
         double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.z;

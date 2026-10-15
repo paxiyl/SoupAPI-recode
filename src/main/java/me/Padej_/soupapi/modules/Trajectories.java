@@ -43,7 +43,7 @@ public class Trajectories extends ConfigurableModule {
 
     public static void render(WorldRenderContext context) {
         if (mc.options.hudHidden) return;
-        if (mc.player == null || mc.world == null || !mc.options.getPerspective().isFirstPerson() || !CONFIG.trajectoriesPreviewEnabled) return;
+        if (mc.player == null || mc.world == null || !mc.options.perspective == 0 || !CONFIG.trajectoriesPreviewEnabled) return;
         Hand hand;
         float tickDelta = context.tickCounter().getTickDelta(true);
 

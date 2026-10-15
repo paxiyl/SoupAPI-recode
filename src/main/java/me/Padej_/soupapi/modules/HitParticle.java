@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.Maths;
 
 import me.Padej_.soupapi.compat.Texts;
@@ -112,7 +114,7 @@ public class HitParticle extends ConfigurableModule {
         // Текстовые частицы
         if (!CONFIG.hitParticlesTextMode.equals(HitTextMode.DISABLED)) {
             if (CONFIG.hitParticlesTextMode == HitTextMode.ALL_ENTITIES) {
-                for (Entity entity : mc.world.getEntities()) {
+                for (Entity entity : mc.world.entities) {
                     if (!(entity instanceof LivingEntity)) continue;
                     LivingEntity lent = (LivingEntity) entity;
                     if (mc.player.squaredDistanceTo(entity) <= 256f && lent.isAlive()) {
@@ -301,8 +303,8 @@ public class HitParticle extends ConfigurableModule {
             matrixStack.scale(scale, scale, scale);
 
             matrixStack.translate(size / 2f, size / 2f, size / 2f);
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-mc.gameRenderer.getCamera().getYaw()));
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(mc.gameRenderer.getCamera().getPitch()));
+            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-Cameras.get().getYaw()));
+            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Cameras.get().getPitch()));
 
             if (isText) {
                 matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
@@ -345,7 +347,7 @@ public class HitParticle extends ConfigurableModule {
 
         private boolean posBlock(double x, double y, double z) {
             if (mc.player == null || mc.world == null) return false;
-            return (!(mc.world.getBlockState(BlockPos.ofFloored(x, y, z)).getBlock() instanceof AirBlock));
+            return (!(mc.world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof AirBlock));
         }
     }
 

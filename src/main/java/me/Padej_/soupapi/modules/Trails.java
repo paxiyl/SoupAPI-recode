@@ -33,7 +33,7 @@ public class Trails extends ConfigurableModule {
         int trailLifetime = CONFIG.trailsLenght;
         float minStep = 0.001f;
 
-        for (PlayerEntity player : mc.world.getPlayers()) {
+        for (PlayerEntity player : mc.world.playerEntities) {
             // Добавляем сегмент, если есть любое движение
             Vec3d prevPos = new Vec3d(player.prevX, player.prevY, player.prevZ);
             Vec3d currentPos = player.getPos();
@@ -48,7 +48,7 @@ public class Trails extends ConfigurableModule {
         }
 
         if (CONFIG.trailsForGliders) {
-            for (Entity entity : mc.world.getEntities()) {
+            for (Entity entity : mc.world.entities) {
                 if (entity == mc.player || !(entity instanceof LivingEntity)) {
                     continue;
                 }
@@ -90,12 +90,12 @@ public class Trails extends ConfigurableModule {
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        for (Entity entity : mc.world.getEntities()) {
+        for (Entity entity : mc.world.entities) {
             if ((entity instanceof PlayerEntity && !EntityUtils.isFriend(entity) && entity != mc.player) ||
                     (!CONFIG.trailsForGliders && entity != mc.player && !(entity instanceof PlayerEntity)))
                 continue;
 
-            if (entity == mc.player && mc.options.getPerspective().isFirstPerson() && !CONFIG.trailsFirstPerson)
+            if (entity == mc.player && mc.options.perspective == 0 && !CONFIG.trailsFirstPerson)
                 continue;
             if (!(entity instanceof LivingEntity) || !mc.player.canSee(entity)) continue;
 

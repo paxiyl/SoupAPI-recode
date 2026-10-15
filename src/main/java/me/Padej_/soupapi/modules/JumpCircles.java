@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.BlendFactor;
 import me.Padej_.soupapi.compat.ShaderKey;
 
@@ -58,9 +60,9 @@ public class JumpCircles extends ConfigurableModule {
             return;
         }
 
-        double cameraX = context.camera().getPos().x;
-        double cameraY = context.camera().getPos().y;
-        double cameraZ = context.camera().getPos().z;
+        double cameraX = Cameras.get().getPos().x;
+        double cameraY = Cameras.get().getPos().y;
+        double cameraZ = Cameras.get().getPos().z;
 
         CIRCLES.removeIf(JumpCircle::isExpired);
         for (JumpCircle circle : CIRCLES) {

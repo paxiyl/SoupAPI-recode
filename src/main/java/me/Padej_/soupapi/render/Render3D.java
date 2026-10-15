@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.render;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.BlendFactor;
 import me.Padej_.soupapi.compat.Maths;
 import me.Padej_.soupapi.compat.Quaternionf;
@@ -41,7 +43,7 @@ import java.util.List;
 public class Render3D extends ConfigurableModule {
     private static float rollAngle = 0.0f;
     private static long lastUpdateTime = System.currentTimeMillis();
-    private static Camera camera = mc.gameRenderer.getCamera();
+    private static Camera camera = Cameras.get();
 
     public static void renderChinaHat(MatrixStack matrices, VertexConsumer vertexConsumer) {
         Mat4 matrix = matrices.peek().getPositionMatrix();

@@ -26,7 +26,7 @@ public class RPC extends ConfigurableModule {
 
         presence.startTimestamp = startTimestamp;
         presence.largeImageKey = CONFIG.mctiersEnabled ? MC_Tiers.getMcTiersGameModeIcon() : DEFAULT_ICON;
-        presence.largeImageText = mc.getVersionType() + " " + mc.getGameVersion();
+        presence.largeImageText = mc.getGameVersion() + " " + mc.getGameVersion();
         presence.instance = 1;
 
         presence.button_label_1 = "View On Modrinth";
@@ -93,16 +93,16 @@ public class RPC extends ConfigurableModule {
     private static String getState() {
         switch (CONFIG.rpcState) {
             case NAME:
-                if (mc.getGameProfile() != null && mc.getGameProfile().getName() != null) {
-                return mc.getGameProfile().getName();
+                if (mc.getSession().getProfile() != null && mc.getSession().getProfile().getName() != null) {
+                return mc.getSession().getProfile().getName();
                 } else {
                 return "Bruh -_-. Name is Null";
                 }
 
             case IP:
-                if (mc.getNetworkHandler() != null && mc.getNetworkHandler().getServerInfo() != null
-                && mc.getNetworkHandler().getServerInfo().address != null) {
-                return mc.getNetworkHandler().getServerInfo().address.toLowerCase();
+                if (mc.getNetworkHandler() != null && mc.getCurrentServerEntry() != null
+                && mc.getCurrentServerEntry().address != null) {
+                return mc.getCurrentServerEntry().address.toLowerCase();
                 } else {
                 return "Offline";
                 }

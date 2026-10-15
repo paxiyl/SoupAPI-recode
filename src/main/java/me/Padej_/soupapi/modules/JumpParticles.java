@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.Maths;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
@@ -177,8 +179,8 @@ public class JumpParticles extends ConfigurableModule {
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);
             matrixStack.scale(renderScale, renderScale, renderScale);
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-mc.gameRenderer.getCamera().getYaw()));
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(mc.gameRenderer.getCamera().getPitch()));
+            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-Cameras.get().getYaw()));
+            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Cameras.get().getPitch()));
             matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / mc.getCurrentFps()) * rotationSpeed));
 
             if (glyphTexture != null) {
@@ -190,7 +192,7 @@ public class JumpParticles extends ConfigurableModule {
 
         private boolean posBlock(double x, double y, double z) {
             if (mc.player == null || mc.world == null) return false;
-            return (!(mc.world.getBlockState(BlockPos.ofFloored(x, y, z)).getBlock() instanceof AirBlock));
+            return (!(mc.world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof AirBlock));
         }
     }
 

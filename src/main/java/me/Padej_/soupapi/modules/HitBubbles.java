@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.BlendFactor;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -59,9 +61,9 @@ public class HitBubbles extends ConfigurableModule {
         for (HitBubble b : copy) {
             matrixStack.push();
             matrixStack.translate(
-                    b.x - mc.gameRenderer.getCamera().getPos().getX(),
-                    b.y - mc.gameRenderer.getCamera().getPos().getY(),
-                    b.z - mc.gameRenderer.getCamera().getPos().getZ()
+                    b.x - Cameras.get().getPos().getX(),
+                    b.y - Cameras.get().getPos().getY(),
+                    b.z - Cameras.get().getPos().getZ()
             );
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(b.yaw));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(b.pitch));

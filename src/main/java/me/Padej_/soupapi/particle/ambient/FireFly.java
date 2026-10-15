@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.particle.ambient;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
@@ -60,7 +62,7 @@ public class FireFly extends DefaultAmbientParticle {
     public void render(WorldRenderContext context) {
         float tickDelta = context.tickCounter().getTickDelta(true);
         if (!trails.isEmpty()) {
-            Camera camera = context.camera();
+            Camera camera = Cameras.get();
             for (Trail ctx : trails) {
                 Vec3d pos = ctx.interpolate(1f);
                 MatrixStack matrices = new MatrixStack();
