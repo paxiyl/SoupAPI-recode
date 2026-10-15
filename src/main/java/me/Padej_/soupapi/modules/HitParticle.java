@@ -63,15 +63,15 @@ public class HitParticle extends ConfigurableModule {
             // Создаем частицы при попадании
             for (int i = 0; i < CONFIG.hitParticlesCount; i++) {
                 Color c = Palette.getRandomColor();
-                float critOffset = CONFIG.hitParticlesLikeCrit ? 0 : target.getHeight() / 2f;
+                float critOffset = CONFIG.hitParticlesLikeCrit ? 0 : target.height / 2f;
                 float baseX = (float) target.x;
                 float baseY = (float) (target.y + critOffset);
                 float baseZ = (float) target.z;
 
                 if (CONFIG.hitParticlesLikeCrit) {
-                    float offsetX = (RANDOM.nextFloat() - 0.5f) * target.getWidth();
-                    float offsetY = RANDOM.nextFloat() * target.getHeight();
-                    float offsetZ = (RANDOM.nextFloat() - 0.5f) * target.getWidth();
+                    float offsetX = (RANDOM.nextFloat() - 0.5f) * target.width;
+                    float offsetY = RANDOM.nextFloat() * target.height;
+                    float offsetZ = (RANDOM.nextFloat() - 0.5f) * target.width;
 
                     particles.add(new Particle(
                             baseX + offsetX,
@@ -127,7 +127,7 @@ public class HitParticle extends ConfigurableModule {
                         Color color = Palette.getRandomColor();
                         particles.add(new Particle(
                                 (float) lent.x,
-                                MathUtility.random((float) (lent.y + lent.getHeight()), (float) lent.y),
+                                MathUtility.random((float) (lent.y + lent.height), (float) lent.y),
                                 (float) lent.z,
                                 color,
                                 MathUtility.random(0, 180),
@@ -141,7 +141,7 @@ public class HitParticle extends ConfigurableModule {
                 float delta = -1.0f;
                 particles.add(new Particle(
                         (float) mc.player.x,
-                        MathUtility.random((float) (mc.player.y + mc.player.getHeight()), (float) mc.player.y),
+                        MathUtility.random((float) (mc.player.y + mc.player.height), (float) mc.player.y),
                         (float) mc.player.z,
                         color,
                         MathUtility.random(0, 180),
@@ -157,7 +157,7 @@ public class HitParticle extends ConfigurableModule {
                 Color c = Palette.getRandomColor();
                 particles.add(new Particle(
                         (float) mc.player.x,
-                        MathUtility.random((float) (mc.player.y + mc.player.getHeight()), (float) mc.player.y),
+                        MathUtility.random((float) (mc.player.y + mc.player.height), (float) mc.player.y),
                         (float) mc.player.z,
                         c,
                         MathUtility.random(0, 180),

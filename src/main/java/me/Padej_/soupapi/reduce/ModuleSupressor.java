@@ -3,13 +3,12 @@ package me.Padej_.soupapi.reduce;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.MC_Tiers;
 
-import java.util.Objects;
-
 public class ModuleSupressor extends ConfigurableModule {
 
     public static boolean disableItemOverlay() {
-        if (Objects.requireNonNull(mc.getNetworkHandler()).getServerInfo() == null) return false;
-        String ip = mc.getNetworkHandler().getServerInfo().address.toLowerCase();
+        // 1.8.9 keeps the connected server on the client, not the network handler.
+        if (mc.getCurrentServerEntry() == null || mc.getCurrentServerEntry().address == null) return false;
+        String ip = mc.getCurrentServerEntry().address.toLowerCase();
         return
                 // servers
                 ip.contains("minefun") ||
@@ -25,8 +24,9 @@ public class ModuleSupressor extends ConfigurableModule {
     }
 
     public static boolean disableHPBar() {
-        if (Objects.requireNonNull(mc.getNetworkHandler()).getServerInfo() == null) return false;
-        String ip = mc.getNetworkHandler().getServerInfo().address.toLowerCase();
+        // 1.8.9 keeps the connected server on the client, not the network handler.
+        if (mc.getCurrentServerEntry() == null || mc.getCurrentServerEntry().address == null) return false;
+        String ip = mc.getCurrentServerEntry().address.toLowerCase();
         return
                 // servers
                 ip.contains(".minehub.") ||

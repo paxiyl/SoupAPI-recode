@@ -32,7 +32,7 @@ public class JumpParticles extends ConfigurableModule {
         if (mc.player == null || !CONFIG.jumpParticlesEnabled) return;
         updateAvailableTextures();
 
-        boolean isJumping = !mc.player.isOnGround();
+        boolean isJumping = !mc.player.onGround;
         if (isJumping && !wasJumping && mc.options.jumpKey.isPressed()) {
             spawnParticles();
         }

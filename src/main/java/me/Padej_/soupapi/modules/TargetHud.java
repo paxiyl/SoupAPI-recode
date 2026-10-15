@@ -111,7 +111,7 @@ public class TargetHud extends ConfigurableModule {
         }
 
         // Проверяем, существует ли lastTarget в мире
-        if (lastTarget != null && (lastTarget.isRemoved() || !Objects.requireNonNull(mc.world).getEntitiesByClass(LivingEntity.class, lastTarget.getBoundingBox().expand(0.1), e -> e == lastTarget).contains(lastTarget))) {
+        if (lastTarget != null && (lastTarget.removed || !Objects.requireNonNull(mc.world).getEntitiesByClass(LivingEntity.class, lastTarget.getBoundingBox().expand(0.1), e -> e == lastTarget).contains(lastTarget))) {
             hudTimer = 0; // Сбрасываем таймер, чтобы HUD исчез
             lastTarget = null; // Очищаем lastTarget
         }

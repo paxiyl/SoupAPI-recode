@@ -42,7 +42,7 @@ public class JumpCircles extends ConfigurableModule {
     public static void onTick() {
         if (mc.player != null) {
             PlayerEntity player = mc.player;
-            boolean isJumping = !player.isOnGround();
+            boolean isJumping = !player.onGround;
 
             if (isJumping && !wasJumping && mc.options.jumpKey.isPressed()) {
                 CIRCLES.add(new JumpCircle(player.getPos()));

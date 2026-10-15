@@ -54,7 +54,7 @@ public class TotemPopParticles extends ConfigurableModule {
         emitters.add(new Emitter(entity, c));
 
         for (int i = 0; i < CONFIG.totemPopParticlesCount; i++) {
-            particles.add(new Particle((float) entity.x, (float) (entity.y + entity.getHeight() / 2), (float) entity.z, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
+            particles.add(new Particle((float) entity.x, (float) (entity.y + entity.height / 2), (float) entity.z, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
         }
     }
 
@@ -207,7 +207,7 @@ public class TotemPopParticles extends ConfigurableModule {
 
             int perTick = Math.max(1, CONFIG.totemPopParticlesCount / 30);
             for (int i = 0; i < perTick; i++) {
-                particles.add(new Particle((float) entity.x, (float) (entity.y + entity.getHeight() / 2f), (float) entity.z, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
+                particles.add(new Particle((float) entity.x, (float) (entity.y + entity.height / 2f), (float) entity.z, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
             }
             return false;
         }

@@ -16,7 +16,7 @@ public class GaussianFilter {
 
     public static void convolveAndTranspose(@NotNull Kernel kernel, int[] inPixels, int[] outPixels, int width, int height, boolean alpha, boolean premultiply, boolean unpremultiply, int edgeAction) {
         float[] matrix = kernel.getKernelData(null);
-        int cols = kernel.getWidth();
+        int cols = kernel.width;
         int cols2 = cols / 2;
         for (int y = 0; y < height; y++) {
             int index = y;
@@ -119,8 +119,8 @@ public class GaussianFilter {
     }
 
     public BufferedImage filter(BufferedImage src, BufferedImage dst) {
-        int width = src.getWidth();
-        int height = src.getHeight();
+        int width = src.width;
+        int height = src.height;
         if (dst == null) {
             dst = createCompatibleDestImage(src, null);
         }
@@ -139,7 +139,7 @@ public class GaussianFilter {
         if (dstCM == null) {
             dstCM = src.getColorModel();
         }
-        return new BufferedImage(dstCM, dstCM.createCompatibleWritableRaster(src.getWidth(), src.getHeight()), dstCM.isAlphaPremultiplied(), null);
+        return new BufferedImage(dstCM, dstCM.createCompatibleWritableRaster(src.width, src.height), dstCM.isAlphaPremultiplied(), null);
     }
 
     public String toString() {

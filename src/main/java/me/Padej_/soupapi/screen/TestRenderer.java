@@ -125,9 +125,9 @@ public class TestRenderer extends Screen {
 
     private void loadImageFromBufferedImage(BufferedImage bufferedImage) {
         try {
-            NativeImage nativeImage = new NativeImage(bufferedImage.getWidth(), bufferedImage.getHeight(), true);
-            for (int x = 0; x < bufferedImage.getWidth(); x++) {
-                for (int y = 0; y < bufferedImage.getHeight(); y++) {
+            NativeImage nativeImage = new NativeImage(bufferedImage.width, bufferedImage.height, true);
+            for (int x = 0; x < bufferedImage.width; x++) {
+                for (int y = 0; y < bufferedImage.height; y++) {
                     int argb = bufferedImage.getRGB(x, y);
                     nativeImage.setColorArgb(x, y, argb);
                 }

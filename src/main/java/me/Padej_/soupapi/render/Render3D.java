@@ -142,7 +142,7 @@ public class Render3D extends ConfigurableModule {
 
     private static Vec3d calculateEntityPositionRelativeToCamera(Camera camera, float tickDelta, Entity targetEntity) {
         double interpolatedX = Maths.lerp(tickDelta, targetEntity.prevX, targetEntity.x);
-        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevY, targetEntity.y) + (double) (targetEntity.getHeight() / 2.0F);
+        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevY, targetEntity.y) + (double) (targetEntity.height / 2.0F);
         double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevZ, targetEntity.z);
         Vec3d entityPos = new Vec3d(interpolatedX, interpolatedY, interpolatedZ);
         return entityPos.subtract(camera.getPos());
@@ -218,7 +218,7 @@ public class Render3D extends ConfigurableModule {
         if (targetEntity == null) return;
 
         Vec3d newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
-        float entityAge = targetEntity.age + tickDelta;
+        float entityAge = targetEntity.ticksAlive + tickDelta;
 
         MatrixStack matrices = new MatrixStack();
         MatrixStack matricesB = new MatrixStack();
@@ -307,7 +307,7 @@ public class Render3D extends ConfigurableModule {
         if (targetEntity == null) return;
         if (targetEntity instanceof PlayerEntity && ((PlayerEntity) targetEntity).isGliding()) return;
         Vec3d newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
-        float entityAge = targetEntity.age + tickDelta;
+        float entityAge = targetEntity.ticksAlive + tickDelta;
 
         MatrixStack matrices = new MatrixStack();
         matrices.push();
@@ -393,7 +393,7 @@ public class Render3D extends ConfigurableModule {
         double x = Maths.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderManager().cameraX;
         double y = Maths.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderManager().cameraY;
         double z = Maths.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderManager().cameraZ;
-        double height = target.getHeight();
+        double height = target.height;
 
         // Генерация трёх спиралей с разными угловыми сдвигами
         var spirals = new ArrayList[]{new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
@@ -508,7 +508,7 @@ public class Render3D extends ConfigurableModule {
         double x = Maths.lerp(tickDelta, target.prevX, target.x) - mc.getEntityRenderManager().cameraX;
         double y = Maths.lerp(tickDelta, target.prevY, target.y) - mc.getEntityRenderManager().cameraY;
         double z = Maths.lerp(tickDelta, target.prevZ, target.z) - mc.getEntityRenderManager().cameraZ;
-        double height = target.getHeight();
+        double height = target.height;
 
         float time = (System.currentTimeMillis() % 1000000) / 1000.0f;
         float t = (time * animationSpeed) % 1.0f;

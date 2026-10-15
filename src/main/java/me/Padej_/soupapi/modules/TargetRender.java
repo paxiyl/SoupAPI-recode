@@ -49,7 +49,7 @@ public class TargetRender extends ConfigurableModule {
 
         if (lastTargetEntity != null) {
             if (currentTime - lastTargetUpdateTime > CONFIG.targetRenderLiveTime * 1000L
-                    || lastTargetEntity.isRemoved()) {
+                    || lastTargetEntity.removed) {
                 lastTargetEntity = null;
                 return false;
             }

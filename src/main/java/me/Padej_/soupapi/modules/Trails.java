@@ -59,7 +59,7 @@ public class Trails extends ConfigurableModule {
 
                 Vec3d prevPos = new Vec3d(entity.prevX, entity.prevY, entity.prevZ);
                 Vec3d currentPos = entity.getPos();
-                float yOffset = entity.getHeight() / 2;
+                float yOffset = entity.height / 2;
                 if (prevPos.distanceTo(currentPos) > minStep) {
                     ((TrailEntity) entity).soupAPI$getTrails().add(new TrailSegment(
                             prevPos.add(0, -yOffset, 0),
@@ -102,7 +102,7 @@ public class Trails extends ConfigurableModule {
             List<TrailSegment> trails = ((TrailEntity) entity).soupAPI$getTrails();
             if (trails.isEmpty()) continue;
 
-            float height = entity.getHeight() * (CONFIG.trailsHeight / 100f);
+            float height = entity.height * (CONFIG.trailsHeight / 100f);
             int baseAlpha = 255;
 
             for (int i = 0; i < trails.size() - 1; i++) {

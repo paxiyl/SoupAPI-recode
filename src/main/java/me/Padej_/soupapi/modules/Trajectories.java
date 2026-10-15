@@ -138,7 +138,7 @@ public class Trajectories extends ConfigurableModule {
         motionX *= pow;
         motionY *= pow;
         motionZ *= pow;
-        if (!player.isOnGround())
+        if (!player.onGround)
             motionY += player.getVelocity().getY();
 
         Vec3d lastPos;
