@@ -1,0 +1,15 @@
+[
+  {
+    "modid": "soupapi",
+    "name": "SoupAPI",
+    "description": "Visual client additions: target HUD, particles, trails, capes, custom fog and more. Ported to Minecraft 1.8.9 Forge.",
+    "version": "1.3.7-a-1.8.9",
+    "mcversion": "1.8.9",
+    "url": "https://discord.gg/gT35BwzMET",
+    "authorList": ["Padej_"],
+    "credits": "donmor3000, LopyMine, THDevelopment. Uses code from ThunderHack-Recode (GPL-3.0).",
+    "logoFile": "/assets/soupapi/icon.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

@@ -1,0 +1,100 @@
+package me.Padej_.soupapi.particle.ambient;
+
+import me.Padej_.soupapi.compat.Cameras;
+
+import me.Padej_.soupapi.modules.AmbientParticle;
+import me.Padej_.soupapi.render.Render2D;
+import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.utils.MathUtility;
+import me.Padej_.soupapi.utils.Palette;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.ResourceLocation;
+import me.Padej_.soupapi.compat.RotationAxis;
+import net.minecraft.util.Vec3;
+
+import java.awt.*;
+import java.util.Random;
+
+import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
+import static me.Padej_.soupapi.modules.AmbientParticle.AVAILABLE_TEXTURES;
+
+public class DefaultAmbientParticle {
+    public static Minecraft mc = Minecraft.getMinecraft();
+
+    protected ResourceLocation texture;
+    protected final Color color;
+    protected float prevPosX, prevPosY, prevPosZ, posX, posY, posZ, motionX, motionY, motionZ;
+    protected int age;
+    protected final int maxAge;
+
+    public DefaultAmbientParticle(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
+        this.texture = AVAILABLE_TEXTURES.get(new Random().nextInt(AVAILABLE_TEXTURES.size()));
+        this.color = AmbientParticle.useRandomColor.getValue() ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
+        this.posX = posX;
+        this.posY = posY;
+        this.posZ = posZ;
+        prevPosX = posX;
+        prevPosY = posY;
+        prevPosZ = posZ;
+        this.motionX = motionX;
+        this.motionY = motionY;
+        this.motionZ = motionZ;
+        age = (int) MathUtility.random(100, 300);
+        maxAge = age;
+    }
+
+    public boolean tick() {
+        if (mc.thePlayer.getDistanceSq(posX, posY, posZ) > 4096) age -= 8;
+        else age--;
+
+        if (age < 0)
+            return true;
+
+        prevPosX = posX;
+        prevPosY = posY;
+        prevPosZ = posZ;
+
+        posX += motionX;
+        posY += motionY;
+        posZ += motionZ;
+
+        motionX *= 0.9f;
+        if (AmbientParticle.physic.getValue().equals(AmbientParticle.Physics.FALL)) {
+            motionY *= 0.9f;
+        }
+        motionZ *= 0.9f;
+
+        motionY -= 0.001f;
+
+        return false;
+    }
+
+    public void render(WorldRenderContext context) {
+        Camera camera = Cameras.get();
+        Color color = TargetHudRenderer.topLeft;
+        Vec3 pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
+
+        MatrixStack matrices = new MatrixStack();
+        matrices.translate(pos.xCoord, pos.yCoord, pos.zCoord);
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
+
+        int alpha = (int) (255 * ((float) age / (float) maxAge));
+        Color withAlpha = Render2D.injectAlpha(color, alpha);
+
+        Render2D.drawGlyphs(matrices, texture, withAlpha, AmbientParticle.particleScale.getValue() / 100f);
+    }
+
+    private static Vec3 interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
+        float tickDelta = context.tickCounter().getTickDelta(true);
+        Vec3 cameraPos = Cameras.get().getPositionVector();
+        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.xCoord;
+        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.yCoord;
+        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.zCoord;
+        return new Vec3(x, y, z);
+    }
+}

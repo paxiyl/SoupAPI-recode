@@ -1,3 +1,415 @@
+java.net.ConnectException: Connection refused (Connection refused)java.net.ConnectException: Connection refused (Connection refused)
+
+	at java.net.PlainSocketImpl.socketConnect(Native Method)	at java.net.PlainSocketImpl.socketConnect(Native Method)
+
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+
+	at java.net.Socket.connect(Socket.java:607)	at java.net.Socket.connect(Socket.java:607)
+
+	at java.net.Socket.connect(Socket.java:556)	at java.net.Socket.connect(Socket.java:556)
+
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:473)	at sun.net.www.http.HttpClient.openServer(HttpClient.java:473)
+
+	at sun.net.www.http.HttpClient$1.run(HttpClient.java:525)	at sun.net.www.http.HttpClient$1.run(HttpClient.java:525)
+
+	at sun.net.www.http.HttpClient$1.run(HttpClient.java:523)	at sun.net.www.http.HttpClient$1.run(HttpClient.java:523)
+
+	at java.security.AccessController.doPrivileged(Native Method)	at java.security.AccessController.doPrivileged(Native Method)
+
+	at sun.net.www.http.HttpClient.privilegedOpenServer(HttpClient.java:522)	at sun.net.www.http.HttpClient.privilegedOpenServer(HttpClient.java:522)
+
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:563)	at sun.net.www.http.HttpClient.openServer(HttpClient.java:563)
+
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:264)	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:264)
+
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:367)	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:367)
+
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:212)	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:212)
+
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1203)	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1203)
+
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:1076)	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:1076)
+
+	at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:1010)	at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:1010)
+
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:189)	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:189)
+
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:167)	at sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:167)
+
+	at net.minecraftforge.gradle.common.BasePlugin.getWithEtag(BasePlugin.java:651)	at net.minecraftforge.gradle.common.BasePlugin.getWithEtag(BasePlugin.java:651)
+
+	at net.minecraftforge.gradle.common.BasePlugin.getRemoteJsons(BasePlugin.java:213)	at net.minecraftforge.gradle.common.BasePlugin.getRemoteJsons(BasePlugin.java:213)
+
+	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:172)	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:172)
+
+	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:89)	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:89)
+
+	at org.gradle.api.internal.plugins.ImperativeOnlyPluginApplicator.applyImperative(ImperativeOnlyPluginApplicator.java:35)	at org.gradle.api.internal.plugins.ImperativeOnlyPluginApplicator.applyImperative(ImperativeOnlyPluginApplicator.java:35)
+
+	at org.gradle.api.internal.plugins.RuleBasedPluginApplicator.applyImperative(RuleBasedPluginApplicator.java:43)	at org.gradle.api.internal.plugins.RuleBasedPluginApplicator.applyImperative(RuleBasedPluginApplicator.java:43)
+
+	at org.gradle.api.internal.plugins.DefaultPluginManager.doApply(DefaultPluginManager.java:137)	at org.gradle.api.internal.plugins.DefaultPluginManager.doApply(DefaultPluginManager.java:137)
+
+	at org.gradle.api.internal.plugins.DefaultPluginManager.apply(DefaultPluginManager.java:112)	at org.gradle.api.internal.plugins.DefaultPluginManager.apply(DefaultPluginManager.java:112)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.applyType(DefaultObjectConfigurationAction.java:113)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.applyType(DefaultObjectConfigurationAction.java:113)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.access$200(DefaultObjectConfigurationAction.java:36)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.access$200(DefaultObjectConfigurationAction.java:36)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction$3.run(DefaultObjectConfigurationAction.java:80)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction$3.run(DefaultObjectConfigurationAction.java:80)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.execute(DefaultObjectConfigurationAction.java:136)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.execute(DefaultObjectConfigurationAction.java:136)
+
+	at org.gradle.api.internal.project.AbstractPluginAware.apply(AbstractPluginAware.java:46)	at org.gradle.api.internal.project.AbstractPluginAware.apply(AbstractPluginAware.java:46)
+
+	at org.gradle.api.internal.project.ProjectScript.apply(ProjectScript.java:34)	at org.gradle.api.internal.project.ProjectScript.apply(ProjectScript.java:34)
+
+	at org.gradle.api.Script$apply$0.callCurrent(Unknown Source)	at org.gradle.api.Script$apply$0.callCurrent(Unknown Source)
+
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:52)	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:52)
+
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:154)	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:154)
+
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:166)	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:166)
+
+	at build_bigda9jmtgc01iz0kow00k314.run(/home/user/SoupAPI-recode/build.gradle:15)	at build_bigda9jmtgc01iz0kow00k314.run(/home/user/SoupAPI-recode/build.gradle:15)
+
+	at org.gradle.groovy.scripts.internal.DefaultScriptRunnerFactory$ScriptRunnerImpl.run(DefaultScriptRunnerFactory.java:91)	at org.gradle.groovy.scripts.internal.DefaultScriptRunnerFactory$ScriptRunnerImpl.run(DefaultScriptRunnerFactory.java:91)
+
+	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl$2.run(DefaultScriptPluginFactory.java:177)	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl$2.run(DefaultScriptPluginFactory.java:177)
+
+	at org.gradle.configuration.ProjectScriptTarget.addConfiguration(ProjectScriptTarget.java:77)	at org.gradle.configuration.ProjectScriptTarget.addConfiguration(ProjectScriptTarget.java:77)
+
+	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl.apply(DefaultScriptPluginFactory.java:182)	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl.apply(DefaultScriptPluginFactory.java:182)
+
+	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:38)	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:38)
+
+	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:25)	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:25)
+
+	at org.gradle.configuration.project.ConfigureActionsProjectEvaluator.evaluate(ConfigureActionsProjectEvaluator.java:34)	at org.gradle.configuration.project.ConfigureActionsProjectEvaluator.evaluate(ConfigureActionsProjectEvaluator.java:34)
+
+	at org.gradle.configuration.project.LifecycleProjectEvaluator.evaluate(LifecycleProjectEvaluator.java:55)	at org.gradle.configuration.project.LifecycleProjectEvaluator.evaluate(LifecycleProjectEvaluator.java:55)
+
+	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:540)	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:540)
+
+	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:93)	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:93)
+
+	at org.gradle.execution.TaskPathProjectEvaluator.configureHierarchy(TaskPathProjectEvaluator.java:42)	at org.gradle.execution.TaskPathProjectEvaluator.configureHierarchy(TaskPathProjectEvaluator.java:42)
+
+	at org.gradle.configuration.DefaultBuildConfigurer.configure(DefaultBuildConfigurer.java:35)	at org.gradle.configuration.DefaultBuildConfigurer.configure(DefaultBuildConfigurer.java:35)
+
+	at org.gradle.initialization.DefaultGradleLauncher$2.run(DefaultGradleLauncher.java:124)	at org.gradle.initialization.DefaultGradleLauncher$2.run(DefaultGradleLauncher.java:124)
+
+	at org.gradle.internal.Factories$1.create(Factories.java:22)	at org.gradle.internal.Factories$1.create(Factories.java:22)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:53)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:53)
+
+	at org.gradle.initialization.DefaultGradleLauncher.doBuildStages(DefaultGradleLauncher.java:121)	at org.gradle.initialization.DefaultGradleLauncher.doBuildStages(DefaultGradleLauncher.java:121)
+
+	at org.gradle.initialization.DefaultGradleLauncher.access$200(DefaultGradleLauncher.java:32)	at org.gradle.initialization.DefaultGradleLauncher.access$200(DefaultGradleLauncher.java:32)
+
+	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:98)	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:98)
+
+	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:92)	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:92)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:63)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:63)
+
+	at org.gradle.initialization.DefaultGradleLauncher.doBuild(DefaultGradleLauncher.java:92)	at org.gradle.initialization.DefaultGradleLauncher.doBuild(DefaultGradleLauncher.java:92)
+
+	at org.gradle.initialization.DefaultGradleLauncher.run(DefaultGradleLauncher.java:83)	at org.gradle.initialization.DefaultGradleLauncher.run(DefaultGradleLauncher.java:83)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run(InProcessBuildActionExecuter.java:99)	at org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run(InProcessBuildActionExecuter.java:99)
+
+	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:28)	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:28)
+
+	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:48)	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:48)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:30)	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:30)
+
+	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:81)	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:81)
+
+	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:46)	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:46)
+
+	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:52)	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:52)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:37)	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:37)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:26)	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:26)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:34)	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:34)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:74)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:74)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:72)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:72)
+
+	at org.gradle.util.Swapper.swap(Swapper.java:38)	at org.gradle.util.Swapper.swap(Swapper.java:38)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:72)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:72)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.health.DaemonHealthTracker.execute(DaemonHealthTracker.java:40)	at org.gradle.launcher.daemon.server.health.DaemonHealthTracker.execute(DaemonHealthTracker.java:40)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:60)	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:60)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:72)	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:72)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.health.HintGCAfterBuild.execute(HintGCAfterBuild.java:41)	at org.gradle.launcher.daemon.server.health.HintGCAfterBuild.execute(HintGCAfterBuild.java:41)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:50)	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:50)
+
+	at org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run(DaemonStateCoordinator.java:237)	at org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run(DaemonStateCoordinator.java:237)
+
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:54)	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:54)
+
+	at org.gradle.internal.concurrent.StoppableExecutorImpl$1.run(StoppableExecutorImpl.java:40)	at org.gradle.internal.concurrent.StoppableExecutorImpl$1.run(StoppableExecutorImpl.java:40)
+
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+
+	at java.lang.Thread.run(Thread.java:750)	at java.lang.Thread.run(Thread.java:750)
+
+java.net.ConnectException: Connection refused (Connection refused)java.net.ConnectException: Connection refused (Connection refused)
+
+	at java.net.PlainSocketImpl.socketConnect(Native Method)	at java.net.PlainSocketImpl.socketConnect(Native Method)
+
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+
+	at java.net.Socket.connect(Socket.java:607)	at java.net.Socket.connect(Socket.java:607)
+
+	at java.net.Socket.connect(Socket.java:556)	at java.net.Socket.connect(Socket.java:556)
+
+	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)	at sun.net.NetworkClient.doConnect(NetworkClient.java:180)
+
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:473)	at sun.net.www.http.HttpClient.openServer(HttpClient.java:473)
+
+	at sun.net.www.http.HttpClient$1.run(HttpClient.java:525)	at sun.net.www.http.HttpClient$1.run(HttpClient.java:525)
+
+	at sun.net.www.http.HttpClient$1.run(HttpClient.java:523)	at sun.net.www.http.HttpClient$1.run(HttpClient.java:523)
+
+	at java.security.AccessController.doPrivileged(Native Method)	at java.security.AccessController.doPrivileged(Native Method)
+
+	at sun.net.www.http.HttpClient.privilegedOpenServer(HttpClient.java:522)	at sun.net.www.http.HttpClient.privilegedOpenServer(HttpClient.java:522)
+
+	at sun.net.www.http.HttpClient.openServer(HttpClient.java:563)	at sun.net.www.http.HttpClient.openServer(HttpClient.java:563)
+
+	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:264)	at sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:264)
+
+	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:367)	at sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:367)
+
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:212)	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:212)
+
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1203)	at sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1203)
+
+	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:1076)	at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:1076)
+
+	at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:1010)	at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:1010)
+
+	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:189)	at sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:189)
+
+	at sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:167)	at sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:167)
+
+	at net.minecraftforge.gradle.common.BasePlugin.getWithEtag(BasePlugin.java:651)	at net.minecraftforge.gradle.common.BasePlugin.getWithEtag(BasePlugin.java:651)
+
+	at net.minecraftforge.gradle.common.BasePlugin.getRemoteJsons(BasePlugin.java:218)	at net.minecraftforge.gradle.common.BasePlugin.getRemoteJsons(BasePlugin.java:218)
+
+	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:172)	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:172)
+
+	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:89)	at net.minecraftforge.gradle.common.BasePlugin.apply(BasePlugin.java:89)
+
+	at org.gradle.api.internal.plugins.ImperativeOnlyPluginApplicator.applyImperative(ImperativeOnlyPluginApplicator.java:35)	at org.gradle.api.internal.plugins.ImperativeOnlyPluginApplicator.applyImperative(ImperativeOnlyPluginApplicator.java:35)
+
+	at org.gradle.api.internal.plugins.RuleBasedPluginApplicator.applyImperative(RuleBasedPluginApplicator.java:43)	at org.gradle.api.internal.plugins.RuleBasedPluginApplicator.applyImperative(RuleBasedPluginApplicator.java:43)
+
+	at org.gradle.api.internal.plugins.DefaultPluginManager.doApply(DefaultPluginManager.java:137)	at org.gradle.api.internal.plugins.DefaultPluginManager.doApply(DefaultPluginManager.java:137)
+
+	at org.gradle.api.internal.plugins.DefaultPluginManager.apply(DefaultPluginManager.java:112)	at org.gradle.api.internal.plugins.DefaultPluginManager.apply(DefaultPluginManager.java:112)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.applyType(DefaultObjectConfigurationAction.java:113)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.applyType(DefaultObjectConfigurationAction.java:113)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.access$200(DefaultObjectConfigurationAction.java:36)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.access$200(DefaultObjectConfigurationAction.java:36)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction$3.run(DefaultObjectConfigurationAction.java:80)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction$3.run(DefaultObjectConfigurationAction.java:80)
+
+	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.execute(DefaultObjectConfigurationAction.java:136)	at org.gradle.api.internal.plugins.DefaultObjectConfigurationAction.execute(DefaultObjectConfigurationAction.java:136)
+
+	at org.gradle.api.internal.project.AbstractPluginAware.apply(AbstractPluginAware.java:46)	at org.gradle.api.internal.project.AbstractPluginAware.apply(AbstractPluginAware.java:46)
+
+	at org.gradle.api.internal.project.ProjectScript.apply(ProjectScript.java:34)	at org.gradle.api.internal.project.ProjectScript.apply(ProjectScript.java:34)
+
+	at org.gradle.api.Script$apply$0.callCurrent(Unknown Source)	at org.gradle.api.Script$apply$0.callCurrent(Unknown Source)
+
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:52)	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:52)
+
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:154)	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:154)
+
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:166)	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:166)
+
+	at build_bigda9jmtgc01iz0kow00k314.run(/home/user/SoupAPI-recode/build.gradle:15)	at build_bigda9jmtgc01iz0kow00k314.run(/home/user/SoupAPI-recode/build.gradle:15)
+
+	at org.gradle.groovy.scripts.internal.DefaultScriptRunnerFactory$ScriptRunnerImpl.run(DefaultScriptRunnerFactory.java:91)	at org.gradle.groovy.scripts.internal.DefaultScriptRunnerFactory$ScriptRunnerImpl.run(DefaultScriptRunnerFactory.java:91)
+
+	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl$2.run(DefaultScriptPluginFactory.java:177)	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl$2.run(DefaultScriptPluginFactory.java:177)
+
+	at org.gradle.configuration.ProjectScriptTarget.addConfiguration(ProjectScriptTarget.java:77)	at org.gradle.configuration.ProjectScriptTarget.addConfiguration(ProjectScriptTarget.java:77)
+
+	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl.apply(DefaultScriptPluginFactory.java:182)	at org.gradle.configuration.DefaultScriptPluginFactory$ScriptPluginImpl.apply(DefaultScriptPluginFactory.java:182)
+
+	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:38)	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:38)
+
+	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:25)	at org.gradle.configuration.project.BuildScriptProcessor.execute(BuildScriptProcessor.java:25)
+
+	at org.gradle.configuration.project.ConfigureActionsProjectEvaluator.evaluate(ConfigureActionsProjectEvaluator.java:34)	at org.gradle.configuration.project.ConfigureActionsProjectEvaluator.evaluate(ConfigureActionsProjectEvaluator.java:34)
+
+	at org.gradle.configuration.project.LifecycleProjectEvaluator.evaluate(LifecycleProjectEvaluator.java:55)	at org.gradle.configuration.project.LifecycleProjectEvaluator.evaluate(LifecycleProjectEvaluator.java:55)
+
+	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:540)	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:540)
+
+	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:93)	at org.gradle.api.internal.project.AbstractProject.evaluate(AbstractProject.java:93)
+
+	at org.gradle.execution.TaskPathProjectEvaluator.configureHierarchy(TaskPathProjectEvaluator.java:42)	at org.gradle.execution.TaskPathProjectEvaluator.configureHierarchy(TaskPathProjectEvaluator.java:42)
+
+	at org.gradle.configuration.DefaultBuildConfigurer.configure(DefaultBuildConfigurer.java:35)	at org.gradle.configuration.DefaultBuildConfigurer.configure(DefaultBuildConfigurer.java:35)
+
+	at org.gradle.initialization.DefaultGradleLauncher$2.run(DefaultGradleLauncher.java:124)	at org.gradle.initialization.DefaultGradleLauncher$2.run(DefaultGradleLauncher.java:124)
+
+	at org.gradle.internal.Factories$1.create(Factories.java:22)	at org.gradle.internal.Factories$1.create(Factories.java:22)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:53)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:53)
+
+	at org.gradle.initialization.DefaultGradleLauncher.doBuildStages(DefaultGradleLauncher.java:121)	at org.gradle.initialization.DefaultGradleLauncher.doBuildStages(DefaultGradleLauncher.java:121)
+
+	at org.gradle.initialization.DefaultGradleLauncher.access$200(DefaultGradleLauncher.java:32)	at org.gradle.initialization.DefaultGradleLauncher.access$200(DefaultGradleLauncher.java:32)
+
+	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:98)	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:98)
+
+	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:92)	at org.gradle.initialization.DefaultGradleLauncher$1.create(DefaultGradleLauncher.java:92)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:91)
+
+	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:63)	at org.gradle.internal.progress.DefaultBuildOperationExecutor.run(DefaultBuildOperationExecutor.java:63)
+
+	at org.gradle.initialization.DefaultGradleLauncher.doBuild(DefaultGradleLauncher.java:92)	at org.gradle.initialization.DefaultGradleLauncher.doBuild(DefaultGradleLauncher.java:92)
+
+	at org.gradle.initialization.DefaultGradleLauncher.run(DefaultGradleLauncher.java:83)	at org.gradle.initialization.DefaultGradleLauncher.run(DefaultGradleLauncher.java:83)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run(InProcessBuildActionExecuter.java:99)	at org.gradle.launcher.exec.InProcessBuildActionExecuter$DefaultBuildController.run(InProcessBuildActionExecuter.java:99)
+
+	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:28)	at org.gradle.tooling.internal.provider.ExecuteBuildActionRunner.run(ExecuteBuildActionRunner.java:28)
+
+	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)	at org.gradle.launcher.exec.ChainingBuildActionRunner.run(ChainingBuildActionRunner.java:35)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:48)	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:48)
+
+	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:30)	at org.gradle.launcher.exec.InProcessBuildActionExecuter.execute(InProcessBuildActionExecuter.java:30)
+
+	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:81)	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:81)
+
+	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:46)	at org.gradle.launcher.exec.ContinuousBuildActionExecuter.execute(ContinuousBuildActionExecuter.java:46)
+
+	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:52)	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:52)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:37)	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:37)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:26)	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:26)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:34)	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:34)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:74)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:74)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:72)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput$2.call(ForwardClientInput.java:72)
+
+	at org.gradle.util.Swapper.swap(Swapper.java:38)	at org.gradle.util.Swapper.swap(Swapper.java:38)
+
+	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:72)	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:72)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.health.DaemonHealthTracker.execute(DaemonHealthTracker.java:40)	at org.gradle.launcher.daemon.server.health.DaemonHealthTracker.execute(DaemonHealthTracker.java:40)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:60)	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:60)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:72)	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:72)
+
+	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:36)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.health.HintGCAfterBuild.execute(HintGCAfterBuild.java:41)	at org.gradle.launcher.daemon.server.health.HintGCAfterBuild.execute(HintGCAfterBuild.java:41)
+
+	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:120)
+
+	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:50)	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:50)
+
+	at org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run(DaemonStateCoordinator.java:237)	at org.gradle.launcher.daemon.server.DaemonStateCoordinator$1.run(DaemonStateCoordinator.java:237)
+
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:54)	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:54)
+
+	at org.gradle.internal.concurrent.StoppableExecutorImpl$1.run(StoppableExecutorImpl.java:40)	at org.gradle.internal.concurrent.StoppableExecutorImpl$1.run(StoppableExecutorImpl.java:40)
+
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+
+	at java.lang.Thread.run(Thread.java:750)	at java.lang.Thread.run(Thread.java:750)
+
 This mapping 'stable_20' was designed for MC 1.8.8! Use at your own peril.This mapping 'stable_20' was designed for MC 1.8.8! Use at your own peril.
 
 WARNING: You are using an unsupported version of ForgeGradle.
@@ -12,32 +424,49 @@ See https://gist.github.com/TheCurle/fe7ad3ede188cbdd15c235cc75d52d4a for more i
          by: Searge, ProfMobius, Fesh0r,         
          R4wk, ZeuX, IngisKahn, bspkrs           
 #################################################
-:dumpCompileClasspath
-Download https://maven.minecraftforge.net/net/java/dev/jna/jna/4.5.2/jna-4.5.2.pom
-Download https://maven.minecraftforge.net/net/java/dev/jna/jna/4.5.2/jna-4.5.2.jar
-Invalid cookie header: "set-cookie: __cf_bm=289w7imjzv1YvfDBsjgt_r4nvst0d8k9hl3b7AduozY-1792074064.2346919-1.0.1.1-UfWSdOKA5AQa00jaEBLKahwlKg_wqoPLyKmV1mdS9t8OJasBfiHEBtPPg5iAqpJ7cg5do4ImcarrgcV9tZe2_H8IBRWvHA87HTP5Fmp1jYIKYJxsERl_7gzHJGcnzv0g; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:04 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:04 GMT
-Invalid cookie header: "set-cookie: __cf_bm=IqiktYX0n2xq6mzFDCx6jE.RKI5KPffJW1xgNVj1SoU-1792074064.6501114-1.0.1.1-W4vr.Sl5z1ZiQaYtxitH1HfOOW9Q8cNfVXJiAxMgzPTOpx7qlgudk1yK2p45mYothfRADFzqj2NPO9s9NukkyrlsjfT4Fr2BrpOMKQkNfFQSy9GBGnH41RmmWMmKJM4n; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:04 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:04 GMT
-Invalid cookie header: "set-cookie: __cf_bm=xGeh9yqBppbrQeqeLppbNXnwPaCu1jxG7iDNnrDeV7g-1792074065.0578368-1.0.1.1-JTz7f9USc_Mrb8s.X8HW0YlGUupwQKssSVdzBh5bthfGryAJsHzV2vLHxUBGahrKWDLod4QeFZCX48BKXpdA4FTc5oYxYDXxc5_h75wgjaltWqDZtSvbLUmYzf9H2dc7; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=.yO03L.p3.XCNnSz6aUniAoGf3SwvfC5g5EkmlmcH9I-1792074065.2597775-1.0.1.1-jQA0BEqbYxJHh3ini7OMmu_Y2uNlVxrTogYVKVikoLS8HKVDw.FV1zhLN4fJgQePwPOEHTr6ZuA4sh4DUFh7TzCM_yiBMb766ok6VQVz9RWYVe6ZxbdYBIQjpnBkp98X; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=jCyg.Xe3ezR7sBriEmpKgqt0_4dznry6DlNWtaJXgmU-1792074065.4207916-1.0.1.1-R7BbECZOv.TRtGoK3ygNEQ8Bmf9MR9S7doDB1ZX2h2oy9Mdv.d5YHNTYo03C8AFNrTYfHfvCjauT63AVfyTf8rnWOA1iiJOwWiFEX91L2wE6B7Cl7w4o6dsVzjyHJdWV; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=nwP3tSN2rWbWc6RD0UX2yPQKzc3czHSZMLUNXIUxLjA-1792074065.4878552-1.0.1.1-2p.VN_a8bEQ10t0z5JRYhPf4KBY_uVSGeg8RMEFTp9StCXeSgBjab5BHXkFx.ULT1Ybesh4jilvuDWORGq9kq8ZLKHVo.Sjs.kjiyyClFhBSMQvC7v2b0XAIrliGMP18; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=2EEkSYZdXZOxysYwKJZf0TCVq21ybQXCjs1nz9IKg7k-1792074065.533533-1.0.1.1-mla_r2zxB2At62ab0C2B0hX6AVbH6l0Etvl1PyzZMV27uZGXus3EGJ.lHMXNvTOESeoPypi7NC9eyAIgX60gJrWG5CFS78xBgrnUW8R..HAmsOp9bOtHg0jMdrx5Psjv; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=_EKECeRlKENwq0innWjeg.fh._8P1kbOVfgwyW34AlQ-1792074065.6029246-1.0.1.1-wEa8oKkNEQdkqFwPAI.2GsN97mojMvUjrULXAzYSX2YVmuxJDZmNmfLxfZgwMxHqDTQwmhASp7xbBQWxJk7l3L.HMliotEy2YHtDfSziR3wuL92.fCpclzNOV8UZYeUT; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=RGwXEnlWUjN5JIZRVmdwyicWuy5Mdcl.J0E.r4Tggwk-1792074065.686639-1.0.1.1-Ddj81DdL3mQM6BOwsNdqbzdLbyJRC6XZoJ_tgMgs772eKGNF_D6z6Y8pkHGi_54GrXn.MeSM.7av932ERZSdKwz3PDrvk_LYbdqHNTeoVhBadIXqzIhs_P5KC9vZYJ7q; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=U0Kc4yO63UM.2DFEQswp2.dxdWWTGN9nhvsTXbmlENA-1792074065.733221-1.0.1.1-4ZGh1JdUE0YduW6Na5HTiLAQsVwn6Z4txYdYD3KMubYvRCYD9E2owEyv3YSqerg.mZ4.UuvT7QT6cTfSyjChRUjo3ahCDdTBIMZEMQjOsciId74hv92o5JctQa9HIHqD; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=zofcR3FiGoIJoOeluSsHpg3n4C2ZyszWD3nKoqyke4Y-1792074065.7744372-1.0.1.1-s9ifpo_YwBhLakuwp1Hiw4assx4_U7UCGib1q_X6xzorkG.Igo6TMfXJyrlcbG_.ul6JzIKWBT1ay2R61B2t0IJ849WSWclwO3wjPHYFnJXmoCyJodXjK5LQkWOPtS8V; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=Oeob3ECCfUvfWAC1IT0CHgrxzkI2ME.WpW2lLAj5Bmw-1792074065.8159075-1.0.1.1-i8ZSsQa9R6Q0mthz1koaXO_T49fNTT5RnavaF8Tdeq3c70.Nw4FWkLh.8mAmjhyWzCa46jkD6.W4hAqadbBtJv.iNcvdCce7CTHCKHNpIMjL_5ENFXTUj6xm20QrGCcr; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=ceVdYPHBdR.wG0RncmWBNj9OS9igCM9P_ztVOOv4hCA-1792074065.8565679-1.0.1.1-zW8IinjkRcRYZhoC6ELJ0eViHBR5pKv6MimWQpOz.V7ls59FAdIg_oopNabagou8zFNkW9cLclQ0MNc6aNlUcsMtuTV3_8x.8dXJZBNmeIgUXXeAfODHUtEmxU8QWN8U; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=zwDD1xFvDD0b4XcLP2yAfEfKoBvdMisFj9NH3xlg_YQ-1792074065.8979754-1.0.1.1-WaRs.dh0Wbqgd9ZbttZCrzOGDsiH4uPYB4yHKQUIg6UCY53b6hmkXWo3kIqy.yr7ZE0ZmC1FjCDoz8XkTTGdQ91.Eh_MoC2_4bRCH.djLqVuOlrAzHiS31B3fUTL_zz2; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=2R8ZidqjCzGuu8LzKOpHAWeQXLV0wXAYgQ.xylRcZm8-1792074065.9430237-1.0.1.1-qXbro3XrvzLmI8jr.sb4f7lfK1hB80SSMx4M4ST9FjRPM6G8Uukj9JmgdVM8SAKagYrhcJBxx3vA8elyo5XLyDuVxT.A3IAfRETjFBTEyhU8PZ4pdSUpMk4ZLbELzf2H; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=AmWGbCJC96ThhqWAtfOJemIIsGoO3NRZOOCtJfM5RqY-1792074065.9923806-1.0.1.1-IIp80SvrTMA2c951wBLGWsPWP4_ynzhkXutelUrX6SPocI.gG5UXMVj17x5AiMzAhxr5DAJeEUk8kOtNCyUdbgAA3MpqXrnWrXA7zW6E1YeVbWCiYMIBZn7FnM20tgyZ; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:05 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:05 GMT
-Invalid cookie header: "set-cookie: __cf_bm=1zfMPd0mhV4dcRCtFuVRGZxnllQg6jB5nJAUZ1TIm_c-1792074066.031512-1.0.1.1-xmMvQKndGKkM4PWCw4OivCxmzqjCa35D3LRM0EXRjLTRD52MO6iE4JUkCxi8bY38aWrHHBzzpYp6aD_EYDU9bd6Bbk.D2rOG70nqZkMljBJhbKjlQmvCg6qQ88JF9Yjz; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:06 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:06 GMT
-Invalid cookie header: "set-cookie: __cf_bm=Q5Luiqomg9r60w3Qx3KWMea6WLpXSED6AtW6qvL.EeI-1792074066.0736156-1.0.1.1-otEmzJJ2frLeideaEfWvmUiIL.pEcMLhBjZeJdeFCih173PRcuHb8aBi3VcSMsNNs1VURq7kGSuwicyw8MG65BiMx2gcpNDKazK2RnRKSaoYzVp810teaQ80weaznsWI; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:06 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:06 GMT
-Invalid cookie header: "set-cookie: __cf_bm=KxImMkPGW5bDwNO31Bsr3VCA00r9etLY_fYNAF0Uvcw-1792074066.128033-1.0.1.1-g4J3iSEqWZ_PkuH5nxKrEI4vbDRSOBG45Z29UZSTPZbqkKZ60HS635sf7HB9326zo8k6ZIkLqvnGZzldryWo2aS1q5Cj2Z219MIiBhRt1XpFzYTYDUu__SzKvT3kX_4J; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:06 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:06 GMT
-Invalid cookie header: "set-cookie: __cf_bm=SEKDC2S_PIw7q6O6WVooXg0Lgy8w2oItSVhHRzNMo2c-1792074066.1688309-1.0.1.1-oW_1AYxlNy8onP5WgPrkMgeGRb7ZUCdyG5ISoNsCBsc30GovtClXSc.GenvdDO.k4Brr2gymyEgscKXNbZfnsGnE2qSRONlwCS_QIVOqw4gm8dcaqw9K7ppUAS4Bu5y3; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:06 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:06 GMT
-Invalid cookie header: "set-cookie: __cf_bm=ljCCDOaETYNIF8BWyA3.lCcTnONQEkQeOTMGqrZ73T0-1792074066.2238276-1.0.1.1-fGXaCN7Ge6nSlRSwYuu4ePBlBxb7hDy0lvuxkKXJdm4AMWDM_VyphKVB8UhFjVEPMnEBFiJLXrOaGDEJSw62gFWD2yhzBrpD2hXZxNbMOu9bHUpdDf37nXyDmQW3xdaD; HttpOnly; SameSite=None; Secure; Path=/; Domain=maven.org; Expires=Thu, 15 Oct 2026 14:51:06 GMT". Invalid 'expires' attribute: Thu, 15 Oct 2026 14:51:06 GMT
-wrote /home/user/SoupAPI-recode/build/compile-classpath.txt
+:deobfCompileDummyTask
+:getVersionJsonConnection refused (Connection refused)
+
+:extractUserdev
+:downloadClient SKIPPED
+:downloadServer SKIPPED
+:splitServerJar SKIPPED
+:mergeJars SKIPPED
+:applyBinaryPatches SKIPPED
+:deobfProvidedDummyTask
+:extractDependencyATs SKIPPED
+:extractMcpData SKIPPED
+:extractMcpMappings
+:genSrgs SKIPPED
+:deobfMcMCP SKIPPED
+:sourceApiJava
+:compileApiJava UP-TO-DATE
+:processApiResources UP-TO-DATE
+:apiClasses UP-TO-DATE
+:sourceMainJava
+:compileJavaNote: /home/user/SoupAPI-recode/build/sources/main/java/me/Padej_/soupapi/event/ForgeEventBridge.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+:processResources
+:classes
+:jar
+:sourceTestJava
+:compileTestJava UP-TO-DATE
+:processTestResources UP-TO-DATE
+:testClasses UP-TO-DATE
+:test UP-TO-DATE
+:reobfJar
+:extractRangemapReplacedMain
+/home/user/SoupAPI-recode/build/sources/main/java
+:retromapReplacedMain
+remapping source...
+:sourceJar
+:assemble
+:check UP-TO-DATE
+:build
 
 BUILD SUCCESSFUL
 
-Total time: 9.932 secs
+Total time: 51.101 secs
