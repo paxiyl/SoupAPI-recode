@@ -190,6 +190,26 @@ public final class Mat4 {
         return this;
     }
 
+    /**
+     * Projects a point through this matrix into window coordinates, matching JOML's
+     * {@code Matrix4f.project(x, y, z, int[] viewport, Vector3f dest)}: transform, perspective
+     * divide, then map the resulting NDC into the viewport rectangle.
+     *
+     * <p>This is the same arithmetic as {@code gluProject}, done here rather than through GLU so
+     * the result does not depend on the GL matrix stack's current contents.
+     */
+    public Vector3f project(float x, float y, float z, int[] viewport, Vector3f dest) {
+        float w = m03 * x + m13 * y + m23 * z + m33;
+        float invW = w == 0f ? 0f : 1f / w;
+        float nx = (m00 * x + m10 * y + m20 * z + m30) * invW;
+        float ny = (m01 * x + m11 * y + m21 * z + m31) * invW;
+        float nz = (m02 * x + m12 * y + m22 * z + m32) * invW;
+        dest.x = (nx * 0.5f + 0.5f) * viewport[2] + viewport[0];
+        dest.y = (ny * 0.5f + 0.5f) * viewport[3] + viewport[1];
+        dest.z = (1f + nz) * 0.5f;
+        return dest;
+    }
+
     /** Writes the 16 elements in OpenGL's expected column-major order. */
     public void writeTo(java.nio.FloatBuffer buf) {
         buf.put(m00).put(m01).put(m02).put(m03);

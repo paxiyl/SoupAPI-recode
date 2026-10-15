@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.compat.Maths;
 import me.Padej_.soupapi.compat.Windows;
 
@@ -272,8 +274,12 @@ public class TargetHud extends ConfigurableModule {
     public static Vec3d worldSpaceToScreenSpace(Vec3d pos) {
         Camera camera = Cameras.get();
         int displayHeight = Windows.height();
-        int[] viewport = new int[4];
-        GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
+        // LWJGL 2 reads integer state into an IntBuffer rather than an int[].
+        java.nio.IntBuffer viewportBuffer = org.lwjgl.BufferUtils.createIntBuffer(16);
+        GL11.glGetInteger(GL11.GL_VIEWPORT, viewportBuffer);
+        int[] viewport = new int[]{
+                viewportBuffer.get(0), viewportBuffer.get(1),
+                viewportBuffer.get(2), viewportBuffer.get(3)};
         Vector3f target = new Vector3f();
         double scale = Windows.scaleFactor();
 
