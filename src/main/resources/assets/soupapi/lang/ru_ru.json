@@ -341,5 +341,6 @@
   "text.autoconfig.soupapi.option.landingImpactCount": "Density",
   "text.autoconfig.soupapi.option.landingImpactScale": "Scale",
   "text.autoconfig.soupapi.option.landingImpactDuration": "Duration (ticks)",
-  "text.autoconfig.soupapi.option.landingImpactMinFall": "Minimum Fall (0.1 blocks)"
+  "text.autoconfig.soupapi.option.landingImpactMinFall": "Minimum Fall (0.1 blocks)",
+  "text.autoconfig.soupapi.option.hitEffectsStick": "Прилипать к телу"
 }

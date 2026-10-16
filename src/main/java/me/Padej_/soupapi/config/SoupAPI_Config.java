@@ -139,6 +139,8 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("hit_effects")
     public boolean hitEffectsFollow = true;
     @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsStick = true;
+    @ConfigEntry.Category("hit_effects")
     @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
     public int hitEffectsCount = 10;
     @ConfigEntry.Category("hit_effects")

@@ -68,44 +68,18 @@ public class Render3D_Shapes {
             // gl4es, so on PojavLauncher every outline arrived as a one-pixel scratch.
             OUTLINE_QUEUE.forEach(action -> glowBox(action.box(), action.color(), action.lineWidth()));
 
-            if (!OUTLINE_SIDE_QUEUE.isEmpty()) {
-                setupRender();
-                Tessellator tessellator = Tessellator.getInstance();
-                BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-                RenderSystem.disableCull();
-                RenderSystem.disableDepthTest();
-                RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
-                RenderSystem.lineWidth(2f);
-                OUTLINE_SIDE_QUEUE.forEach(action -> {
-                    setSideOutlinePoints(action.box, matrixFrom(action.box().minX, action.box().minY,
-                            action.box().minZ), buffer, action.color(), action.side());
-                });
-                Render2D.endBuilding(buffer);
-                RenderSystem.enableCull();
-                RenderSystem.enableDepthTest();
-                endRender();
-            }
+            OUTLINE_SIDE_QUEUE.forEach(action -> glowBoxSide(action.box(), action.color(),
+                    action.lineWidth(), action.side()));
 
             OUTLINE_QUEUE.clear();
             OUTLINE_SIDE_QUEUE.clear();
         }
 
         if (!DEBUG_LINE_QUEUE.isEmpty()) {
-            setupRender();
-            RenderSystem.disableDepthTest();
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.LINES);
-
-            RenderSystem.disableCull();
-            RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
-            DEBUG_LINE_QUEUE.forEach(action -> {
-                MatrixStack matrices = matrixFrom(action.start.xCoord, action.start.yCoord, action.start.zCoord);
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.xCoord - action.start.xCoord), (float) (action.end.yCoord - action.start.yCoord), (float) (action.end.zCoord - action.start.zCoord), action.color);
-            });
-            Render2D.endBuilding(buffer);
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            endRender();
+            DEBUG_LINE_QUEUE.forEach(action -> Fx.glowLine(
+                    action.start.xCoord, action.start.yCoord, action.start.zCoord,
+                    action.end.xCoord, action.end.yCoord, action.end.zCoord,
+                    0.03f, action.color()));
             DEBUG_LINE_QUEUE.clear();
         }
 
@@ -122,7 +96,7 @@ public class Render3D_Shapes {
 
     /** The twelve edges of a box, each drawn as a glowing band. */
     public static void glowBox(AxisAlignedBB box, Color colour, float lineWidth) {
-        double width = 0.02 * Math.max(1f, lineWidth);
+        double width = 0.035 * Math.max(1f, lineWidth);
         double[][] corners = {
                 {box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
                 {box.maxX, box.minY, box.maxZ}, {box.minX, box.minY, box.maxZ},
@@ -205,6 +179,44 @@ public class Render3D_Shapes {
 
                 }
                 break;
+        }
+    }
+
+    /** The four edges of one face of a box, as glowing bands. */
+    public static void glowBoxSide(AxisAlignedBB box, Color colour, float lineWidth, EnumFacing side) {
+        double width = 0.035 * Math.max(1f, lineWidth);
+        double[][] corners;
+        switch (side) {
+            case DOWN:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                        {box.maxX, box.minY, box.maxZ}, {box.minX, box.minY, box.maxZ}};
+                break;
+            case UP:
+                corners = new double[][]{{box.minX, box.maxY, box.minZ}, {box.maxX, box.maxY, box.minZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+                break;
+            case NORTH:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                        {box.maxX, box.maxY, box.minZ}, {box.minX, box.maxY, box.minZ}};
+                break;
+            case SOUTH:
+                corners = new double[][]{{box.minX, box.minY, box.maxZ}, {box.maxX, box.minY, box.maxZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+                break;
+            case WEST:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.minX, box.minY, box.maxZ},
+                        {box.minX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.minZ}};
+                break;
+            case EAST:
+            default:
+                corners = new double[][]{{box.maxX, box.minY, box.minZ}, {box.maxX, box.minY, box.maxZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.maxX, box.maxY, box.minZ}};
+                break;
+        }
+        for (int i = 0; i < 4; i++) {
+            double[] a = corners[i];
+            double[] b = corners[(i + 1) % 4];
+            Fx.glowLine(a[0], a[1], a[2], b[0], b[1], b[2], width, colour);
         }
     }
 

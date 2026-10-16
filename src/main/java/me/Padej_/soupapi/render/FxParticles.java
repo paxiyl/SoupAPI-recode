@@ -1,6 +1,7 @@
 package me.Padej_.soupapi.render;
 
 import me.Padej_.soupapi.compat.BufferBuilder;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import java.awt.Color;
@@ -103,6 +104,12 @@ public final class FxParticles {
         boolean fadeIn;
         ResourceLocation texture;
         Color colour;
+        /** When set, the particle rides this entity instead of moving under its own motion. */
+        Entity anchor;
+        double localX;
+        double localY;
+        double localZ;
+        float anchorYaw;
 
         public Particle(double x, double y, double z, int life, float size, Color colour) {
             this.x = this.prevX = x;
@@ -168,7 +175,55 @@ public final class FxParticles {
             return this;
         }
 
+        /**
+         * Sticks the particle to an entity at an offset in that entity's own frame.
+         *
+         * <p>The offset is kept in body-local coordinates and turned with the body each frame, so a
+         * shard driven into someone's chest stays in their chest while they move and spin, rather
+         * than hanging in the air where they were hit.
+         */
+        public Particle attach(Entity entity, double localX, double localY, double localZ) {
+            this.anchor = entity;
+            this.localX = localX;
+            this.localY = localY;
+            this.localZ = localZ;
+            this.anchorYaw = entity instanceof net.minecraft.entity.EntityLivingBase
+                    ? ((net.minecraft.entity.EntityLivingBase) entity).renderYawOffset
+                    : entity.rotationYaw;
+            return this;
+        }
+
+        private boolean anchored() {
+            return anchor != null && !anchor.isDead;
+        }
+
+        /** The anchor's position this frame, with the local offset turned to match its body. */
+        private double[] anchored(float tickDelta) {
+            float yaw = anchor instanceof net.minecraft.entity.EntityLivingBase
+                    ? interp(((net.minecraft.entity.EntityLivingBase) anchor).prevRenderYawOffset,
+                    ((net.minecraft.entity.EntityLivingBase) anchor).renderYawOffset, tickDelta)
+                    : interp(anchor.prevRotationYaw, anchor.rotationYaw, tickDelta);
+            double turn = Math.toRadians(yaw - anchorYaw);
+            double cos = Math.cos(turn);
+            double sin = Math.sin(turn);
+            double ox = localX * cos - localZ * sin;
+            double oz = localX * sin + localZ * cos;
+            return new double[]{
+                    anchor.lastTickPosX + (anchor.posX - anchor.lastTickPosX) * tickDelta + ox,
+                    anchor.lastTickPosY + (anchor.posY - anchor.lastTickPosY) * tickDelta + localY,
+                    anchor.lastTickPosZ + (anchor.posZ - anchor.lastTickPosZ) * tickDelta + oz};
+        }
+
+        private static float interp(float previous, float current, float tickDelta) {
+            return previous + (current - previous) * tickDelta;
+        }
+
         void tick() {
+            if (anchored()) {
+                // Position comes from the anchor; nothing to integrate.
+                life--;
+                return;
+            }
             prevX = x;
             prevY = y;
             prevZ = z;
@@ -200,14 +255,17 @@ public final class FxParticles {
         }
 
         double renderX(float tickDelta) {
+            if (anchored()) return anchored(tickDelta)[0];
             return prevX + (x - prevX) * tickDelta;
         }
 
         double renderY(float tickDelta) {
+            if (anchored()) return anchored(tickDelta)[1];
             return prevY + (y - prevY) * tickDelta;
         }
 
         double renderZ(float tickDelta) {
+            if (anchored()) return anchored(tickDelta)[2];
             return prevZ + (z - prevZ) * tickDelta;
         }
 

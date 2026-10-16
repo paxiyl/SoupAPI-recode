@@ -110,6 +110,32 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Fifth round: shards that stick, and the last of the hairlines
+
+**Hit particles stick to the body.** The impact burst used to spawn at the hit point and fly off
+under its own motion, so on a moving target it was left behind within a tick or two. Particles can
+now be anchored to an entity: `FxParticles.Particle.attach(entity, localX, localY, localZ)` stores
+a body-local offset plus the entity's `renderYawOffset` at spawn time, `tick()` stops integrating
+motion for an anchored particle, and `renderX/Y/Z` rotate the offset by how far the body has turned
+since and add the entity's interpolated position. The result rides the target through knockback and
+turns with it instead of hanging in the air where the hit happened.
+
+`HitEffects.stick(...)` places them on the target's body cylinder — radius `max(0.2, width * 0.52)`,
+height between 0.2 and 0.95 of the entity's height — and gives them four to five times the burst's
+lifetime, so they read as embedded rather than as a flash. Shards, glass, arrows and runes each get
+their own glyph driven into the body; sparks, rings, cross, burst, stars and slash stay as free
+bursts, because a spark or a ring makes no sense stuck to a hitbox. The behaviour is a toggle,
+`Stick To Body`, on by default, next to the existing `Follow Target`.
+
+**The last three GL-line paths are gone.** The fourth round converted the box outlines and the
+trajectory path; three queues were still drawing real lines. `OUTLINE_SIDE_QUEUE` (the trajectory's
+landing face) now goes through a new `Render3D_Shapes.glowBoxSide(box, colour, lineWidth, side)`
+that picks the four corners for the given `EnumFacing` and emits each edge as an `Fx.glowLine`
+band; `DEBUG_LINE_QUEUE` draws as bands too; and `glowBox`'s edge width went from a flat 0.02 to
+`0.035 * max(1, lineWidth)`, so a configured line width now actually changes the thickness. No
+module reaches `DrawMode.LINES` any more — only `compat/VertexFormat` still names it, for the
+1.21.4 API surface.
+
 ## Fourth round: combat effects, and lines that are no longer lines
 
 Taken from the reference showcases, in-game visuals only — no GUI changes, no weapon rendering.
@@ -136,7 +162,7 @@ setting cannot eat the frame):
 **Symbol trails.** A trail can now be a line of symbols rather than a ribbon — the chain-trail idea
 from the showcase — which with 43 symbols is 43 trails rather than one.
 
-**157 selectable styles across 283 options.**
+**157 selectable styles across 284 options.**
 
 ## Third round: thick geometry, real symbols, themes that change the look
 

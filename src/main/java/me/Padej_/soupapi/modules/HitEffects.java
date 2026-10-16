@@ -81,25 +81,42 @@ public class HitEffects extends ConfigurableModule {
 
         switch (CONFIG.hitEffectsStyle) {
             case SHARDS:
-                burst(x, y, z, count, 0.22 * speed, size * 0.35f, life,
-                        TexturesManager.GLYPH_TRIANGLE, 0.012, false);
+                if (CONFIG.hitEffectsStick) {
+                    stick(target, count, size * 0.4f, life * 4, TexturesManager.GLYPH_TRIANGLE);
+                } else {
+                    burst(x, y, z, count, 0.22 * speed, size * 0.35f, life,
+                            TexturesManager.GLYPH_TRIANGLE, 0.012, false);
+                }
                 break;
             case GLASS:
-                burst(x, y, z, count * 2, 0.26 * speed, size * 0.22f, life,
-                        TexturesManager.GLYPH_DIAMOND_SUIT, 0.02, false);
+                if (CONFIG.hitEffectsStick) {
+                    stick(target, count * 2, size * 0.26f, life * 4, TexturesManager.GLYPH_DIAMOND_SUIT);
+                } else {
+                    burst(x, y, z, count * 2, 0.26 * speed, size * 0.22f, life,
+                            TexturesManager.GLYPH_DIAMOND_SUIT, 0.02, false);
+                }
                 ring(x, y, z, size * 0.5f, size * 1.6f, life, 0.0);
                 break;
             case ARROWS:
-                burst(x, y, z, count, 0.1 * speed, size * 0.45f, (int) (life * 1.6),
-                        TexturesManager.GLYPH_ARROW_HEAVY, 0.0, false);
+                if (CONFIG.hitEffectsStick) {
+                    stick(target, count, size * 0.5f, life * 5, TexturesManager.GLYPH_ARROW_HEAVY);
+                } else {
+                    burst(x, y, z, count, 0.1 * speed, size * 0.45f, (int) (life * 1.6),
+                            TexturesManager.GLYPH_ARROW_HEAVY, 0.0, false);
+                }
                 break;
             case SPARKS:
                 burst(x, y, z, count * 2, 0.34 * speed, size * 0.16f, life,
                         TexturesManager.FIREFLY, 0.03, false);
                 break;
             case RUNES:
-                burst(x, y, z, Math.max(3, count / 2), 0.14 * speed, size * 0.5f, (int) (life * 1.4),
-                        TexturesManager.getRandomGlyphParticle(), -0.004, false);
+                if (CONFIG.hitEffectsStick) {
+                    stick(target, Math.max(3, count / 2), size * 0.55f, life * 4,
+                            TexturesManager.getRandomGlyphParticle());
+                } else {
+                    burst(x, y, z, Math.max(3, count / 2), 0.14 * speed, size * 0.5f, (int) (life * 1.4),
+                            TexturesManager.getRandomGlyphParticle(), -0.004, false);
+                }
                 break;
             case RINGS:
                 ring(x, y, z, size * 0.3f, size * 1.4f, life, 0.0);
@@ -138,6 +155,29 @@ public class HitEffects extends ConfigurableModule {
     private static double driftX;
     private static double driftY;
     private static double driftZ;
+
+    /**
+     * Drives sprites into the target and leaves them there.
+     *
+     * <p>Spawn points sit on the surface of the body's cylinder - a random angle and a height over
+     * the torso and legs - and each one is attached to the entity, so the shards ride the target
+     * through knockback and turns instead of being left where the hit landed.
+     */
+    private static void stick(Entity target, int count, float size, int life,
+                              ResourceLocation texture) {
+        double radius = Math.max(0.2, target.width * 0.52);
+        for (int i = 0; i < count; i++) {
+            double angle = MathUtility.random(0f, (float) (Math.PI * 2));
+            double height = MathUtility.random(0.2f, 0.95f) * target.height;
+            double jitter = MathUtility.random(0.9f, 1.15f);
+            FxParticles.spawn(new FxParticles.Particle(
+                    target.posX, target.posY + height, target.posZ,
+                    life, size * (float) jitter, colour(i / (float) Math.max(1, count)))
+                    .texture(texture)
+                    .fadeIn()
+                    .attach(target, Math.cos(angle) * radius, height, Math.sin(angle) * radius));
+        }
+    }
 
     private static void burst(double x, double y, double z, int count, double speed, float size,
                               int life, ResourceLocation texture, double gravity, boolean flat) {

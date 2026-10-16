@@ -116,6 +116,7 @@ text.autoconfig.soupapi.option.hitEffectsOnlyPlayers=Only On Players
 text.autoconfig.soupapi.option.hitEffectsRandomColor=Random Color
 text.autoconfig.soupapi.option.hitEffectsScale=Scale
 text.autoconfig.soupapi.option.hitEffectsSpeed=Speed
+text.autoconfig.soupapi.option.hitEffectsStick=Stick To Body
 text.autoconfig.soupapi.option.hitEffectsStyle=Effect
 text.autoconfig.soupapi.option.hitParticleIncludeDollar=Dollar
 text.autoconfig.soupapi.option.hitParticleIncludeFirefly=Firefly
