@@ -41,17 +41,46 @@ public final class Camera {
         return tickDelta;
     }
 
-    /** The interpolated eye position of the camera entity. */
+    /**
+     * The world position the world pass is drawn around.
+     *
+     * <p>Every call site subtracts this from a world position to get camera-relative geometry, so
+     * it has to be the exact origin vanilla uses for the same job: {@code RenderManager.renderPosX/
+     * Y/Z}, which interpolate {@code lastTickPos} to {@code pos} and carry <b>no eye height</b>.
+     *
+     * <p>This previously added {@code getEyeHeight()}, on the reasoning that the camera sits at eye
+     * level. The camera does, but the origin does not — and everything the mod drew in the world
+     * was therefore about 1.62 blocks too low: jump circles and trails ended up under the ground
+     * where nothing could see them, and a hit bubble aimed at an opponent's chest landed at their
+     * feet.
+     */
     public Vec3 getPos() {
+        // Read vanilla's own value where it exists, so the two can never drift apart.
+        net.minecraft.client.renderer.entity.RenderManager manager =
+                Minecraft.getMinecraft().getRenderManager();
+        if (manager != null && (manager.viewerPosX != 0.0 || manager.viewerPosY != 0.0
+                || manager.viewerPosZ != 0.0)) {
+            return new Vec3(manager.viewerPosX, manager.viewerPosY, manager.viewerPosZ);
+        }
+
         Entity e = getFocusedEntity();
         if (e == null) {
             return new Vec3(0.0, 0.0, 0.0);
         }
-        double x = e.prevPosX + (e.posX - e.prevPosX) * tickDelta;
-        double y = e.prevPosY + (e.posY - e.prevPosY) * tickDelta;
-        double z = e.prevPosZ + (e.posZ - e.prevPosZ) * tickDelta;
-        // 1.8.9 stores the entity origin at the feet; the camera sits at eye height.
-        return new Vec3(x, y + e.getEyeHeight(), z);
+        double x = e.lastTickPosX + (e.posX - e.lastTickPosX) * tickDelta;
+        double y = e.lastTickPosY + (e.posY - e.lastTickPosY) * tickDelta;
+        double z = e.lastTickPosZ + (e.posZ - e.lastTickPosZ) * tickDelta;
+        return new Vec3(x, y, z);
+    }
+
+    /** The interpolated eye position, for ray casts and anything measured from the viewer's eyes. */
+    public Vec3 getEyePos() {
+        Entity e = getFocusedEntity();
+        if (e == null) {
+            return new Vec3(0.0, 0.0, 0.0);
+        }
+        Vec3 pos = getPos();
+        return new Vec3(pos.xCoord, pos.yCoord + e.getEyeHeight(), pos.zCoord);
     }
 
     /** Alias of {@link #getPos()}; MCP spells Entity's equivalent {@code getPositionVector}. */

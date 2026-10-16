@@ -122,6 +122,7 @@ public final class ForgeEventBridge {
         guard("overlayReload", OverlayReloadListener::callEvent);
 
         guard("Trails.tick", Trails::onTick);
+        guard("PlayerEffects.tick", me.Padej_.soupapi.modules.PlayerEffects::onTick);
         guard("JumpCircles.tick", JumpCircles::onTick);
         guard("TargetHud.tick", TargetHud::onTick);
         guard("RPC.tick", RPC::onTick);
@@ -166,6 +167,7 @@ public final class ForgeEventBridge {
         guard("AmbientParticle", () -> AmbientParticle.render(context));
 
         guard("ColoredSky", me.Padej_.soupapi.modules.ColoredSky::render);
+        guard("PlayerEffects", () -> me.Padej_.soupapi.modules.PlayerEffects.render(context));
         guard("FriendsHighlight", () -> me.Padej_.soupapi.modules.FriendsHighlight.render(context));
         guard("Render3D_Shapes", () -> Render3D_Shapes.render(context));
 

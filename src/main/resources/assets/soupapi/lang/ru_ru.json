@@ -1,6 +1,5 @@
 {
   "text.autoconfig.soupapi.title": "§lНастройки SoupAPI",
-
   "text.autoconfig.soupapi.option.configPos_BUTTON": "Открыть меню позиций конфига",
   "text.autoconfig.soupapi.option.translatorBruhEnabled": "Переводчик (RU 2 ENG)",
   "text.autoconfig.soupapi.option.friends.@PrefixText": "Друзья",
@@ -29,7 +28,6 @@
   "text.autoconfig.soupapi.option.textColor": "Цвет текста",
   "text.autoconfig.soupapi.option.backColor": "Цвет фона",
   "text.autoconfig.soupapi.option.backAlpha": "Прозрачность фона",
-
   "text.autoconfig.soupapi.category.trails": "Trails",
   "text.autoconfig.soupapi.option.trailsEnabled": "Включено",
   "text.autoconfig.soupapi.option.trailsFirstPerson": "От первого лица",
@@ -39,7 +37,6 @@
   "text.autoconfig.soupapi.option.trailsLenght": "Длина",
   "text.autoconfig.soupapi.option.trailsHeight": "Высота",
   "text.autoconfig.soupapi.option.trailsAlphaFactor": "Прозрачность",
-
   "text.autoconfig.soupapi.category.china_hat": "China Hat",
   "text.autoconfig.soupapi.option.chinaHatEnabled": "Включено",
   "text.autoconfig.soupapi.option.chinaHatRenderHalf": "Половинная отрисовка",
@@ -49,7 +46,6 @@
   "text.autoconfig.soupapi.option.chinaHatTipHeight": "Высота",
   "text.autoconfig.soupapi.option.chinaHatBaseRadius.@PrefixText": "Настройки основания",
   "text.autoconfig.soupapi.option.chinaHatBaseRadius": "Радиус",
-
   "text.autoconfig.soupapi.category.halo": "Halo",
   "text.autoconfig.soupapi.option.haloEnabled": "Включено",
   "text.autoconfig.soupapi.option.haloSoulRenderSoulStyle.@PrefixText": "Настройки стиля SOUL",
@@ -61,7 +57,6 @@
   "text.autoconfig.soupapi.option.haloSoulEndSize": "Конечный размер",
   "text.autoconfig.soupapi.option.haloSoulScale": "Масштаб",
   "text.autoconfig.soupapi.option.haloSoulSubdivision": "Подразделение",
-
   "text.autoconfig.soupapi.category.jump_particles": "Jump Particles",
   "text.autoconfig.soupapi.option.jumpParticlesEnabled": "Включено",
   "text.autoconfig.soupapi.option.jumpParticlesIncludeFirefly": "Светлячок",
@@ -76,7 +71,6 @@
   "text.autoconfig.soupapi.option.jumpParticlesCount": "Количество",
   "text.autoconfig.soupapi.option.jumpParticlesLiveTime": "Время жизни",
   "text.autoconfig.soupapi.option.jumpParticlesScale": "Масштаб",
-
   "text.autoconfig.soupapi.category.jump_circles": "Jump Circles",
   "text.autoconfig.soupapi.option.jumpCirclesEnabled": "Включено",
   "text.autoconfig.soupapi.option.jumpCirclesFadeOut": "Затухание",
@@ -87,7 +81,6 @@
   "text.autoconfig.soupapi.option.jumpCirclesScale": "Масштаб",
   "text.autoconfig.soupapi.option.jumpCirclesLiveTime": "Время жизни",
   "text.autoconfig.soupapi.option.jumpCirclesSpinSpeed": "Скорость вращения",
-
   "text.autoconfig.soupapi.category.world": "World",
   "text.autoconfig.soupapi.option.ambientParticlesEnabled.@PrefixText": "Фоновые частицы",
   "text.autoconfig.soupapi.option.ambientParticlesEnabled": "Включено",
@@ -120,7 +113,6 @@
   "text.autoconfig.soupapi.option.customFogStart": "Начало",
   "text.autoconfig.soupapi.option.customFogEnd": "Конец",
   "text.autoconfig.soupapi.option.customFogDensity": "Плотность",
-
   "text.autoconfig.soupapi.category.target_render": "Target Render",
   "text.autoconfig.soupapi.option.targetRenderEnabled": "Включено",
   "text.autoconfig.soupapi.option.targetRenderOnlyPlayers": "Только игроки",
@@ -146,7 +138,6 @@
   "text.autoconfig.soupapi.option.targetRenderTopkaRadius.@PrefixText": "Настройки стиля TOPKA",
   "text.autoconfig.soupapi.option.targetRenderTopkaRadius": "Радиус",
   "text.autoconfig.soupapi.option.targetRenderTopkaSpeed": "Скорость",
-
   "text.autoconfig.soupapi.category.target_hud": "Target HUD",
   "text.autoconfig.soupapi.option.targetHudEnabled": "Включено",
   "text.autoconfig.soupapi.option.targetHudFollow": "Следовать",
@@ -166,7 +157,6 @@
   "text.autoconfig.soupapi.option.targetHudOffsetY": "Позиция Y",
   "text.autoconfig.soupapi.option.targetHudEntityOffsetX": "Позиция X сущности",
   "text.autoconfig.soupapi.option.targetHudEntityOffsetY": "Позиция Y сущности",
-
   "text.autoconfig.soupapi.category.hud": "HUD",
   "text.autoconfig.soupapi.option.hudBetterHotbarEnabled.@PrefixText": "Хотбар",
   "text.autoconfig.soupapi.option.hudBetterHotbarEnabled": "Включено",
@@ -183,13 +173,11 @@
   "text.autoconfig.soupapi.option.hudBetterPotionsHudToRoman": "Арабские цифры в римские",
   "text.autoconfig.soupapi.option.hudBetterPotionsHudX": "Позиция X",
   "text.autoconfig.soupapi.option.hudBetterPotionsHudY": "Позиция Y",
-
   "text.autoconfig.soupapi.category.hit_bubbles": "Hit Bubbles",
   "text.autoconfig.soupapi.option.hitBubblesEnabled": "Включено",
   "text.autoconfig.soupapi.option.hitBubblesStyle": "Стиль",
   "text.autoconfig.soupapi.option.hitBubblesRenderTime": "Время жизни",
   "text.autoconfig.soupapi.option.hitBubblesScale": "Масштаб",
-
   "text.autoconfig.soupapi.category.hit_sound": "Hit Sound",
   "text.autoconfig.soupapi.option.hitSoundEnabled": "Включено",
   "text.autoconfig.soupapi.option.hitSoundRandomPitch": "Случайная высота",
@@ -204,12 +192,10 @@
   "text.autoconfig.soupapi.option.hitSoundOverwriteKnockbackVolume": "Громкость отбрасывающего удара",
   "text.autoconfig.soupapi.option.hitSoundOverwriteStrongVolume": "Громкость сильного удара",
   "text.autoconfig.soupapi.option.hitSoundOverwriteWeakVolume": "Громкость слабого удара",
-
   "text.autoconfig.soupapi.category.rpc": "RPC",
   "text.autoconfig.soupapi.option.rpcEnabled": "Включить",
   "text.autoconfig.soupapi.option.rpcState": "Формат состояния",
   "text.autoconfig.soupapi.option.rpcCustomStateText": "Пользовательский текст состояния",
-
   "text.autoconfig.soupapi.category.swing_hand": "Swing Hand",
   "text.autoconfig.soupapi.option.swingHandEnabled": "Включить",
   "text.autoconfig.soupapi.option.swingHandConfig_BUTTON": "Открыть экран настроек",
@@ -224,13 +210,11 @@
   "text.autoconfig.soupapi.option.swingHand_ySwingRot": "Поворот взмаха Y",
   "text.autoconfig.soupapi.option.swingHand_zSwingRot": "Поворот взмаха Z",
   "text.autoconfig.soupapi.option.swingHand_speed": "Скорость",
-
   "text.autoconfig.soupapi.category.aspect_ratio": "Aspect Ratio",
   "text.autoconfig.soupapi.option.aspectRatioEnabled": "Включить",
   "text.autoconfig.soupapi.option.aspectRatioUsePreset": "Использовать пресет",
   "text.autoconfig.soupapi.option.aspectRatioFactor": "Ручной коэффициент",
   "text.autoconfig.soupapi.option.aspectRatioPreset": "Пресет",
-
   "text.autoconfig.soupapi.category.no_render": "No Render",
   "text.autoconfig.soupapi.option.noFireOverlayEnabled.@PrefixText": "Оверлей огня",
   "text.autoconfig.soupapi.option.noFireOverlayEnabled": "Включено",
@@ -238,7 +222,6 @@
   "text.autoconfig.soupapi.option.noFireOverlayY": "Позиция Y",
   "text.autoconfig.soupapi.option.noFireOverlayAlpha": "Прозрачность",
   "text.autoconfig.soupapi.option.noFireOverlayCustomColor": "Цвет",
-
   "text.autoconfig.soupapi.category.totem": "Totem",
   "text.autoconfig.soupapi.option.totemOverwriteScaleEnable.@PrefixText": "Масштаб всплытия тотема",
   "text.autoconfig.soupapi.option.totemOverwriteScaleEnable": "Включено",
@@ -261,7 +244,6 @@
   "text.autoconfig.soupapi.option.totemPopParticlesSpeed": "Скорость",
   "text.autoconfig.soupapi.option.totemPopParticlesRenderTime": "Время жизни",
   "text.autoconfig.soupapi.option.totemPopParticlesScale": "Масштаб",
-
   "text.autoconfig.soupapi.category.hit_particles": "Hit Particles",
   "text.autoconfig.soupapi.option.hitParticlesEnabled": "Включено",
   "text.autoconfig.soupapi.option.hitParticlesSelf": "Себя",
@@ -283,7 +265,6 @@
   "text.autoconfig.soupapi.option.hitParticlesRenderTime": "Время жизни",
   "text.autoconfig.soupapi.option.hitParticlesTextScale": "Масштаб текста",
   "text.autoconfig.soupapi.option.hitParticlesScale": "Масштаб",
-
   "text.autoconfig.soupapi.category.capes": "Cape",
   "text.autoconfig.soupapi.option.capesEnabled": "Включено",
   "text.autoconfig.soupapi.option.selectCape_BUTTON": "Открыть экран выбора плаща",
@@ -292,24 +273,35 @@
   "text.autoconfig.soupapi.option.customCapesEnabled": "Включено",
   "text.autoconfig.soupapi.option.customCapesLink": "Ссылка",
   "text.autoconfig.soupapi.option.updateCape_BUTTON": "Обновить пользовательский плащ",
-
   "text.autoconfig.soupapi.category.mouse_move": "Mouse Move",
   "text.autoconfig.soupapi.option.mouseMoveEnabled": "Включено",
   "text.autoconfig.soupapi.option.mouseMoveBlur": "Размытие",
   "text.autoconfig.soupapi.option.mouseMoveX.@PrefixText": "Позиция",
   "text.autoconfig.soupapi.option.mouseMoveX": "Позиция X",
   "text.autoconfig.soupapi.option.mouseMoveY": "Позиция Y",
-
   "text.autoconfig.soupapi.category.hit_color": "Hit Color",
   "text.autoconfig.soupapi.option.hitColorEnabled": "Включено",
   "text.autoconfig.soupapi.option.hitColorCustomColor": "Пользовательский цвет",
   "text.autoconfig.soupapi.option.hitColorColor": "Цвет",
   "text.autoconfig.soupapi.option.hitColorAlpha": "Прозрачность",
-
   "text.autoconfig.soupapi.category.trajectories": "Trajectories",
   "text.autoconfig.soupapi.option.trajectoriesPreviewEnabled": "Включено",
   "text.autoconfig.soupapi.option.trajectoriesPreviewLandSideOutline": "Контур стороны",
   "text.autoconfig.soupapi.option.trajectoriesPreviewLandSideFill": "Заливка стороны",
-
-  "": ""
+  "": "",
+  "text.autoconfig.soupapi.category.player_effects": "Эффекты игрока",
+  "text.autoconfig.soupapi.option.playerEffectsEnabled": "Включено",
+  "text.autoconfig.soupapi.option.playerEffectsStyle": "Эффект",
+  "text.autoconfig.soupapi.option.playerEffectsTarget": "Применять к",
+  "text.autoconfig.soupapi.option.playerEffectsFirstPerson": "Показывать от первого лица",
+  "text.autoconfig.soupapi.option.playerEffectsRandomColor": "Случайный цвет",
+  "text.autoconfig.soupapi.option.playerEffectsScale": "Размер",
+  "text.autoconfig.soupapi.option.playerEffectsSpeed": "Скорость",
+  "text.autoconfig.soupapi.option.playerEffectsAlpha": "Прозрачность",
+  "text.autoconfig.soupapi.option.playerEffectsCount": "Плотность",
+  "text.autoconfig.soupapi.option.playerEffectsScale.@PrefixText": "Форма",
+  "text.autoconfig.soupapi.option.playerEffectsGhostCount": "Количество призраков",
+  "text.autoconfig.soupapi.option.playerEffectsGhostInterval": "Интервал призраков (тики)",
+  "text.autoconfig.soupapi.option.playerEffectsGhostCount.@PrefixText": "Призрак",
+  "text.autoconfig.soupapi.option.trailsTarget": "Применять к"
 }

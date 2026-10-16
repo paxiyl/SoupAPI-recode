@@ -44,16 +44,19 @@ public class JumpCircles extends ConfigurableModule {
     private static boolean wasJumping = false;
 
     public static void onTick() {
-        if (mc.thePlayer != null) {
-            EntityPlayer player = mc.thePlayer;
-            boolean isJumping = !player.onGround;
+        if (mc.thePlayer == null) return;
+        EntityPlayer player = mc.thePlayer;
+        boolean airborne = !player.onGround;
 
-            if (isJumping && !wasJumping && mc.gameSettings.keyBindJump.isKeyDown()) {
-                CIRCLES.add(new JumpCircle(player.getPositionVector()));
-            }
-
-            wasJumping = isJumping;
+        // Fires on leaving the ground with upward motion. The old test also required the jump key
+        // to still be held on the tick the player left the ground, which is a coin toss with a
+        // touch control - on PojavLauncher the button is usually released by then, so most jumps
+        // produced no circle at all.
+        if (airborne && !wasJumping && player.motionY > 0.0) {
+            CIRCLES.add(new JumpCircle(player.getPositionVector()));
         }
+
+        wasJumping = airborne;
     }
 
     public static void renderCircles(WorldRenderContext context) {

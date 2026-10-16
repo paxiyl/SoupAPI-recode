@@ -89,9 +89,9 @@ public class SoupAPI_Config implements ConfigData {
     public boolean trailsRenderHalf = false;
     @ConfigEntry.Category("trails")
     public boolean trailsForGliders = false;
-    //    @ConfigEntry.Category("trails")
-//    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-//    public Trails.Targets trailsTarget = Trails.Targets.PLAYERS;
+    @ConfigEntry.Category("trails")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Trails.Targets trailsTarget = Trails.Targets.BOTH;
     @ConfigEntry.Category("trails")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Trails.Style trailsStyle = Trails.Style.FADED;
@@ -104,6 +104,44 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("trails")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
     public int trailsAlphaFactor = 100;
+
+    /**
+     * PLAYER EFFECTS
+     **/
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsEnabled = false;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Style playerEffectsStyle = PlayerEffects.Style.GHOST;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Target playerEffectsTarget = PlayerEffects.Target.BOTH;
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsFirstPerson = false;
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsRandomColor = false;
+
+    @ConfigEntry.Gui.PrefixText // Shape
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int playerEffectsScale = 100;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int playerEffectsSpeed = 100;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int playerEffectsAlpha = 70;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 24)
+    public int playerEffectsCount = 8;
+
+    @ConfigEntry.Gui.PrefixText // Ghost
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 16)
+    public int playerEffectsGhostCount = 6;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 20)
+    public int playerEffectsGhostInterval = 3;
 
     /**
      * CHINA HAT

@@ -4,7 +4,6 @@ import me.Padej_.soupapi.compat.ShaderKey;
 
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
-import me.Padej_.soupapi.interfaces.TrailEntity;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.EntityUtils;
@@ -22,52 +21,83 @@ import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class Trails extends ConfigurableModule {
 
+    /**
+     * Per-entity trail history.
+     *
+     * <p>1.21.4 stored this on the entity itself through a mixin-implemented {@code TrailEntity}
+     * interface. There are no mixins here, so nothing implemented it and every tick threw a
+     * {@link ClassCastException} on the first player it looked at — which is why trails did nothing
+     * whatever they were set to. A weak-keyed side map does the same job without touching the
+     * entity class, and lets entities be collected with the world.
+     */
+    private static final Map<Entity, List<TrailSegment>> TRAILS =
+            new WeakHashMap<Entity, List<TrailSegment>>();
+
+    private static List<TrailSegment> trailsOf(Entity entity) {
+        List<TrailSegment> list = TRAILS.get(entity);
+        if (list == null) {
+            list = new ArrayList<TrailSegment>();
+            TRAILS.put(entity, list);
+        }
+        return list;
+    }
+
+    /** Whether this entity should leave a trail, by the configured target. */
+    public static boolean isTarget(Entity entity) {
+        boolean self = entity == mc.thePlayer;
+        switch (CONFIG.trailsTarget) {
+            case SELF:
+                return self;
+            case OTHERS:
+                return !self;
+            case BOTH:
+            default:
+                return true;
+        }
+    }
+
     public static void onTick() {
-        if (mc.thePlayer == null) return;
-        if (!CONFIG.trailsEnabled) return;
+        if (mc.thePlayer == null || mc.theWorld == null) return;
+        if (!CONFIG.trailsEnabled) {
+            if (!TRAILS.isEmpty()) TRAILS.clear();
+            return;
+        }
 
         int trailLifetime = CONFIG.trailsLenght;
         float minStep = 0.001f;
 
         for (EntityPlayer player : mc.theWorld.playerEntities) {
-            // Добавляем сегмент, если есть любое движение
+            if (!isTarget(player)) continue;
             Vec3 prevPos = new Vec3(player.prevPosX, player.prevPosY, player.prevPosZ);
             Vec3 currentPos = player.getPositionVector();
-            if (prevPos.distanceTo(currentPos) > minStep) { // Минимальный порог для избежания дребезга
-                ((TrailEntity) player).soupAPI$getTrails().add(new TrailSegment(
-                        prevPos,
-                        currentPos,
-                        trailLifetime
-                ));
+            List<TrailSegment> trails = trailsOf(player);
+            if (prevPos.distanceTo(currentPos) > minStep) {
+                trails.add(new TrailSegment(prevPos, currentPos, trailLifetime));
             }
-            ((TrailEntity) player).soupAPI$getTrails().removeIf(TrailSegment::update);
+            trails.removeIf(TrailSegment::update);
         }
 
+        // Anything else alive, when the option asks for it. Elytra are 1.9+, so on 1.8.9 this is
+        // "other living entities" rather than "gliders".
         if (CONFIG.trailsForGliders) {
             for (Entity entity : mc.theWorld.loadedEntityList) {
-                if (entity == mc.thePlayer || !(entity instanceof EntityLivingBase)) {
-                    continue;
-                }
-                EntityLivingBase livingEntity = (EntityLivingBase) entity;
-                if (!false /* elytra is 1.9+ */) {
-                    continue;
-                }
+                if (entity instanceof EntityPlayer || !(entity instanceof EntityLivingBase)) continue;
+                if (!isTarget(entity)) continue;
 
                 Vec3 prevPos = new Vec3(entity.prevPosX, entity.prevPosY, entity.prevPosZ);
                 Vec3 currentPos = entity.getPositionVector();
-                float yOffset = entity.height / 2;
+                List<TrailSegment> trails = trailsOf(entity);
                 if (prevPos.distanceTo(currentPos) > minStep) {
-                    ((TrailEntity) entity).soupAPI$getTrails().add(new TrailSegment(
-                            prevPos.addVector(0, -yOffset, 0),
-                            currentPos.addVector(0, -yOffset, 0),
-                            trailLifetime
-                    ));
+                    trails.add(new TrailSegment(prevPos, currentPos, trailLifetime));
                 }
-                ((TrailEntity) entity).soupAPI$getTrails().removeIf(TrailSegment::update);
+                trails.removeIf(TrailSegment::update);
             }
         }
     }
@@ -90,17 +120,18 @@ public class Trails extends ConfigurableModule {
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        for (Entity entity : mc.theWorld.loadedEntityList) {
-            if ((entity instanceof EntityPlayer && !EntityUtils.isFriend(entity) && entity != mc.thePlayer) ||
-                    (!CONFIG.trailsForGliders && entity != mc.thePlayer && !(entity instanceof EntityPlayer)))
-                continue;
+        for (Map.Entry<Entity, List<TrailSegment>> entry : TRAILS.entrySet()) {
+            Entity entity = entry.getKey();
+            if (entity == null || entity.isDead || !(entity instanceof EntityLivingBase)) continue;
+            if (!isTarget(entity)) continue;
+            if (entity != mc.thePlayer && !(entity instanceof EntityPlayer) && !CONFIG.trailsForGliders) continue;
 
+            // Your own trail is invisible from inside your own head unless you ask for it.
             if (entity == mc.thePlayer && mc.gameSettings.thirdPersonView == 0 && !CONFIG.trailsFirstPerson)
                 continue;
-            if (!(entity instanceof EntityLivingBase) || !mc.thePlayer.canEntityBeSeen(entity)) continue;
 
-            List<TrailSegment> trails = ((TrailEntity) entity).soupAPI$getTrails();
-            if (trails.isEmpty()) continue;
+            List<TrailSegment> trails = entry.getValue();
+            if (trails == null || trails.isEmpty()) continue;
 
             float height = entity.height * (CONFIG.trailsHeight / 100f);
             int baseAlpha = 255;
@@ -151,6 +182,26 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = (int) (computeFadedAlphaInvert(0, height) * (nextAlphaFactor / 255.0f));
                     nextMidAlpha = (int) (computeFadedAlphaInvert(height / 2.0f, height) * (nextAlphaFactor / 255.0f));
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (computeFadedAlphaInvert(height, height) * (nextAlphaFactor / 255.0f));
+                } else if (CONFIG.trailsStyle == Trails.Style.PULSE) {
+                    // A wave of brightness travelling back along the trail.
+                    float wave = (float) (0.55 + 0.45 * Math.sin(
+                            currentProgressColor * Math.PI * 4 - System.currentTimeMillis() / 160.0));
+                    float waveNext = (float) (0.55 + 0.45 * Math.sin(
+                            nextProgressColor * Math.PI * 4 - System.currentTimeMillis() / 160.0));
+                    currentBottomAlpha = (int) (currentAlphaFactor * wave);
+                    currentMidAlpha = (int) (currentAlphaFactor * wave);
+                    currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (currentAlphaFactor * wave * 0.4f);
+                    nextBottomAlpha = (int) (nextAlphaFactor * waveNext);
+                    nextMidAlpha = (int) (nextAlphaFactor * waveNext);
+                    nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (nextAlphaFactor * waveNext * 0.4f);
+                } else if (CONFIG.trailsStyle == Trails.Style.GRADIENT) {
+                    // Solid at the feet, gone by the top, and fading with age along its length.
+                    currentBottomAlpha = (int) currentAlphaFactor;
+                    currentMidAlpha = (int) (currentAlphaFactor * 0.5f);
+                    currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : 0;
+                    nextBottomAlpha = (int) nextAlphaFactor;
+                    nextMidAlpha = (int) (nextAlphaFactor * 0.5f);
+                    nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : 0;
                 } else { // SOLID
                     currentBottomAlpha = (int) currentAlphaFactor;
                     currentMidAlpha = (int) currentAlphaFactor;
@@ -269,10 +320,11 @@ public class Trails extends ConfigurableModule {
     }
 
     public enum Style {
-        FADED, SOLID, FADED_INVERT
+        FADED, SOLID, FADED_INVERT, GRADIENT, PULSE
     }
 
+    /** Who leaves a trail. */
     public enum Targets {
-        PLAYERS, PROJECTILES, BOTH
+        SELF, OTHERS, BOTH
     }
 }

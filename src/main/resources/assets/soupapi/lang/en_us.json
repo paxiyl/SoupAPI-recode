@@ -1,6 +1,5 @@
 {
   "text.autoconfig.soupapi.title": "§lSoupAPI settings",
-
   "text.autoconfig.soupapi.option.configPos_BUTTON": "Open Config Pos Screen",
   "text.autoconfig.soupapi.option.translatorBruhEnabled": "Bruh Translator (RU 2 ENG)",
   "text.autoconfig.soupapi.option.friends.@PrefixText": "Friends",
@@ -29,7 +28,6 @@
   "text.autoconfig.soupapi.option.textColor": "Text Color",
   "text.autoconfig.soupapi.option.backColor": "Background Color",
   "text.autoconfig.soupapi.option.backAlpha": "Background Alpha",
-
   "text.autoconfig.soupapi.category.trails": "Trails",
   "text.autoconfig.soupapi.option.trailsEnabled": "Enabled",
   "text.autoconfig.soupapi.option.trailsFirstPerson": "First Person",
@@ -39,7 +37,6 @@
   "text.autoconfig.soupapi.option.trailsLenght": "Lenght",
   "text.autoconfig.soupapi.option.trailsHeight": "Height",
   "text.autoconfig.soupapi.option.trailsAlphaFactor": "Alpha",
-
   "text.autoconfig.soupapi.category.china_hat": "China Hat",
   "text.autoconfig.soupapi.option.chinaHatEnabled": "Enabled",
   "text.autoconfig.soupapi.option.chinaHatRenderHalf": "Render Half",
@@ -49,7 +46,6 @@
   "text.autoconfig.soupapi.option.chinaHatTipHeight": "Height",
   "text.autoconfig.soupapi.option.chinaHatBaseRadius.@PrefixText": "Base Settings",
   "text.autoconfig.soupapi.option.chinaHatBaseRadius": "Radius",
-
   "text.autoconfig.soupapi.category.halo": "Halo",
   "text.autoconfig.soupapi.option.haloEnabled": "Enabled",
   "text.autoconfig.soupapi.option.haloSoulRenderSoulStyle.@PrefixText": "SOUL Style Settings",
@@ -61,7 +57,6 @@
   "text.autoconfig.soupapi.option.haloSoulEndSize": "End Size",
   "text.autoconfig.soupapi.option.haloSoulScale": "Scale",
   "text.autoconfig.soupapi.option.haloSoulSubdivision": "Subdivision",
-
   "text.autoconfig.soupapi.category.jump_particles": "Jump Particles",
   "text.autoconfig.soupapi.option.jumpParticlesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.jumpParticlesIncludeFirefly": "Firefly",
@@ -76,7 +71,6 @@
   "text.autoconfig.soupapi.option.jumpParticlesCount": "Count",
   "text.autoconfig.soupapi.option.jumpParticlesLiveTime": "Live Time",
   "text.autoconfig.soupapi.option.jumpParticlesScale": "Scale",
-
   "text.autoconfig.soupapi.category.jump_circles": "Jump Circles",
   "text.autoconfig.soupapi.option.jumpCirclesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.jumpCirclesFadeOut": "Fade Out",
@@ -87,7 +81,6 @@
   "text.autoconfig.soupapi.option.jumpCirclesScale": "Scale",
   "text.autoconfig.soupapi.option.jumpCirclesLiveTime": "Live Time",
   "text.autoconfig.soupapi.option.jumpCirclesSpinSpeed": "Spin Speed",
-
   "text.autoconfig.soupapi.category.world": "World",
   "text.autoconfig.soupapi.option.ambientParticlesEnabled.@PrefixText": "Ambient Particles",
   "text.autoconfig.soupapi.option.ambientParticlesEnabled": "Enabled",
@@ -120,7 +113,6 @@
   "text.autoconfig.soupapi.option.customFogStart": "Start",
   "text.autoconfig.soupapi.option.customFogEnd": "End",
   "text.autoconfig.soupapi.option.customFogDensity": "Density",
-
   "text.autoconfig.soupapi.category.target_render": "Target Render",
   "text.autoconfig.soupapi.option.targetRenderEnabled": "Enabled",
   "text.autoconfig.soupapi.option.targetRenderOnlyPlayers": "Only Players",
@@ -146,7 +138,6 @@
   "text.autoconfig.soupapi.option.targetRenderTopkaRadius.@PrefixText": "TOPKA Style Settings",
   "text.autoconfig.soupapi.option.targetRenderTopkaRadius": "Radius",
   "text.autoconfig.soupapi.option.targetRenderTopkaSpeed": "Speed",
-
   "text.autoconfig.soupapi.category.target_hud": "Target HUD",
   "text.autoconfig.soupapi.option.targetHudEnabled": "Enabled",
   "text.autoconfig.soupapi.option.targetHudFollow": "Follow",
@@ -166,7 +157,6 @@
   "text.autoconfig.soupapi.option.targetHudOffsetY": "Offset Y",
   "text.autoconfig.soupapi.option.targetHudEntityOffsetX": "Entity Offset X",
   "text.autoconfig.soupapi.option.targetHudEntityOffsetY": "Entity Offset Y",
-
   "text.autoconfig.soupapi.category.hud": "HUD",
   "text.autoconfig.soupapi.option.hudBetterHotbarEnabled.@PrefixText": "Hotbar",
   "text.autoconfig.soupapi.option.hudBetterHotbarEnabled": "Enabled",
@@ -183,13 +173,11 @@
   "text.autoconfig.soupapi.option.hudBetterPotionsHudToRoman": "Arabic Numbers To Roman",
   "text.autoconfig.soupapi.option.hudBetterPotionsHudX": "Offset X",
   "text.autoconfig.soupapi.option.hudBetterPotionsHudY": "Offset Y",
-
   "text.autoconfig.soupapi.category.hit_bubbles": "Hit Bubbles",
   "text.autoconfig.soupapi.option.hitBubblesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.hitBubblesStyle": "Style",
   "text.autoconfig.soupapi.option.hitBubblesRenderTime": "Live Time",
   "text.autoconfig.soupapi.option.hitBubblesScale": "Scale",
-
   "text.autoconfig.soupapi.category.hit_sound": "Hit Sound",
   "text.autoconfig.soupapi.option.hitSoundEnabled": "Enabled",
   "text.autoconfig.soupapi.option.hitSoundRandomPitch": "Random Pitch",
@@ -204,12 +192,10 @@
   "text.autoconfig.soupapi.option.hitSoundOverwriteKnockbackVolume": "Knockback Attack Volume",
   "text.autoconfig.soupapi.option.hitSoundOverwriteStrongVolume": "Strong Attack Volume",
   "text.autoconfig.soupapi.option.hitSoundOverwriteWeakVolume": "Weak Attack Volume",
-
   "text.autoconfig.soupapi.category.rpc": "RPC",
   "text.autoconfig.soupapi.option.rpcEnabled": "Enable",
   "text.autoconfig.soupapi.option.rpcState": "State Format",
   "text.autoconfig.soupapi.option.rpcCustomStateText": "Custom State Text",
-
   "text.autoconfig.soupapi.category.swing_hand": "Swing Hand",
   "text.autoconfig.soupapi.option.swingHandEnabled": "Enable",
   "text.autoconfig.soupapi.option.swingHandConfig_BUTTON": "Open Config Screen",
@@ -224,13 +210,11 @@
   "text.autoconfig.soupapi.option.swingHand_ySwingRot": "Swing Rotation Y",
   "text.autoconfig.soupapi.option.swingHand_zSwingRot": "Swing Rotation Z",
   "text.autoconfig.soupapi.option.swingHand_speed": "Speed",
-
   "text.autoconfig.soupapi.category.aspect_ratio": "Aspect Ratio",
   "text.autoconfig.soupapi.option.aspectRatioEnabled": "Enable",
   "text.autoconfig.soupapi.option.aspectRatioUsePreset": "Use Preset",
   "text.autoconfig.soupapi.option.aspectRatioFactor": "Manual Factor",
   "text.autoconfig.soupapi.option.aspectRatioPreset": "Preset",
-
   "text.autoconfig.soupapi.category.no_render": "No Render",
   "text.autoconfig.soupapi.option.noFireOverlayEnabled.@PrefixText": "Fire Overlay",
   "text.autoconfig.soupapi.option.noFireOverlayEnabled": "Enabled",
@@ -238,7 +222,6 @@
   "text.autoconfig.soupapi.option.noFireOverlayY": "Offset Y",
   "text.autoconfig.soupapi.option.noFireOverlayAlpha": "Alpha",
   "text.autoconfig.soupapi.option.noFireOverlayCustomColor": "Color",
-
   "text.autoconfig.soupapi.category.totem": "Totem",
   "text.autoconfig.soupapi.option.totemOverwriteScaleEnable.@PrefixText": "Totem Pop Scale",
   "text.autoconfig.soupapi.option.totemOverwriteScaleEnable": "Enabled",
@@ -261,7 +244,6 @@
   "text.autoconfig.soupapi.option.totemPopParticlesSpeed": "Speed",
   "text.autoconfig.soupapi.option.totemPopParticlesRenderTime": "Live Time",
   "text.autoconfig.soupapi.option.totemPopParticlesScale": "Scale",
-
   "text.autoconfig.soupapi.category.hit_particles": "Hit Particles",
   "text.autoconfig.soupapi.option.hitParticlesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.hitParticlesSelf": "Self",
@@ -283,7 +265,6 @@
   "text.autoconfig.soupapi.option.hitParticlesRenderTime": "Live Time",
   "text.autoconfig.soupapi.option.hitParticlesTextScale": "Text Scale",
   "text.autoconfig.soupapi.option.hitParticlesScale": "Scale",
-
   "text.autoconfig.soupapi.category.capes": "Cape",
   "text.autoconfig.soupapi.option.capesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.selectCape_BUTTON": "Open Select Cape Screen",
@@ -292,24 +273,35 @@
   "text.autoconfig.soupapi.option.customCapesEnabled": "Enabled",
   "text.autoconfig.soupapi.option.customCapesLink": "Link",
   "text.autoconfig.soupapi.option.updateCape_BUTTON": "Update Custom Cape",
-
   "text.autoconfig.soupapi.category.mouse_move": "Mouse Move",
   "text.autoconfig.soupapi.option.mouseMoveEnabled": "Enabled",
   "text.autoconfig.soupapi.option.mouseMoveBlur": "Blur",
   "text.autoconfig.soupapi.option.mouseMoveX.@PrefixText": "Position",
   "text.autoconfig.soupapi.option.mouseMoveX": "Offset X",
   "text.autoconfig.soupapi.option.mouseMoveY": "Offset Y",
-
   "text.autoconfig.soupapi.category.hit_color": "Hit Color",
   "text.autoconfig.soupapi.option.hitColorEnabled": "Enabled",
   "text.autoconfig.soupapi.option.hitColorCustomColor": "Custom Color",
   "text.autoconfig.soupapi.option.hitColorColor": "Color",
   "text.autoconfig.soupapi.option.hitColorAlpha": "Alpha",
-
   "text.autoconfig.soupapi.category.trajectories": "Trajectories",
   "text.autoconfig.soupapi.option.trajectoriesPreviewEnabled": "Enabled",
   "text.autoconfig.soupapi.option.trajectoriesPreviewLandSideOutline": "Side Outline",
   "text.autoconfig.soupapi.option.trajectoriesPreviewLandSideFill": "Side Fill",
-
-  "": ""
+  "": "",
+  "text.autoconfig.soupapi.category.player_effects": "Player Effects",
+  "text.autoconfig.soupapi.option.playerEffectsEnabled": "Enabled",
+  "text.autoconfig.soupapi.option.playerEffectsStyle": "Effect",
+  "text.autoconfig.soupapi.option.playerEffectsTarget": "Apply To",
+  "text.autoconfig.soupapi.option.playerEffectsFirstPerson": "Show In First Person",
+  "text.autoconfig.soupapi.option.playerEffectsRandomColor": "Random Color",
+  "text.autoconfig.soupapi.option.playerEffectsScale": "Scale",
+  "text.autoconfig.soupapi.option.playerEffectsSpeed": "Speed",
+  "text.autoconfig.soupapi.option.playerEffectsAlpha": "Opacity",
+  "text.autoconfig.soupapi.option.playerEffectsCount": "Density",
+  "text.autoconfig.soupapi.option.playerEffectsScale.@PrefixText": "Shape",
+  "text.autoconfig.soupapi.option.playerEffectsGhostCount": "Ghost Count",
+  "text.autoconfig.soupapi.option.playerEffectsGhostInterval": "Ghost Spacing (ticks)",
+  "text.autoconfig.soupapi.option.playerEffectsGhostCount.@PrefixText": "Ghost",
+  "text.autoconfig.soupapi.option.trailsTarget": "Apply To"
 }

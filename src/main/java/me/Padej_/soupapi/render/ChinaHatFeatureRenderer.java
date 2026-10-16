@@ -40,6 +40,8 @@ public class ChinaHatFeatureRenderer implements LayerRenderer<AbstractClientPlay
     @Override
     public void doRenderLayer(AbstractClientPlayer entity, float limbAngle, float limbDistance,
                               float tickDelta, float age, float headYaw, float headPitch, float scale) {
+        // A ghost is a re-render of the same model; its layers must not run again.
+        if (me.Padej_.soupapi.modules.PlayerEffects.isDrawingGhost()) return;
         if (!SoupAPI.configHolder.get().chinaHatEnabled) return;
 
         Minecraft client = Minecraft.getMinecraft();

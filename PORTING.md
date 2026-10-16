@@ -110,6 +110,59 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Fixes from in-game testing, and the effects added after it
+
+**The world-space origin was wrong by eye height.** `Camera.getPos()` added `getEyeHeight()`, on
+the reasoning that the camera sits at eye level. The camera does — but the *origin the world pass
+is drawn around* does not: vanilla uses `RenderManager.viewerPos*`, which is the view entity's
+interpolated position with no eye height, and every call site in the mod subtracts this value to
+place geometry. So everything the mod drew in the world sat about 1.62 blocks too low: jump circles
+and trails were under the ground where nothing could see them, and a hit bubble aimed at an
+opponent's chest landed at their feet. It now reads vanilla's own `viewerPos*`, so the two cannot
+drift apart.
+
+**Trails threw every tick.** They stored their history on the entity through a mixin-implemented
+`TrailEntity` interface. With no mixins nothing implements it, so the first player each tick raised
+a `ClassCastException` — caught by the event guard, logged once, and silently skipped forever. The
+history now lives in a weak-keyed side map. While in there: a **Apply To** option (self, others,
+both — the interface existed upstream but was commented out of the config), two more styles
+(`GRADIENT`, `PULSE`), and the line-of-sight test is gone, which used to make a trail vanish the
+moment its owner stepped behind a wall.
+
+**The china hat was drawn fully transparent.** Its alpha was
+`(int) (1 - (chinaHatAlpha * 255 / 100f))` — negative for every setting above zero, and the vertex
+colour takes floats, so the value was clamped to nothing. It is a 0..1 float now.
+
+**Jump circles mostly did not fire.** The trigger required the jump key to still be held on the
+tick the player left the ground. With a touch control that is a coin toss, so most jumps produced
+nothing. It now fires on leaving the ground with upward motion.
+
+### Player effects
+
+A new page with twelve effects, one shared set of controls (effect, who it applies to, scale,
+speed, opacity, density), and a first-person toggle:
+
+| Effect | What it does |
+|---|---|
+| Ghost | Fading copies of the player left at the positions it held a moment ago — the afterimage effect |
+| Orbit | Sprites circling at waist height |
+| Helix | Two strands spiralling up around the player |
+| Rings | Rings rising from the feet, shrinking as they go |
+| Shockwave | A ring expanding across the ground on every landing |
+| Flame | Flames rising from the feet |
+| Snow | Snow drifting down around the player |
+| Sparks | Sparks thrown outward while moving, pulled down by gravity |
+| Wings | A pair of glowing wings that beat behind the shoulders |
+| Crown | Shards orbiting above the head |
+| Pulse Sphere | A wireframe sphere pulsing with the palette |
+| Footprints | Glowing marks left where the player steps |
+
+The geometric ones are computed from the world time each frame and keep no state. The emitted ones
+spawn particles on the tick and age them out. Ghost is a real re-render of the player model, which
+needs two guards: the mod's own feature layers skip while a ghost is drawing, and name tags and
+drop shadows are suppressed for the duration — otherwise every ghost would stack another copy of
+both on top of the player.
+
 ## The settings screen, and which options actually do anything
 
 The screen was rebuilt (`gui/SoupSettingsScreen`, `gui/option/*`). The old one could only edit a

@@ -1,0 +1,668 @@
+package me.Padej_.soupapi.modules;
+
+import me.Padej_.soupapi.compat.BlendFactor;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.Cameras;
+import me.Padej_.soupapi.compat.Mat4;
+import me.Padej_.soupapi.compat.MatrixStack;
+import me.Padej_.soupapi.compat.RenderSystem;
+import me.Padej_.soupapi.compat.RotationAxis;
+import me.Padej_.soupapi.compat.ShaderKey;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.config.ConfigurableModule;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.render.Render2D;
+import me.Padej_.soupapi.render.Render3D_Shapes;
+import me.Padej_.soupapi.utils.MathUtility;
+import me.Padej_.soupapi.utils.Palette;
+import me.Padej_.soupapi.utils.TexturesManager;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
+/**
+ * Cosmetic effects attached to a player.
+ *
+ * <p>Twelve styles, each drawn around the player it is attached to, with one shared set of controls
+ * (style, who it applies to, size, speed, opacity, density) rather than a page of options per
+ * effect. Everything is client-side: nobody else sees these.
+ *
+ * <p>Two kinds of effect live here. The geometric ones — orbits, helixes, rings, wings, crowns,
+ * spheres — are computed from the world time each frame and keep no state at all, which is both
+ * cheaper and impossible to leak. The emitted ones — flames, snow, sparks, footprints, shockwaves —
+ * spawn particles on the tick and age them out. {@link Style#GHOST} is its own thing: it re-renders
+ * the player model at the positions it occupied a moment ago.
+ */
+public class PlayerEffects extends ConfigurableModule {
+
+    /** How the effect is attached. */
+    public enum Target {
+        SELF, OTHERS, BOTH
+    }
+
+    public enum Style {
+        /** Fading copies of the player left behind at past positions. */
+        GHOST,
+        /** Sprites circling the player at waist height. */
+        ORBIT,
+        /** Two strands of sprites spiralling up around the player. */
+        HELIX,
+        /** Rings rising from the feet and shrinking as they go. */
+        RINGS,
+        /** A ring that expands across the ground each time the player lands. */
+        SHOCKWAVE,
+        /** Flames rising from the feet. */
+        FLAME,
+        /** Snow drifting down around the player. */
+        SNOW,
+        /** Sparks thrown outward from the feet, pulled down by gravity. */
+        SPARKS,
+        /** A pair of glowing wings behind the shoulders. */
+        WINGS,
+        /** Shards orbiting above the head. */
+        CROWN,
+        /** A wireframe sphere around the player, pulsing with the palette. */
+        PULSE_SPHERE,
+        /** Glowing marks left on the ground where the player steps. */
+        FOOTPRINTS
+    }
+
+    // ---- state ------------------------------------------------------------------------------
+
+    /** Past positions for {@link Style#GHOST}, per player. */
+    private static final Map<Entity, List<Pose>> HISTORY = new WeakHashMap<Entity, List<Pose>>();
+    /** Emitted particles, in world space. */
+    private static final List<Puff> PUFFS = new ArrayList<Puff>();
+    /** Ground contact state, for shockwaves and footprints. */
+    private static final Map<Entity, Boolean> GROUNDED = new WeakHashMap<Entity, Boolean>();
+    private static final Map<Entity, Double> WALKED = new WeakHashMap<Entity, Double>();
+
+    /** Set while a ghost is being drawn, so the mod's own feature layers do not re-enter. */
+    private static boolean drawingGhost;
+
+    public static boolean isDrawingGhost() {
+        return drawingGhost;
+    }
+
+    // ---- tick -------------------------------------------------------------------------------
+
+    public static void onTick() {
+        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (!CONFIG.playerEffectsEnabled) {
+            if (!PUFFS.isEmpty()) PUFFS.clear();
+            if (!HISTORY.isEmpty()) HISTORY.clear();
+            return;
+        }
+
+        for (int i = 0; i < PUFFS.size(); i++) {
+            PUFFS.get(i).tick();
+        }
+        for (Iterator<Puff> it = PUFFS.iterator(); it.hasNext(); ) {
+            if (it.next().dead()) it.remove();
+        }
+
+        for (EntityPlayer player : mc.theWorld.playerEntities) {
+            if (!isTarget(player)) continue;
+            trackHistory(player);
+            emit(player);
+        }
+    }
+
+    private static void trackHistory(EntityPlayer player) {
+        if (CONFIG.playerEffectsStyle != Style.GHOST) return;
+        List<Pose> poses = HISTORY.get(player);
+        if (poses == null) {
+            poses = new ArrayList<Pose>();
+            HISTORY.put(player, poses);
+        }
+        poses.add(new Pose(player.posX, player.posY, player.posZ, player.rotationYaw,
+                player.renderYawOffset, player.ticksExisted));
+        int keep = CONFIG.playerEffectsGhostCount * CONFIG.playerEffectsGhostInterval + 1;
+        while (poses.size() > keep) {
+            poses.remove(0);
+        }
+    }
+
+    private static void emit(EntityPlayer player) {
+        Style style = CONFIG.playerEffectsStyle;
+        float scale = CONFIG.playerEffectsScale / 100f;
+        int count = CONFIG.playerEffectsCount;
+
+        switch (style) {
+            case FLAME:
+                for (int i = 0; i < Math.max(1, count / 4); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-0.35f, 0.35f) * scale,
+                            player.posY + 0.1,
+                            player.posZ + MathUtility.random(-0.35f, 0.35f) * scale,
+                            MathUtility.random(-0.01f, 0.01f), MathUtility.random(0.04f, 0.09f),
+                            MathUtility.random(-0.01f, 0.01f),
+                            16, 0.45f * scale, TexturesManager.FIREFLY, 0f));
+                }
+                break;
+            case SNOW:
+                for (int i = 0; i < Math.max(1, count / 6); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-1.2f, 1.2f) * scale,
+                            player.posY + 2.6,
+                            player.posZ + MathUtility.random(-1.2f, 1.2f) * scale,
+                            MathUtility.random(-0.01f, 0.01f), -0.035f,
+                            MathUtility.random(-0.01f, 0.01f),
+                            48, 0.3f * scale, TexturesManager.SNOWFLAKE, 1.5f));
+                }
+                break;
+            case SPARKS:
+                if (player.moveForward != 0f || player.moveStrafing != 0f) {
+                    for (int i = 0; i < Math.max(1, count / 4); i++) {
+                        PUFFS.add(new Puff(player.posX, player.posY + 0.05, player.posZ,
+                                MathUtility.random(-0.12f, 0.12f), MathUtility.random(0.05f, 0.14f),
+                                MathUtility.random(-0.12f, 0.12f),
+                                20, 0.22f * scale, TexturesManager.STAR, -0.012f));
+                    }
+                }
+                break;
+            case FOOTPRINTS:
+                trackFootprints(player, scale);
+                break;
+            case SHOCKWAVE:
+                trackLanding(player, scale);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void trackFootprints(EntityPlayer player, float scale) {
+        Double last = WALKED.get(player);
+        double walked = player.distanceWalkedModified;
+        if (last != null && walked - last > 0.9 && player.onGround) {
+            PUFFS.add(new Puff(player.posX, player.posY + 0.02, player.posZ,
+                    0, 0, 0, 30, 0.7f * scale, TexturesManager.GLYPH_CIRCLE, 0f).flat());
+        }
+        if (last == null || walked - last > 0.9) {
+            WALKED.put(player, walked);
+        }
+    }
+
+    private static void trackLanding(EntityPlayer player, float scale) {
+        Boolean wasGrounded = GROUNDED.get(player);
+        boolean grounded = player.onGround;
+        if (wasGrounded != null && !wasGrounded && grounded) {
+            PUFFS.add(new Puff(player.posX, player.posY + 0.05, player.posZ,
+                    0, 0, 0, 18, 0.5f * scale, null, 0f).expanding(3.2f * scale));
+        }
+        GROUNDED.put(player, grounded);
+    }
+
+    public static boolean isTarget(Entity entity) {
+        boolean self = entity == mc.thePlayer;
+        switch (CONFIG.playerEffectsTarget) {
+            case SELF:
+                return self;
+            case OTHERS:
+                return !self;
+            case BOTH:
+            default:
+                return true;
+        }
+    }
+
+    // ---- rendering --------------------------------------------------------------------------
+
+    public static void render(WorldRenderContext context) {
+        if (!CONFIG.playerEffectsEnabled) return;
+        if (mc.theWorld == null || mc.thePlayer == null) return;
+
+        float tickDelta = context.tickCounter().getTickDelta(true);
+        Style style = CONFIG.playerEffectsStyle;
+
+        if (style == Style.GHOST) {
+            renderGhosts(tickDelta);
+            return;
+        }
+
+        // The emitted styles draw their own particles; the geometric ones are computed here.
+        List<Puff> puffs = PUFFS;
+        if (!puffs.isEmpty()) {
+            renderPuffs(tickDelta);
+        }
+
+        for (EntityPlayer player : mc.theWorld.playerEntities) {
+            if (!isTarget(player)) continue;
+            if (player == mc.thePlayer && mc.gameSettings.thirdPersonView == 0
+                    && !CONFIG.playerEffectsFirstPerson) {
+                continue;
+            }
+            double x = interp(player.lastTickPosX, player.posX, tickDelta);
+            double y = interp(player.lastTickPosY, player.posY, tickDelta);
+            double z = interp(player.lastTickPosZ, player.posZ, tickDelta);
+            renderGeometric(style, player, x, y, z, tickDelta);
+        }
+    }
+
+    private static void renderGeometric(Style style, EntityPlayer player,
+                                        double x, double y, double z, float tickDelta) {
+        float scale = CONFIG.playerEffectsScale / 100f;
+        float speed = CONFIG.playerEffectsSpeed / 100f;
+        int count = Math.max(3, CONFIG.playerEffectsCount);
+        double time = (mc.theWorld.getTotalWorldTime() + tickDelta) * 0.08 * speed;
+        float alpha = CONFIG.playerEffectsAlpha / 100f;
+        float height = player.height;
+
+        switch (style) {
+            case ORBIT: {
+                List<Puff> sprites = new ArrayList<Puff>();
+                for (int i = 0; i < count; i++) {
+                    double angle = time + i * (Math.PI * 2 / count);
+                    double radius = 0.9 * scale;
+                    sprites.add(Puff.still(x + Math.cos(angle) * radius,
+                            y + height * 0.55 + Math.sin(time * 2 + i) * 0.1,
+                            z + Math.sin(angle) * radius,
+                            0.3f * scale, colour(i / (float) count), alpha));
+                }
+                drawSprites(sprites, TexturesManager.FIREFLY, tickDelta);
+                break;
+            }
+            case HELIX: {
+                List<Puff> sprites = new ArrayList<Puff>();
+                int perStrand = Math.max(4, count);
+                for (int strand = 0; strand < 2; strand++) {
+                    for (int i = 0; i < perStrand; i++) {
+                        double t = i / (double) perStrand;
+                        double angle = time * 2 + t * Math.PI * 4 + strand * Math.PI;
+                        double radius = 0.7 * scale * (1.0 - t * 0.3);
+                        sprites.add(Puff.still(x + Math.cos(angle) * radius,
+                                y + t * (height + 0.4),
+                                z + Math.sin(angle) * radius,
+                                0.22f * scale, colour((float) t), alpha));
+                    }
+                }
+                drawSprites(sprites, TexturesManager.FIREFLY, tickDelta);
+                break;
+            }
+            case RINGS: {
+                for (int ring = 0; ring < 3; ring++) {
+                    double phase = ((time * 0.5) + ring / 3.0) % 1.0;
+                    double ringY = y + phase * (height + 0.5);
+                    double radius = (0.95 - phase * 0.55) * scale;
+                    ring(x, ringY, z, radius, count * 2, colour((float) phase), alpha * (1f - (float) phase));
+                }
+                break;
+            }
+            case WINGS: {
+                double yaw = Math.toRadians(interp(player.prevRenderYawOffset,
+                        player.renderYawOffset, tickDelta));
+                double backX = Math.sin(yaw) * 0.18;
+                double backZ = -Math.cos(yaw) * 0.18;
+                double baseY = y + height * 0.72;
+                int feathers = Math.max(4, count);
+                for (int side = -1; side <= 1; side += 2) {
+                    for (int i = 0; i < feathers; i++) {
+                        double spread = (i + 1) / (double) feathers;
+                        double flap = Math.sin(time * 3) * 0.25 + 0.6;
+                        double tipX = x + backX + Math.cos(yaw) * side * spread * 1.4 * scale * flap;
+                        double tipZ = z + backZ + Math.sin(yaw) * side * spread * 1.4 * scale * flap;
+                        double tipY = baseY + spread * 0.9 * scale - Math.pow(spread, 2) * 0.4;
+                        line(x + backX, baseY, z + backZ, tipX, tipY, tipZ,
+                                colour((float) spread), alpha);
+                    }
+                }
+                break;
+            }
+            case CROWN: {
+                List<Puff> sprites = new ArrayList<Puff>();
+                int shards = Math.max(3, count / 2);
+                for (int i = 0; i < shards; i++) {
+                    double angle = -time * 1.5 + i * (Math.PI * 2 / shards);
+                    double radius = 0.45 * scale;
+                    sprites.add(Puff.still(x + Math.cos(angle) * radius,
+                            y + height + 0.35 + Math.sin(time * 2 + i) * 0.05,
+                            z + Math.sin(angle) * radius,
+                            0.25f * scale, colour(i / (float) shards), alpha));
+                }
+                drawSprites(sprites, TexturesManager.GLYPH_TRIANGLE, tickDelta);
+                break;
+            }
+            case PULSE_SPHERE: {
+                double pulse = 0.8 + Math.sin(time * 2) * 0.15;
+                double radius = 0.95 * scale * pulse;
+                double centreY = y + height * 0.5;
+                ring(x, centreY, z, radius, count * 2, colour(0f), alpha);
+                verticalRing(x, centreY, z, radius, count * 2, 0.0, colour(0.33f), alpha);
+                verticalRing(x, centreY, z, radius, count * 2, Math.PI / 2, colour(0.66f), alpha);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    /** Re-renders the player model at the positions it held a moment ago. */
+    private static void renderGhosts(float tickDelta) {
+        if (drawingGhost) return;
+        float alpha = CONFIG.playerEffectsAlpha / 100f;
+        int interval = Math.max(1, CONFIG.playerEffectsGhostInterval);
+
+        for (EntityPlayer player : mc.theWorld.playerEntities) {
+            if (!isTarget(player)) continue;
+            List<Pose> poses = HISTORY.get(player);
+            if (poses == null || poses.size() < 2) continue;
+
+            int drawn = 0;
+            for (int i = poses.size() - 1 - interval; i >= 0 && drawn < CONFIG.playerEffectsGhostCount;
+                 i -= interval) {
+                Pose pose = poses.get(i);
+                float age = (poses.size() - 1 - i) / (float) poses.size();
+                Color colour = colour(age);
+                drawGhost(player, pose, colour, alpha * (1f - age), tickDelta);
+                drawn++;
+            }
+        }
+    }
+
+    private static void drawGhost(EntityPlayer player, Pose pose, Color colour, float alpha,
+                                  float tickDelta) {
+        net.minecraft.client.renderer.entity.RenderManager manager = mc.getRenderManager();
+        if (manager == null) return;
+
+        drawingGhost = true;
+        boolean hidGui = mc.gameSettings.hideGUI;
+        boolean shadows = manager.isRenderShadow();
+        GlStateManager.pushMatrix();
+        try {
+            // A ghost is a full entity render, so without this each one would stack another name
+            // tag and another drop shadow on top of the player's own. canRenderName() is gated on
+            // Minecraft.isGuiEnabled(), which reads this flag.
+            mc.gameSettings.hideGUI = true;
+            manager.setRenderShadow(false);
+            GlStateManager.enableBlend();
+            // Additive, so the ghost glows and never darkens what is behind it.
+            GlStateManager.blendFunc(770, 1);
+            GlStateManager.depthMask(false);
+            GlStateManager.disableLighting();
+            // Untextured, which is what makes it read as a silhouette rather than a clone.
+            GlStateManager.disableTexture2D();
+            GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
+                    colour.getBlue() / 255f, Math.max(0.02f, alpha));
+
+            manager.renderEntityWithPosYaw(player,
+                    pose.x - manager.viewerPosX,
+                    pose.y - manager.viewerPosY,
+                    pose.z - manager.viewerPosZ,
+                    pose.bodyYaw, tickDelta);
+        } catch (Throwable ignored) {
+            // A model that cannot be re-rendered is not worth a crash.
+        } finally {
+            mc.gameSettings.hideGUI = hidGui;
+            manager.setRenderShadow(shadows);
+            GlStateManager.enableTexture2D();
+            GlStateManager.enableLighting();
+            GlStateManager.depthMask(true);
+            GlStateManager.color(1f, 1f, 1f, 1f);
+            RenderSystem.defaultBlendFunc();
+            GlStateManager.disableBlend();
+            GlStateManager.popMatrix();
+            drawingGhost = false;
+        }
+    }
+
+    // ---- primitives -------------------------------------------------------------------------
+
+    private static void renderPuffs(float tickDelta) {
+        List<Puff> textured = new ArrayList<Puff>();
+        for (int i = 0; i < PUFFS.size(); i++) {
+            Puff puff = PUFFS.get(i);
+            if (puff.texture == null) {
+                // An expanding ground ring.
+                double progress = puff.progress(tickDelta);
+                ring(puff.x, puff.y, puff.z, puff.size + progress * puff.expandTo,
+                        CONFIG.playerEffectsCount * 2, colour((float) progress),
+                        (CONFIG.playerEffectsAlpha / 100f) * (1f - (float) progress));
+            } else {
+                textured.add(puff);
+            }
+        }
+        if (!textured.isEmpty()) {
+            drawSprites(textured, textured.get(0).texture, tickDelta);
+        }
+    }
+
+    /** One batched draw of billboarded sprites. */
+    private static void drawSprites(List<Puff> sprites, ResourceLocation texture, float tickDelta) {
+        if (sprites.isEmpty()) return;
+        Camera camera = Cameras.get();
+        Vec3 cameraPos = camera.getPositionVector();
+
+        Render2D.setupRender();
+        RenderSystem.disableCull();
+        RenderSystem.depthMask(false);
+        RenderSystem.enableDepthTest();
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
+
+        BufferBuilder buffer = Tessellator.getInstance()
+                .begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+
+        for (int i = 0; i < sprites.size(); i++) {
+            Puff sprite = sprites.get(i);
+            double px = sprite.renderX(tickDelta) - cameraPos.xCoord;
+            double py = sprite.renderY(tickDelta) - cameraPos.yCoord;
+            double pz = sprite.renderZ(tickDelta) - cameraPos.zCoord;
+
+            MatrixStack matrices = new MatrixStack();
+            matrices.translate(px, py, pz);
+            if (sprite.flat) {
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f));
+            } else {
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+            }
+            Mat4 matrix = matrices.peek().getPositionMatrix();
+
+            float half = sprite.renderSize(tickDelta) / 2f;
+            Color colour = sprite.colour != null ? sprite.colour : colour((float) sprite.progress(tickDelta));
+            int a = Math.round(255 * Math.max(0f, Math.min(1f, sprite.renderAlpha(tickDelta))));
+
+            buffer.vertex(matrix, -half, -half, 0f).texture(0f, 1f)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), a);
+            buffer.vertex(matrix, half, -half, 0f).texture(1f, 1f)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), a);
+            buffer.vertex(matrix, half, half, 0f).texture(1f, 0f)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), a);
+            buffer.vertex(matrix, -half, half, 0f).texture(0f, 0f)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), a);
+        }
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
+        Render2D.endRender();
+    }
+
+    /** A horizontal circle of line segments, queued with the mod's other 3D shapes. */
+    private static void ring(double x, double y, double z, double radius, int segments,
+                             Color colour, float alpha) {
+        Color c = Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha))));
+        int steps = Math.max(8, segments);
+        for (int i = 0; i < steps; i++) {
+            double a0 = i * (Math.PI * 2 / steps);
+            double a1 = (i + 1) * (Math.PI * 2 / steps);
+            line(x + Math.cos(a0) * radius, y, z + Math.sin(a0) * radius,
+                    x + Math.cos(a1) * radius, y, z + Math.sin(a1) * radius, c, 1f);
+        }
+    }
+
+    /** A circle standing on its edge, rotated about Y by {@code tilt}. */
+    private static void verticalRing(double x, double y, double z, double radius, int segments,
+                                     double tilt, Color colour, float alpha) {
+        Color c = Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha))));
+        int steps = Math.max(8, segments);
+        for (int i = 0; i < steps; i++) {
+            double a0 = i * (Math.PI * 2 / steps);
+            double a1 = (i + 1) * (Math.PI * 2 / steps);
+            double x0 = Math.cos(a0) * radius * Math.cos(tilt);
+            double z0 = Math.cos(a0) * radius * Math.sin(tilt);
+            double x1 = Math.cos(a1) * radius * Math.cos(tilt);
+            double z1 = Math.cos(a1) * radius * Math.sin(tilt);
+            line(x + x0, y + Math.sin(a0) * radius, z + z0,
+                    x + x1, y + Math.sin(a1) * radius, z + z1, c, 1f);
+        }
+    }
+
+    private static void line(double x1, double y1, double z1, double x2, double y2, double z2,
+                             Color colour, float alpha) {
+        Render3D_Shapes.drawLine(new Vec3(x1, y1, z1), new Vec3(x2, y2, z2),
+                Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha)))));
+    }
+
+    private static void line(double x1, double y1, double z1, double x2, double y2, double z2,
+                             Color colour) {
+        Render3D_Shapes.drawLine(new Vec3(x1, y1, z1), new Vec3(x2, y2, z2), colour);
+    }
+
+    private static Color colour(float position) {
+        if (CONFIG.playerEffectsRandomColor) {
+            return Palette.getRandomColor();
+        }
+        float p = position % 1f;
+        return Palette.getColor(p < 0 ? p + 1f : p);
+    }
+
+    private static double interp(double previous, double current, float tickDelta) {
+        return previous + (current - previous) * tickDelta;
+    }
+
+    private static float interp(float previous, float current, float tickDelta) {
+        return previous + (current - previous) * tickDelta;
+    }
+
+    // ---- value types ------------------------------------------------------------------------
+
+    /** Where a player was, for ghosts. */
+    private static final class Pose {
+        final double x;
+        final double y;
+        final double z;
+        final float yaw;
+        final float bodyYaw;
+        final int tick;
+
+        Pose(double x, double y, double z, float yaw, float bodyYaw, int tick) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.yaw = yaw;
+            this.bodyYaw = bodyYaw;
+            this.tick = tick;
+        }
+    }
+
+    /** An emitted particle, or a one-off sprite for a geometric style. */
+    private static final class Puff {
+        double x;
+        double y;
+        double z;
+        double prevX;
+        double prevY;
+        double prevZ;
+        double motionX;
+        double motionY;
+        double motionZ;
+        double gravity;
+        int life;
+        int maxLife;
+        float size;
+        float expandTo;
+        boolean flat;
+        ResourceLocation texture;
+        Color colour;
+        float fixedAlpha = -1f;
+
+        Puff(double x, double y, double z, double motionX, double motionY, double motionZ,
+             int life, float size, ResourceLocation texture, double gravity) {
+            this.x = this.prevX = x;
+            this.y = this.prevY = y;
+            this.z = this.prevZ = z;
+            this.motionX = motionX;
+            this.motionY = motionY;
+            this.motionZ = motionZ;
+            this.life = this.maxLife = life;
+            this.size = size;
+            this.texture = texture;
+            this.gravity = gravity;
+        }
+
+        static Puff still(double x, double y, double z, float size, Color colour, float alpha) {
+            Puff puff = new Puff(x, y, z, 0, 0, 0, 1, size, null, 0);
+            puff.colour = colour;
+            puff.fixedAlpha = alpha;
+            return puff;
+        }
+
+        Puff flat() {
+            this.flat = true;
+            return this;
+        }
+
+        Puff expanding(float to) {
+            this.expandTo = to;
+            return this;
+        }
+
+        void tick() {
+            prevX = x;
+            prevY = y;
+            prevZ = z;
+            x += motionX;
+            y += motionY;
+            z += motionZ;
+            motionY -= gravity;
+            motionX *= 0.96;
+            motionZ *= 0.96;
+            life--;
+        }
+
+        boolean dead() {
+            return life <= 0;
+        }
+
+        double progress(float tickDelta) {
+            if (maxLife <= 0) return 0.0;
+            double aged = maxLife - (life - tickDelta);
+            return Math.max(0.0, Math.min(1.0, aged / maxLife));
+        }
+
+        double renderX(float tickDelta) {
+            return prevX + (x - prevX) * tickDelta;
+        }
+
+        double renderY(float tickDelta) {
+            return prevY + (y - prevY) * tickDelta;
+        }
+
+        double renderZ(float tickDelta) {
+            return prevZ + (z - prevZ) * tickDelta;
+        }
+
+        float renderSize(float tickDelta) {
+            return expandTo > 0f ? size + (float) progress(tickDelta) * expandTo : size;
+        }
+
+        float renderAlpha(float tickDelta) {
+            if (fixedAlpha >= 0f) return fixedAlpha;
+            return (CONFIG.playerEffectsAlpha / 100f) * (1f - (float) progress(tickDelta));
+        }
+    }
+}

@@ -53,7 +53,10 @@ public class Render3D extends ConfigurableModule {
         float yOffset = -CONFIG.chinaHatYOffset / 100f;
         int segments = 60;
         float time = mc.theWorld.getTotalWorldTime() % 360;
-        int alpha = (int) (1 - (CONFIG.chinaHatAlpha * 255 / 100f));
+        // 0..1, because the vertex colour below takes floats. This read
+        // `(int) (1 - (chinaHatAlpha * 255 / 100f))`, which is negative for every setting above 0 -
+        // so the hat was drawn fully transparent and the feature looked like it did nothing.
+        float alpha = CONFIG.chinaHatAlpha / 100f;
         boolean isHalf = CONFIG.chinaHatRenderHalf;
 
         int rotation = 360 / 5;

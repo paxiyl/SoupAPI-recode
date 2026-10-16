@@ -34,6 +34,8 @@ public class CapeFeatureRenderer implements LayerRenderer<AbstractClientPlayer> 
     @Override
     public void doRenderLayer(AbstractClientPlayer player, float limbAngle, float limbDistance,
                               float tickDelta, float age, float headYaw, float headPitch, float scale) {
+        // A ghost is a re-render of the same model; its layers must not run again.
+        if (me.Padej_.soupapi.modules.PlayerEffects.isDrawingGhost()) return;
         if (!ConfigurableModule.CONFIG.capesEnabled) return;
         if (player != Minecraft.getMinecraft().thePlayer) return;
         if (player.isInvisible()) return;
