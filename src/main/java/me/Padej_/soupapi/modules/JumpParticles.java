@@ -54,17 +54,17 @@ public class JumpParticles extends ConfigurableModule {
     private static void updateAvailableTextures() {
         AVAILABLE_TEXTURES.clear();
 
-        if (CONFIG.jumpParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
-        if (CONFIG.jumpParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
-        if (CONFIG.jumpParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
-        if (CONFIG.jumpParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.HEART);
-        if (CONFIG.jumpParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.STAR);
+        if (CONFIG.jumpParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
+        if (CONFIG.jumpParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
+        if (CONFIG.jumpParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
+        if (CONFIG.jumpParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
+        if (CONFIG.jumpParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
         if (CONFIG.jumpParticlesIncludeGlyphs) {
             Collections.addAll(AVAILABLE_TEXTURES, TexturesManager.GLYPH_TEXTURES);
         }
 
         if (AVAILABLE_TEXTURES.isEmpty()) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY));
         }
     }
 

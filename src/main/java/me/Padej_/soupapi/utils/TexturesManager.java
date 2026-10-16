@@ -15,6 +15,12 @@ public class TexturesManager extends ConfigurableModule {
     public static final ResourceLocation SOUP = new ResourceLocation("soupapi", "textures/jump_circles/soup.png");
     public static final ResourceLocation PORTAL_2 = new ResourceLocation("soupapi", "textures/jump_circles/portal_2.png");
 
+    public static final ResourceLocation RUNE_RING = new ResourceLocation("soupapi", "textures/jump_circles/rune_ring.png");
+    public static final ResourceLocation SAKURA_RING = new ResourceLocation("soupapi", "textures/jump_circles/sakura_ring.png");
+    public static final ResourceLocation SNOWFLAKE_RING = new ResourceLocation("soupapi", "textures/jump_circles/snowflake_ring.png");
+    public static final ResourceLocation MAGIC_RING = new ResourceLocation("soupapi", "textures/jump_circles/magic_ring.png");
+    public static final ResourceLocation SHATTER_RING = new ResourceLocation("soupapi", "textures/jump_circles/shatter_ring.png");
+
     private static final ResourceLocation CIRCLE_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_unblack.png");
     private static final ResourceLocation CIRCLE_BOLD_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_bold_unblack.png");
     private static final ResourceLocation HEXAGON_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/hexagon_unblack.png");
@@ -99,6 +105,16 @@ public class TexturesManager extends ConfigurableModule {
                 return CIRCLE_BOLD;
             case SOUP:
                 return SOUP;
+            case RUNE:
+                return RUNE_RING;
+            case SAKURA:
+                return SAKURA_RING;
+            case SNOWFLAKE:
+                return SNOWFLAKE_RING;
+            case MAGIC:
+                return MAGIC_RING;
+            case SHATTER:
+                return SHATTER_RING;
         }
         throw new IllegalStateException("Unexpected value: " + CONFIG.jumpCirclesStyle);
     }
@@ -139,6 +155,16 @@ public class TexturesManager extends ConfigurableModule {
                 return PORTAL;
             case PORTAL_2:
                 return PORTAL_2;
+            case RUNE:
+                return RUNE_RING;
+            case SAKURA:
+                return SAKURA_RING;
+            case SNOWFLAKE:
+                return SNOWFLAKE_RING;
+            case MAGIC:
+                return MAGIC_RING;
+            case SHATTER:
+                return SHATTER_RING;
         }
         throw new IllegalStateException("Unexpected value: " + CONFIG.hitBubblesStyle);
     }
@@ -165,6 +191,18 @@ public class TexturesManager extends ConfigurableModule {
                 return VANILLA;
         }
         throw new IllegalStateException("Unexpected value: " + CONFIG.mctiersGameMode);
+    }
+
+    /**
+     * The sprite a particle should use.
+     *
+     * <p>With a theme active and themed particles on, the theme's own sprite wins over whatever the
+     * caller picked — that is what makes a theme change the look of the particles too, not just
+     * their colour.
+     */
+    public static ResourceLocation themed(ResourceLocation fallback) {
+        ResourceLocation themeParticle = Palette.getThemeParticle();
+        return themeParticle != null ? themeParticle : fallback;
     }
 
     public static ResourceLocation getRandomGlyphParticle() {

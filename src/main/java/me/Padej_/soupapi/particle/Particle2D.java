@@ -30,22 +30,22 @@ public class Particle2D {
         AVAILABLE_TEXTURES.clear();
 
         if (CONFIG.targetHudIncludeFirefly) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
         }
         if (CONFIG.targetHudIncludeDollar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
         }
         if (CONFIG.targetHudIncludeSnowflake) {
-            AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
         }
         if (CONFIG.targetHudIncludeHeart) {
-            AVAILABLE_TEXTURES.add(TexturesManager.HEART);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
         }
         if (CONFIG.targetHudIncludeStar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.STAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
         }
         if (CONFIG.targetHudIncludeGlyphs) {
-            AVAILABLE_TEXTURES.add(TexturesManager.getRandomGlyphParticle());
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.getRandomGlyphParticle()));
         }
         if (!CONFIG.targetHudIncludeFirefly &&
                 !CONFIG.targetHudIncludeDollar &&
@@ -54,7 +54,7 @@ public class Particle2D {
                 !CONFIG.targetHudIncludeStar &&
                 !CONFIG.targetHudIncludeGlyphs
         ) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY));
         }
     }
 

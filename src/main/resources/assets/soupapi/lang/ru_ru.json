@@ -303,5 +303,10 @@
   "text.autoconfig.soupapi.option.playerEffectsGhostCount": "Количество призраков",
   "text.autoconfig.soupapi.option.playerEffectsGhostInterval": "Интервал призраков (тики)",
   "text.autoconfig.soupapi.option.playerEffectsGhostCount.@PrefixText": "Призрак",
-  "text.autoconfig.soupapi.option.trailsTarget": "Применять к"
+  "text.autoconfig.soupapi.option.trailsTarget": "Применять к",
+  "text.autoconfig.soupapi.option.themeStyle": "Тема",
+  "text.autoconfig.soupapi.option.themeParticles": "Частицы темы",
+  "text.autoconfig.soupapi.option.haloStyle": "Стиль",
+  "text.autoconfig.soupapi.option.trailsGlow": "Свечение",
+  "text.autoconfig.soupapi.option.hitBubblesAnimation": "Анимация"
 }

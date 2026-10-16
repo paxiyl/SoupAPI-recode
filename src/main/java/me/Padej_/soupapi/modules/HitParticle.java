@@ -183,26 +183,26 @@ public class HitParticle extends ConfigurableModule {
         AVAILABLE_TEXTURES.clear();
 
         if (CONFIG.hitParticleIncludeFirefly) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
         }
         if (CONFIG.hitParticleIncludeDollar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
         }
         if (CONFIG.hitParticleIncludeSnowflake) {
-            AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
         }
         if (CONFIG.hitParticleIncludeHeart) {
-            AVAILABLE_TEXTURES.add(TexturesManager.HEART);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
         }
         if (CONFIG.hitParticleIncludeStar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.STAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
         }
         if (CONFIG.hitParticleIncludeGlyphs) {
-            AVAILABLE_TEXTURES.add(TexturesManager.getRandomGlyphParticle());
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.getRandomGlyphParticle()));
         }
 
         if (AVAILABLE_TEXTURES.isEmpty()) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY); // дефолт
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY)); // дефолт
         }
     }
 

@@ -110,6 +110,43 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Themes, and the second round of visual work
+
+**Themes.** Every colour in the mod comes through `Palette`, so a theme simply answers in place of
+the four colour pickers — one setting restyles the HUD, trails, particles, circles and effects
+together, without overwriting anyone's custom colours. Fourteen presets plus `CUSTOM`: Halloween,
+Christmas, Cyberpunk, Ocean, Lava, Toxic, Sakura, Midnight, Rainbow, Frost, Sunset, Blood, Gold,
+Void. With **Theme Particles** on, the theme also picks the particle sprite (snowflakes for Frost
+and Christmas, petals for Sakura, and so on).
+
+**The ghost was rebuilt.** It was white, carried a broken held item, brought a name tag with it, and
+whited out the whole screen when it caught up with its owner. All four came from re-running the
+entity renderer: that resets the colour before drawing, draws held items and armour as separate
+layers, draws a name tag and a shadow, and happily renders a model inside the camera's near plane —
+where additive blending fills the screen. It now renders the player's **model** directly, which has
+no held item, armour, name or shadow to begin with and keeps the colour it is given. Three rules
+make it usable in a fight: ghosts of your own player are drawn **only behind you**, never within
+2.2 blocks of the camera, and only when far enough from the previous ghost to read as a separate
+copy rather than a smear.
+
+**The china hat was upside down** — the cone was built brim-high, tip-low. Brim and tip swapped.
+
+**The halo had one style**, the busy orbiting souls. Five more: a plain ring, two counter-rotating
+rings, a spinning rune disc, a tilted Saturn ring and a crown of spikes.
+
+**What the second round adds**
+
+| Area | Added |
+|---|---|
+| Themes | 14 presets + themed particles |
+| Player effects | 8 more (bubbles, petals, embers, starfall, tornado, magic circle, beam, heartbeat) — 20 in all |
+| Halo | 5 more styles — 6 in all |
+| Trails | 3 more styles (ribbon, dotted, neon) and a glow toggle — 8 in all |
+| Jump circles | 5 new rings (rune, sakura, snowflake, magic, shatter) — 10 in all |
+| Hit bubbles | the same 5 rings, plus 5 animations (expand, spin, pulse, shrink, flash) — 10 styles |
+
+That is 73 style and theme choices across the mod, and 253 options in the settings screen.
+
 ## Fixes from in-game testing, and the effects added after it
 
 **The world-space origin was wrong by eye height.** `Camera.getPos()` added `getEyeHeight()`, on

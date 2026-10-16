@@ -210,6 +210,6 @@ public class JumpCircles extends ConfigurableModule {
     }
 
     public enum JumCircleStyle {
-        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, SOUP
+        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, SOUP, RUNE, SAKURA, SNOWFLAKE, MAGIC, SHATTER
     }
 }

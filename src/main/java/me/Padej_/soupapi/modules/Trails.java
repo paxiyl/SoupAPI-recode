@@ -114,7 +114,10 @@ public class Trails extends ConfigurableModule {
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        // Glow adds the trail's colour to what is behind it instead of blending over it, which is
+        // what makes a bright trail read as light rather than paint.
+        RenderSystem.blendFunc(GL11.GL_SRC_ALPHA,
+                CONFIG.trailsGlow ? GL11.GL_ONE : GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         RenderSystem.setShader(ShaderKey.POSITION_COLOR);
 
@@ -194,6 +197,33 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = (int) (nextAlphaFactor * waveNext);
                     nextMidAlpha = (int) (nextAlphaFactor * waveNext);
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (nextAlphaFactor * waveNext * 0.4f);
+                } else if (CONFIG.trailsStyle == Trails.Style.RIBBON) {
+                    // A narrow band through the middle, nothing at the edges.
+                    currentBottomAlpha = 0;
+                    currentMidAlpha = (int) currentAlphaFactor;
+                    currentTopAlpha = 0;
+                    nextBottomAlpha = 0;
+                    nextMidAlpha = (int) nextAlphaFactor;
+                    nextTopAlpha = 0;
+                } else if (CONFIG.trailsStyle == Trails.Style.DOTTED) {
+                    // Every other segment, so the trail reads as a dashed line.
+                    boolean on = (i % 2) == 0;
+                    int value = on ? (int) currentAlphaFactor : 0;
+                    int valueNext = on ? (int) nextAlphaFactor : 0;
+                    currentBottomAlpha = value;
+                    currentMidAlpha = value;
+                    currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : value;
+                    nextBottomAlpha = valueNext;
+                    nextMidAlpha = valueNext;
+                    nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : valueNext;
+                } else if (CONFIG.trailsStyle == Trails.Style.NEON) {
+                    // Bright core, faint shoulders.
+                    currentBottomAlpha = (int) (currentAlphaFactor * 0.25f);
+                    currentMidAlpha = (int) currentAlphaFactor;
+                    currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (currentAlphaFactor * 0.25f);
+                    nextBottomAlpha = (int) (nextAlphaFactor * 0.25f);
+                    nextMidAlpha = (int) nextAlphaFactor;
+                    nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (nextAlphaFactor * 0.25f);
                 } else if (CONFIG.trailsStyle == Trails.Style.GRADIENT) {
                     // Solid at the feet, gone by the top, and fading with age along its length.
                     currentBottomAlpha = (int) currentAlphaFactor;
@@ -320,7 +350,7 @@ public class Trails extends ConfigurableModule {
     }
 
     public enum Style {
-        FADED, SOLID, FADED_INVERT, GRADIENT, PULSE
+        FADED, SOLID, FADED_INVERT, GRADIENT, PULSE, RIBBON, DOTTED, NEON
     }
 
     /** Who leaves a trail. */

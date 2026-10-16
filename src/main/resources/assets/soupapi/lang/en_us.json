@@ -303,5 +303,10 @@
   "text.autoconfig.soupapi.option.playerEffectsGhostCount": "Ghost Count",
   "text.autoconfig.soupapi.option.playerEffectsGhostInterval": "Ghost Spacing (ticks)",
   "text.autoconfig.soupapi.option.playerEffectsGhostCount.@PrefixText": "Ghost",
-  "text.autoconfig.soupapi.option.trailsTarget": "Apply To"
+  "text.autoconfig.soupapi.option.trailsTarget": "Apply To",
+  "text.autoconfig.soupapi.option.themeStyle": "Theme",
+  "text.autoconfig.soupapi.option.themeParticles": "Theme Particles",
+  "text.autoconfig.soupapi.option.haloStyle": "Style",
+  "text.autoconfig.soupapi.option.trailsGlow": "Glow",
+  "text.autoconfig.soupapi.option.hitBubblesAnimation": "Animation"
 }

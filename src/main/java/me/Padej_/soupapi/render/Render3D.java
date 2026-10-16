@@ -49,8 +49,11 @@ public class Render3D extends ConfigurableModule {
         Mat4 matrix = matrices.peek().getPositionMatrix();
 
         float baseRadius = CONFIG.chinaHatBaseRadius / 100f;
-        float height = CONFIG.chinaHatTipHeight / 100f;
+        // The brim sits at the offset and the tip rises above it. The cone used to be built the
+        // other way round - brim high, tip below - which drew the hat upside down over the head.
         float yOffset = -CONFIG.chinaHatYOffset / 100f;
+        float brimY = yOffset;
+        float tipY = yOffset + CONFIG.chinaHatTipHeight / 100f;
         int segments = 60;
         float time = mc.theWorld.getTotalWorldTime() % 360;
         // 0..1, because the vertex colour below takes floats. This read
@@ -122,24 +125,24 @@ public class Render3D extends ConfigurableModule {
             float alpha2 = alphas[i + 1];
 
             // Первая грань (от основания сверху к вершине снизу)
-            vertexConsumer.vertex(matrix, x1, height, z1)
+            vertexConsumer.vertex(matrix, x1, brimY, z1)
                     .color(red1, green1, blue1, isHalf ? alpha1 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, x2, height, z2)
+            vertexConsumer.vertex(matrix, x2, brimY, z2)
                     .color(red2, green2, blue2, isHalf ? alpha2 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, tipX, yOffset, tipZ)
+            vertexConsumer.vertex(matrix, tipX, tipY, tipZ)
                     .color(redTip, greenTip, blueTip, alpha)
                     .normal(0, -1, 0);
 
             // Вторая грань (для заполнения обратной стороны)
-            vertexConsumer.vertex(matrix, x2, height, z2)
+            vertexConsumer.vertex(matrix, x2, brimY, z2)
                     .color(red2, green2, blue2, isHalf ? alpha2 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, x1, height, z1)
+            vertexConsumer.vertex(matrix, x1, brimY, z1)
                     .color(red1, green1, blue1, isHalf ? alpha1 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, tipX, yOffset, tipZ)
+            vertexConsumer.vertex(matrix, tipX, tipY, tipZ)
                     .color(redTip, greenTip, blueTip, alpha)
                     .normal(0, -1, 0);
         }

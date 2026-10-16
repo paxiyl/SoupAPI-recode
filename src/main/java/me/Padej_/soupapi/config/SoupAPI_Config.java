@@ -55,6 +55,11 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.PrefixText // Theme
     @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Theme themeStyle = me.Padej_.soupapi.utils.Theme.CUSTOM;
+    @ConfigEntry.Category("main")
+    public boolean themeParticles = true;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Palette.ColorsStyle paletteStyle = Palette.ColorsStyle.QUARTET;
     @ConfigEntry.Category("main")
     @ConfigEntry.ColorPicker
@@ -87,6 +92,8 @@ public class SoupAPI_Config implements ConfigData {
     public boolean trailsFirstPerson = false;
     @ConfigEntry.Category("trails")
     public boolean trailsRenderHalf = false;
+    @ConfigEntry.Category("trails")
+    public boolean trailsGlow = true;
     @ConfigEntry.Category("trails")
     public boolean trailsForGliders = false;
     @ConfigEntry.Category("trails")
@@ -170,6 +177,9 @@ public class SoupAPI_Config implements ConfigData {
      **/
     @ConfigEntry.Category("halo")
     public boolean haloEnabled = false;
+    @ConfigEntry.Category("halo")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Halo.Style haloStyle = Halo.Style.RING;
 
     @ConfigEntry.Gui.PrefixText // soul
     @ConfigEntry.Category("halo")
@@ -495,6 +505,9 @@ public class SoupAPI_Config implements ConfigData {
      **/
     @ConfigEntry.Category("hit_bubbles")
     public boolean hitBubblesEnabled = false;
+    @ConfigEntry.Category("hit_bubbles")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public HitBubbles.Animation hitBubblesAnimation = HitBubbles.Animation.SPIN;
     @ConfigEntry.Category("hit_bubbles")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public HitBubbles.Style hitBubblesStyle = HitBubbles.Style.PORTAL;

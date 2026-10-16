@@ -77,7 +77,23 @@ public class PlayerEffects extends ConfigurableModule {
         /** A wireframe sphere around the player, pulsing with the palette. */
         PULSE_SPHERE,
         /** Glowing marks left on the ground where the player steps. */
-        FOOTPRINTS
+        FOOTPRINTS,
+        /** Bubbles rising as if underwater. */
+        BUBBLES,
+        /** Petals drifting down and sideways. */
+        PETALS,
+        /** Slow embers rising and flickering out. */
+        EMBERS,
+        /** Stars falling from above and landing at the feet. */
+        STARFALL,
+        /** A spinning cone of sprites, wide at the top. */
+        TORNADO,
+        /** A rune disc spinning flat under the player. */
+        MAGIC_CIRCLE,
+        /** A pillar of light through the player. */
+        BEAM,
+        /** Rings that pulse outward from the chest in time with a heartbeat. */
+        HEARTBEAT
     }
 
     // ---- state ------------------------------------------------------------------------------
@@ -128,8 +144,9 @@ public class PlayerEffects extends ConfigurableModule {
             poses = new ArrayList<Pose>();
             HISTORY.put(player, poses);
         }
-        poses.add(new Pose(player.posX, player.posY, player.posZ, player.rotationYaw,
-                player.renderYawOffset, player.ticksExisted));
+        poses.add(new Pose(player.posX, player.posY, player.posZ, player.renderYawOffset,
+                player.limbSwing, player.limbSwingAmount, player.ticksExisted,
+                player.isSneaking()));
         int keep = CONFIG.playerEffectsGhostCount * CONFIG.playerEffectsGhostInterval + 1;
         while (poses.size() > keep) {
             poses.remove(0);
@@ -174,6 +191,54 @@ public class PlayerEffects extends ConfigurableModule {
                 break;
             case FOOTPRINTS:
                 trackFootprints(player, scale);
+                break;
+            case BUBBLES:
+                for (int i = 0; i < Math.max(1, count / 6); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-0.5f, 0.5f) * scale,
+                            player.posY + MathUtility.random(0.1f, 1.4f),
+                            player.posZ + MathUtility.random(-0.5f, 0.5f) * scale,
+                            MathUtility.random(-0.005f, 0.005f), MathUtility.random(0.02f, 0.05f),
+                            MathUtility.random(-0.005f, 0.005f),
+                            40, 0.22f * scale, TexturesManager.GUI_BUBBLE, 0f));
+                }
+                break;
+            case PETALS:
+                for (int i = 0; i < Math.max(1, count / 6); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-1.3f, 1.3f) * scale,
+                            player.posY + 2.4,
+                            player.posZ + MathUtility.random(-1.3f, 1.3f) * scale,
+                            MathUtility.random(-0.03f, 0.03f), -0.025f,
+                            MathUtility.random(-0.03f, 0.03f),
+                            60, 0.28f * scale, TexturesManager.GLYPH_FLOWER, 1.2f));
+                }
+                break;
+            case EMBERS:
+                for (int i = 0; i < Math.max(1, count / 5); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-0.6f, 0.6f) * scale,
+                            player.posY + MathUtility.random(0.2f, 1.2f),
+                            player.posZ + MathUtility.random(-0.6f, 0.6f) * scale,
+                            MathUtility.random(-0.015f, 0.015f), MathUtility.random(0.01f, 0.035f),
+                            MathUtility.random(-0.015f, 0.015f),
+                            44, 0.16f * scale, TexturesManager.FIREFLY, -0.0005f));
+                }
+                break;
+            case STARFALL:
+                for (int i = 0; i < Math.max(1, count / 8); i++) {
+                    PUFFS.add(new Puff(player.posX + MathUtility.random(-1.5f, 1.5f) * scale,
+                            player.posY + 3.2,
+                            player.posZ + MathUtility.random(-1.5f, 1.5f) * scale,
+                            0, -0.12f, 0,
+                            30, 0.3f * scale, TexturesManager.STAR, -0.004f));
+                }
+                break;
+            case HEARTBEAT:
+                // Two beats per second, like a pulse.
+                if ((mc.theWorld.getTotalWorldTime() % 20L) == 0L
+                        || (mc.theWorld.getTotalWorldTime() % 20L) == 6L) {
+                    PUFFS.add(new Puff(player.posX, player.posY + player.height * 0.6,
+                            player.posZ, 0, 0, 0, 14, 0.3f * scale,
+                            TexturesManager.HEART, 0f).expanding(1.6f * scale));
+                }
                 break;
             case SHOCKWAVE:
                 trackLanding(player, scale);
@@ -334,6 +399,58 @@ public class PlayerEffects extends ConfigurableModule {
                 drawSprites(sprites, TexturesManager.GLYPH_TRIANGLE, tickDelta);
                 break;
             }
+            case TORNADO: {
+                List<Puff> sprites = new ArrayList<Puff>();
+                int rings = Math.max(3, count / 2);
+                for (int r = 0; r < rings; r++) {
+                    double t = r / (double) rings;
+                    double radius = (0.15 + t * 1.1) * scale;
+                    int per = 3 + r / 2;
+                    for (int i = 0; i < per; i++) {
+                        double angle = time * 4 + i * (Math.PI * 2 / per) + t * 3;
+                        sprites.add(Puff.still(x + Math.cos(angle) * radius,
+                                y + t * (height + 1.0),
+                                z + Math.sin(angle) * radius,
+                                0.2f * scale, colour((float) t), alpha));
+                    }
+                }
+                drawSprites(sprites, TexturesManager.FIREFLY, tickDelta);
+                break;
+            }
+            case MAGIC_CIRCLE: {
+                // Two counter-rotating rune rings on the ground, plus a slow outer ring.
+                int runes = Math.max(4, count);
+                List<Puff> sprites = new ArrayList<Puff>();
+                for (int i = 0; i < runes; i++) {
+                    double angle = time * 1.2 + i * (Math.PI * 2 / runes);
+                    double radius = 1.1 * scale;
+                    sprites.add(Puff.still(x + Math.cos(angle) * radius, y + 0.03,
+                            z + Math.sin(angle) * radius, 0.3f * scale,
+                            colour(i / (float) runes), alpha).flat());
+                }
+                for (int i = 0; i < runes; i++) {
+                    double angle = -time * 0.8 + i * (Math.PI * 2 / runes) + 0.4;
+                    double radius = 0.6 * scale;
+                    sprites.add(Puff.still(x + Math.cos(angle) * radius, y + 0.03,
+                            z + Math.sin(angle) * radius, 0.22f * scale,
+                            colour(0.5f + i / (float) runes), alpha).flat());
+                }
+                drawSprites(sprites, TexturesManager.getRandomGlyphParticle(), tickDelta);
+                ring(x, y + 0.02, z, 1.35 * scale, runes * 3, colour(0f), alpha);
+                break;
+            }
+            case BEAM: {
+                // A column of rings, brightest at the feet.
+                int slices = Math.max(6, count * 2);
+                for (int i = 0; i < slices; i++) {
+                    double t = i / (double) slices;
+                    double radius = (0.45 - t * 0.2) * scale;
+                    double beamY = y + t * 6.0;
+                    ring(x, beamY, z, radius, 10, colour((float) t + (float) time * 0.1f),
+                            alpha * (1f - (float) t) * 0.8f);
+                }
+                break;
+            }
             case PULSE_SPHERE: {
                 double pulse = 0.8 + Math.sin(time * 2) * 0.15;
                 double radius = 0.95 * scale * pulse;
@@ -348,64 +465,128 @@ public class PlayerEffects extends ConfigurableModule {
         }
     }
 
-    /** Re-renders the player model at the positions it held a moment ago. */
+    /**
+     * Draws the player's own model at the positions it held a moment ago.
+     *
+     * <p>Three rules keep this usable in a fight rather than in the way:
+     * <ul>
+     *   <li>Ghosts of <i>your own</i> player are only drawn <b>behind</b> you — a ghost standing in
+     *       front of your camera is a wall between you and whoever you are hitting.</li>
+     *   <li>Nothing is drawn within a couple of blocks of the camera. A model that intersects the
+     *       near plane fills the screen, and with additive blending that means an entirely white
+     *       screen, which is what happened when a ghost caught up with its owner.</li>
+     *   <li>Ghosts have to be a real distance apart from one another, so they read as a few
+     *       discrete copies that jump behind you rather than a continuous smear.</li>
+     * </ul>
+     */
     private static void renderGhosts(float tickDelta) {
         if (drawingGhost) return;
         float alpha = CONFIG.playerEffectsAlpha / 100f;
         int interval = Math.max(1, CONFIG.playerEffectsGhostInterval);
+        double separation = 0.45 * (CONFIG.playerEffectsScale / 100f);
+
+        Vec3 cameraPos = Cameras.get().getPos();
+        Vec3 look = mc.thePlayer.getLookVec();
 
         for (EntityPlayer player : mc.theWorld.playerEntities) {
             if (!isTarget(player)) continue;
             List<Pose> poses = HISTORY.get(player);
             if (poses == null || poses.size() < 2) continue;
 
+            boolean self = player == mc.thePlayer;
             int drawn = 0;
+            double lastX = Double.NaN;
+            double lastY = 0;
+            double lastZ = 0;
+
             for (int i = poses.size() - 1 - interval; i >= 0 && drawn < CONFIG.playerEffectsGhostCount;
                  i -= interval) {
                 Pose pose = poses.get(i);
-                float age = (poses.size() - 1 - i) / (float) poses.size();
-                Color colour = colour(age);
-                drawGhost(player, pose, colour, alpha * (1f - age), tickDelta);
+
+                // Far enough from the previous ghost to be its own copy.
+                if (!Double.isNaN(lastX)) {
+                    double dx = pose.x - lastX;
+                    double dy = pose.y - lastY;
+                    double dz = pose.z - lastZ;
+                    if (dx * dx + dy * dy + dz * dz < separation * separation) continue;
+                }
+
+                double toCameraX = pose.x - cameraPos.xCoord;
+                double toCameraY = pose.y - cameraPos.yCoord;
+                double toCameraZ = pose.z - cameraPos.zCoord;
+                double distanceSq = toCameraX * toCameraX + toCameraY * toCameraY + toCameraZ * toCameraZ;
+
+                // Never inside the camera.
+                if (distanceSq < 2.2 * 2.2) continue;
+
+                if (self) {
+                    // Only behind: a positive dot product means it is in the direction you face.
+                    double dot = toCameraX * look.xCoord + toCameraY * look.yCoord + toCameraZ * look.zCoord;
+                    if (dot > 0) continue;
+                }
+
+                float age = (poses.size() - 1 - i) / (float) Math.max(1, poses.size());
+                drawGhost(player, pose, colour(age), alpha * (1f - age * 0.7f), tickDelta);
+                lastX = pose.x;
+                lastY = pose.y;
+                lastZ = pose.z;
                 drawn++;
             }
         }
     }
 
+    /**
+     * Draws one ghost.
+     *
+     * <p>This renders the player's <b>model</b> rather than re-running the entity renderer. Going
+     * through the renderer meant the ghost came out white (the renderer resets the colour before
+     * drawing), carried a held item drawn with the wrong state, and brought a name tag and a drop
+     * shadow with it. The model on its own takes the colour it is given and has no held item,
+     * armour, name or shadow to begin with — the held item and armour are separate feature layers.
+     *
+     * <p>The transform mirrors {@code RendererLivingEntity.doRender}: translate, turn to face the
+     * body yaw, flip Y (entity models are authored upside down) and drop by the model's own height
+     * offset.
+     */
     private static void drawGhost(EntityPlayer player, Pose pose, Color colour, float alpha,
                                   float tickDelta) {
         net.minecraft.client.renderer.entity.RenderManager manager = mc.getRenderManager();
         if (manager == null) return;
 
+        net.minecraft.client.renderer.entity.Render<?> render = manager.getEntityRenderObject(player);
+        if (!(render instanceof net.minecraft.client.renderer.entity.RenderPlayer)) return;
+        net.minecraft.client.model.ModelPlayer model =
+                ((net.minecraft.client.renderer.entity.RenderPlayer) render).getMainModel();
+        if (model == null) return;
+
         drawingGhost = true;
-        boolean hidGui = mc.gameSettings.hideGUI;
-        boolean shadows = manager.isRenderShadow();
         GlStateManager.pushMatrix();
         try {
-            // A ghost is a full entity render, so without this each one would stack another name
-            // tag and another drop shadow on top of the player's own. canRenderName() is gated on
-            // Minecraft.isGuiEnabled(), which reads this flag.
-            mc.gameSettings.hideGUI = true;
-            manager.setRenderShadow(false);
             GlStateManager.enableBlend();
-            // Additive, so the ghost glows and never darkens what is behind it.
+            // Additive: the ghost glows and never darkens what is behind it.
             GlStateManager.blendFunc(770, 1);
             GlStateManager.depthMask(false);
             GlStateManager.disableLighting();
-            // Untextured, which is what makes it read as a silhouette rather than a clone.
             GlStateManager.disableTexture2D();
             GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
                     colour.getBlue() / 255f, Math.max(0.02f, alpha));
 
-            manager.renderEntityWithPosYaw(player,
-                    pose.x - manager.viewerPosX,
+            GlStateManager.translate(pose.x - manager.viewerPosX,
                     pose.y - manager.viewerPosY,
-                    pose.z - manager.viewerPosZ,
-                    pose.bodyYaw, tickDelta);
+                    pose.z - manager.viewerPosZ);
+            GlStateManager.rotate(180.0f - pose.bodyYaw, 0.0f, 1.0f, 0.0f);
+            GlStateManager.scale(-1.0f, -1.0f, 1.0f);
+            GlStateManager.translate(0.0f, -1.5078125f, 0.0f);
+
+            model.isSneak = pose.sneaking;
+            model.isRiding = false;
+            model.isChild = false;
+            model.swingProgress = 0.0f;
+            model.render(player, pose.limbSwing, pose.limbSwingAmount, pose.age, 0.0f, 0.0f, 0.0625f);
         } catch (Throwable ignored) {
-            // A model that cannot be re-rendered is not worth a crash.
+            // A model that cannot be drawn is not worth a crash.
         } finally {
-            mc.gameSettings.hideGUI = hidGui;
-            manager.setRenderShadow(shadows);
+            model.isSneak = false;
             GlStateManager.enableTexture2D();
             GlStateManager.enableLighting();
             GlStateManager.depthMask(true);
@@ -550,22 +731,27 @@ public class PlayerEffects extends ConfigurableModule {
 
     // ---- value types ------------------------------------------------------------------------
 
-    /** Where a player was, for ghosts. */
+    /** Where a player was and how it was standing, for ghosts. */
     private static final class Pose {
         final double x;
         final double y;
         final double z;
-        final float yaw;
         final float bodyYaw;
-        final int tick;
+        final float limbSwing;
+        final float limbSwingAmount;
+        final float age;
+        final boolean sneaking;
 
-        Pose(double x, double y, double z, float yaw, float bodyYaw, int tick) {
+        Pose(double x, double y, double z, float bodyYaw, float limbSwing, float limbSwingAmount,
+             float age, boolean sneaking) {
             this.x = x;
             this.y = y;
             this.z = z;
-            this.yaw = yaw;
             this.bodyYaw = bodyYaw;
-            this.tick = tick;
+            this.limbSwing = limbSwing;
+            this.limbSwingAmount = limbSwingAmount;
+            this.age = age;
+            this.sneaking = sneaking;
         }
     }
 

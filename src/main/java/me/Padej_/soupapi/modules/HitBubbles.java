@@ -84,8 +84,30 @@ public class HitBubbles extends ConfigurableModule {
         RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, TexturesManager.getHitBubbleTexture());
 
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
-        float scale = factor * 2f * (CONFIG.hitBubblesScale / 100f);
+        // How the bubble moves over its life. Expanding and spinning was the only behaviour;
+        // these are the same ring drawn with a different curve.
+        float growth;
+        switch (CONFIG.hitBubblesAnimation) {
+            case SPIN:
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
+                growth = factor;
+                break;
+            case SHRINK:
+                growth = 1f - factor * 0.75f;
+                break;
+            case PULSE:
+                growth = factor * (0.8f + 0.2f * (float) Math.sin(factor * Math.PI * 4));
+                break;
+            case FLASH:
+                // Most of the growth happens immediately, then it hangs and fades.
+                growth = (float) Math.sqrt(factor);
+                break;
+            case EXPAND:
+            default:
+                growth = factor;
+                break;
+        }
+        float scale = growth * 2f * (CONFIG.hitBubblesScale / 100f);
         Render2D.renderGradientTexture(matrices,
                 -scale / 2, -scale / 2, scale, scale,
                 0, 0, 128, 128, 128, 128,
@@ -154,7 +176,12 @@ public class HitBubbles extends ConfigurableModule {
     }
 
     public enum Style {
-        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, PORTAL_2
+        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, PORTAL_2, RUNE, SAKURA, SNOWFLAKE, MAGIC, SHATTER
+    }
+
+    /** How a bubble behaves over its lifetime. */
+    public enum Animation {
+        EXPAND, SPIN, PULSE, SHRINK, FLASH
     }
 public static final class HitBubble {
     private final float x;

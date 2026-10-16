@@ -71,15 +71,15 @@ public class TotemPopParticles extends ConfigurableModule {
     private static void updateAvailableTextures() {
         AVAILABLE_TEXTURES.clear();
 
-        if (CONFIG.totemPopParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
-        if (CONFIG.totemPopParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
-        if (CONFIG.totemPopParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
-        if (CONFIG.totemPopParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.HEART);
-        if (CONFIG.totemPopParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.STAR);
-        if (CONFIG.totemPopParticlesIncludeGlyphs) AVAILABLE_TEXTURES.add(TexturesManager.getRandomGlyphParticle());
+        if (CONFIG.totemPopParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
+        if (CONFIG.totemPopParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
+        if (CONFIG.totemPopParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
+        if (CONFIG.totemPopParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
+        if (CONFIG.totemPopParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
+        if (CONFIG.totemPopParticlesIncludeGlyphs) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.getRandomGlyphParticle()));
 
         if (AVAILABLE_TEXTURES.isEmpty()) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY));
         }
     }
 
