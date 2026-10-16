@@ -123,6 +123,85 @@ public class SoupAPI_Config implements ConfigData {
     public int trailsAlphaFactor = 100;
 
     /**
+     * HIT EFFECTS
+     **/
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsEnabled = false;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public HitEffects.Style hitEffectsStyle = HitEffects.Style.SHARDS;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsRandomColor = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsOnlyCrit = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsOnlyPlayers = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsFollow = true;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int hitEffectsCount = 10;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int hitEffectsScale = 100;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int hitEffectsSpeed = 100;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 4, max = 60)
+    public int hitEffectsDuration = 14;
+
+    /**
+     * KILL EFFECTS
+     **/
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsEnabled = false;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public KillEffects.Style killEffectsStyle = KillEffects.Style.SOUL_BURST;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsRandomColor = false;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsOnlyPlayers = true;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsIncludeSelf = true;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int killEffectsCount = 12;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int killEffectsScale = 100;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 8, max = 80)
+    public int killEffectsDuration = 26;
+
+    /**
+     * LANDING IMPACT
+     **/
+    @ConfigEntry.Category("landing_impact")
+    public boolean landingImpactEnabled = false;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public LandingImpact.Style landingImpactStyle = LandingImpact.Style.SHOCKWAVE;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Target landingImpactTarget = PlayerEffects.Target.BOTH;
+    @ConfigEntry.Category("landing_impact")
+    public boolean landingImpactRandomColor = false;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int landingImpactCount = 10;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int landingImpactScale = 100;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 6, max = 60)
+    public int landingImpactDuration = 16;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int landingImpactMinFall = 8;
+
+    /**
      * PLAYER EFFECTS
      **/
     @ConfigEntry.Category("player_effects")

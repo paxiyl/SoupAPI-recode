@@ -110,6 +110,34 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Fourth round: combat effects, and lines that are no longer lines
+
+Taken from the reference showcases, in-game visuals only — no GUI changes, no weapon rendering.
+
+**Everything built from GL lines now draws as geometry.** The third round fixed this for the halo
+and the player effects; the box outlines (friends highlight, trajectory landing) and the trajectory
+path itself were still GL lines, which gl4es draws one pixel wide. `Render3D_Shapes` builds those
+from `Fx.glowLine` bands now, so a trajectory arc and an outlined box glow instead of scratching.
+
+**The ghost forms through you.** Copies within about two blocks of the camera used to be hidden
+outright, to stop a model crossing the near plane filling the screen — which also meant the copy
+never appeared to separate from its owner. It fades in with distance instead: invisible at half a
+block, full by two and a bit, so the ghost materialises as the player walks out of it.
+
+**Three new modules**, sharing one small particle pool (`FxParticles`, capped at 2000 so a bad
+setting cannot eat the frame):
+
+| Module | What it does | Styles |
+|---|---|---|
+| Hit Effects | A burst at the point of impact; Follow Target gives the particles the target's velocity so they travel through the knockback | 10: shards, glass, arrows, sparks, runes, rings, cross, burst, stars, slash |
+| Kill Effects | Fires where something dies. 1.8.9 sends no death packet a client can hook, so living entities in range are remembered while alive and the effect fires the first tick one is found dead | 8: flame pillar, soul burst, explosion, portal, vortex, lightning, rings, ash |
+| Landing Impact | Fires where a player lands, scaled by the height of the fall, with a minimum fall below which nothing draws | 7: ring, dust, shockwave, crack, splash, burst, runes |
+
+**Symbol trails.** A trail can now be a line of symbols rather than a ribbon — the chain-trail idea
+from the showcase — which with 43 symbols is 43 trails rather than one.
+
+**157 selectable styles across 283 options.**
+
 ## Third round: thick geometry, real symbols, themes that change the look
 
 **Why the rings looked weak: gl4es ignores `glLineWidth`.** Every ring, halo, wing and beam was

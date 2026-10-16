@@ -64,28 +64,28 @@ public class Render3D_Shapes {
         }
 
         if (!OUTLINE_QUEUE.isEmpty() || !OUTLINE_SIDE_QUEUE.isEmpty()) {
-            setupRender();
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-            RenderSystem.disableCull();
-            RenderSystem.disableDepthTest();
-            RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
+            // Box outlines as glowing bands rather than GL lines: glLineWidth does nothing on
+            // gl4es, so on PojavLauncher every outline arrived as a one-pixel scratch.
+            OUTLINE_QUEUE.forEach(action -> glowBox(action.box(), action.color(), action.lineWidth()));
 
-            RenderSystem.lineWidth(2f);
+            if (!OUTLINE_SIDE_QUEUE.isEmpty()) {
+                setupRender();
+                Tessellator tessellator = Tessellator.getInstance();
+                BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+                RenderSystem.disableCull();
+                RenderSystem.disableDepthTest();
+                RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
+                RenderSystem.lineWidth(2f);
+                OUTLINE_SIDE_QUEUE.forEach(action -> {
+                    setSideOutlinePoints(action.box, matrixFrom(action.box().minX, action.box().minY,
+                            action.box().minZ), buffer, action.color(), action.side());
+                });
+                Render2D.endBuilding(buffer);
+                RenderSystem.enableCull();
+                RenderSystem.enableDepthTest();
+                endRender();
+            }
 
-            OUTLINE_QUEUE.forEach(action -> {
-                setOutlinePoints(action.box(), matrixFrom(action.box().minX, action.box().minY, action.box().minZ), buffer, action.color());
-            });
-
-            OUTLINE_SIDE_QUEUE.forEach(action -> { // !!!
-                setSideOutlinePoints(action.box, matrixFrom(action.box().minX, action.box().minY, action.box().minZ), buffer, action.color(), action.side());
-            });
-
-            Render2D.endBuilding(buffer);
-
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            endRender();
             OUTLINE_QUEUE.clear();
             OUTLINE_SIDE_QUEUE.clear();
         }
@@ -110,23 +110,32 @@ public class Render3D_Shapes {
         }
 
         if (!LINE_QUEUE.isEmpty()) {
-            setupRender();
-            Tessellator tessellator = Tessellator.getInstance();
-            RenderSystem.disableCull();
-            RenderSystem.setShader(ShaderKey.RENDERTYPE_LINES);
-            RenderSystem.lineWidth(2f);
-            RenderSystem.disableDepthTest();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-            LINE_QUEUE.forEach(action -> { // !!!
-                MatrixStack matrices = matrixFrom(action.start.xCoord, action.start.yCoord, action.start.zCoord);
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.xCoord - action.start.xCoord), (float) (action.end.yCoord - action.start.yCoord), (float) (action.end.zCoord - action.start.zCoord), action.color);
-            });
-            Render2D.endBuilding(buffer);
-            RenderSystem.enableCull();
-            RenderSystem.lineWidth(1f);
-            RenderSystem.enableDepthTest();
-            endRender();
+            // Same reason as the outlines: a band of geometry, not a GL line.
+            float width = 0.04f;
+            LINE_QUEUE.forEach(action -> Fx.glowLine(
+                    action.start.xCoord, action.start.yCoord, action.start.zCoord,
+                    action.end.xCoord, action.end.yCoord, action.end.zCoord,
+                    width, action.color()));
             LINE_QUEUE.clear();
+        }
+    }
+
+    /** The twelve edges of a box, each drawn as a glowing band. */
+    public static void glowBox(AxisAlignedBB box, Color colour, float lineWidth) {
+        double width = 0.02 * Math.max(1f, lineWidth);
+        double[][] corners = {
+                {box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                {box.maxX, box.minY, box.maxZ}, {box.minX, box.minY, box.maxZ},
+                {box.minX, box.maxY, box.minZ}, {box.maxX, box.maxY, box.minZ},
+                {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+        int[][] edges = {
+                {0, 1}, {1, 2}, {2, 3}, {3, 0},
+                {4, 5}, {5, 6}, {6, 7}, {7, 4},
+                {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+        for (int[] edge : edges) {
+            double[] a = corners[edge[0]];
+            double[] b = corners[edge[1]];
+            Fx.glowLine(a[0], a[1], a[2], b[0], b[1], b[2], width, colour);
         }
     }
 

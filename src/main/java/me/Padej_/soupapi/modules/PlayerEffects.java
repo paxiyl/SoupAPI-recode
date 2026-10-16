@@ -521,8 +521,13 @@ public class PlayerEffects extends ConfigurableModule {
                 double distanceSq = toCameraX * toCameraX + toCameraY * toCameraY
                         + toCameraZ * toCameraZ;
 
-                // Never inside the camera: a model across the near plane fills the screen.
-                if (distanceSq < 2.2 * 2.2) continue;
+                // Fade in with distance instead of popping in at a cutoff. A model across the
+                // near plane fills the screen - which is what whited everything out - but hiding
+                // anything close also meant the ghost never appeared to separate from its owner.
+                // Fading it means the copy forms as the player walks out of it.
+                double distance = Math.sqrt(distanceSq);
+                float proximity = (float) Math.max(0.0, Math.min(1.0, (distance - 0.55) / 1.75));
+                if (proximity <= 0.02f) continue;
 
                 if (self) {
                     // Behind only - a ghost in front of you is a wall between you and your target.
@@ -532,7 +537,7 @@ public class PlayerEffects extends ConfigurableModule {
                 }
 
                 float age = (poses.size() - i) / (float) Math.max(1, poses.size());
-                drawGhost(player, pose, colour(age), alpha * (1f - age * 0.6f), tickDelta);
+                drawGhost(player, pose, colour(age), alpha * (1f - age * 0.6f) * proximity, tickDelta);
                 drawn++;
             }
         }

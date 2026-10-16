@@ -136,6 +136,11 @@ public class Trails extends ConfigurableModule {
             List<TrailSegment> trails = entry.getValue();
             if (trails == null || trails.isEmpty()) continue;
 
+            if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.SYMBOLS) {
+                renderSymbolTrail(trails, tickDelta);
+                continue;
+            }
+
             float height = entity.height * (CONFIG.trailsHeight / 100f);
             int baseAlpha = 255;
 
@@ -274,6 +279,35 @@ public class Trails extends ConfigurableModule {
         matrixStack.pop();
     }
 
+    /**
+     * A trail drawn as a line of symbols rather than a ribbon.
+     *
+     * <p>The sprite is whichever symbol is chosen in the settings, so this is 43 trails rather than
+     * one.
+     */
+    private static void renderSymbolTrail(List<TrailSegment> trails, float tickDelta) {
+        net.minecraft.util.ResourceLocation texture =
+                me.Padej_.soupapi.utils.TexturesManager.getRandomGlyphParticle();
+        me.Padej_.soupapi.compat.BufferBuilder buffer =
+                me.Padej_.soupapi.render.Fx.beginSprites(texture);
+        net.minecraft.util.Vec3 cameraOffset = me.Padej_.soupapi.compat.Cameras.get().getPos();
+        for (int i = 0; i < trails.size(); i++) {
+            TrailSegment segment = trails.get(i);
+            Vec3 pos = segment.interpolate(tickDelta);
+            float progress = segment.getProgress(tickDelta);
+            float alpha = Math.max(0f, 1f - progress);
+            if (alpha <= 0.02f) continue;
+            // interpolate() is already camera-relative; the sprite helper wants world space.
+            me.Padej_.soupapi.render.Fx.appendSprite(buffer,
+                    pos.xCoord + mc.getRenderManager().viewerPosX,
+                    pos.yCoord + mc.getRenderManager().viewerPosY + 0.9,
+                    pos.zCoord + mc.getRenderManager().viewerPosZ,
+                    0.45f * (CONFIG.trailsHeight / 100f),
+                    me.Padej_.soupapi.render.Fx.withAlpha(colorAt(progress), alpha), false);
+        }
+        me.Padej_.soupapi.render.Fx.endSprites(buffer);
+    }
+
     public static class TrailSegment {
         private final Vec3 from;
         private final Vec3 to;
@@ -376,7 +410,7 @@ public class Trails extends ConfigurableModule {
     }
 
     public enum Style {
-        FADED, SOLID, FADED_INVERT, GRADIENT, PULSE, RIBBON, DOTTED, NEON
+        FADED, SOLID, FADED_INVERT, GRADIENT, PULSE, RIBBON, DOTTED, NEON, SYMBOLS
     }
 
     /** Who leaves a trail. */

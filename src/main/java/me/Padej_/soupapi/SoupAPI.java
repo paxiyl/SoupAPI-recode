@@ -11,6 +11,7 @@ import me.Padej_.soupapi.event.ForgeEventBridge;
 import me.Padej_.soupapi.gui.SoupSettingsScreen;
 import me.Padej_.soupapi.modules.HitParticle;
 import me.Padej_.soupapi.modules.HitBubbles;
+import me.Padej_.soupapi.modules.HitEffects;
 import me.Padej_.soupapi.modules.Translator;
 import me.Padej_.soupapi.utils.HitSound;
 import net.minecraftforge.fml.common.Mod;
@@ -57,6 +58,8 @@ public class SoupAPI {
         me.Padej_.soupapi.screen.SoupSettingsShortcut.register();
 
         HitBubbles.registerOnHit();
+
+        HitEffects.registerOnHit();
         HitSound.registerOnHit();
         HitParticle.registerOnHit();
 

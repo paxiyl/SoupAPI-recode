@@ -123,6 +123,9 @@ public final class ForgeEventBridge {
 
         guard("Trails.tick", Trails::onTick);
         guard("PlayerEffects.tick", me.Padej_.soupapi.modules.PlayerEffects::onTick);
+        guard("KillEffects.tick", me.Padej_.soupapi.modules.KillEffects::onTick);
+        guard("LandingImpact.tick", me.Padej_.soupapi.modules.LandingImpact::onTick);
+        guard("FxParticles.tick", me.Padej_.soupapi.render.FxParticles::tick);
         guard("JumpCircles.tick", JumpCircles::onTick);
         guard("TargetHud.tick", TargetHud::onTick);
         guard("RPC.tick", RPC::onTick);
@@ -168,6 +171,8 @@ public final class ForgeEventBridge {
 
         guard("ColoredSky", me.Padej_.soupapi.modules.ColoredSky::render);
         guard("PlayerEffects", () -> me.Padej_.soupapi.modules.PlayerEffects.render(context));
+        guard("FxParticles", () -> me.Padej_.soupapi.render.FxParticles.render(
+                context.tickCounter().getTickDelta(true)));
         guard("FriendsHighlight", () -> me.Padej_.soupapi.modules.FriendsHighlight.render(context));
         guard("Render3D_Shapes", () -> Render3D_Shapes.render(context));
 
