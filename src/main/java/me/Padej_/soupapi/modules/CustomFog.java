@@ -44,14 +44,24 @@ public class CustomFog extends ConfigurableModule {
         return Palette.getColor(0);
     }
 
-    /** Opacity, 0..1, used as the GL fog density in exponential mode. */
+    /**
+     * Opacity, 0..1, used as the GL fog density in exponential mode.
+     *
+     * <p>{@code customFogThick} doubles it, which is what "thick" meant on 1.21.4 where the fog
+     * record carried a second, denser layer. The option was read by nothing before this.
+     */
     public static float getDensity() {
-        return CONFIG.customFogDensity / 100f;
+        float density = CONFIG.customFogDensity / 100f;
+        return CONFIG.customFogThick ? Math.min(1f, density * 2f) : density;
     }
 
     /**
-     * Applies the fog distance curve. Called at the end of {@code EntityRenderer.renderFog}, so it
-     * overrides whatever vanilla just configured.
+     * Applies the fog distance curve.
+     *
+     * <p>Called from Forge's {@code EntityViewRenderEvent.RenderFogEvent}, which fires at the end
+     * of {@code EntityRenderer.setupFog} — so this overrides whatever vanilla just configured,
+     * which is what the 1.21.4 mixin on {@code renderFog} did. Without it the sphere/cylinder
+     * choice did nothing: the fog density event alone only covers the exponential curve.
      */
     public static void applyFogState() {
         if (CONFIG.customFogShape == CustomFogShape.SPHERE) {

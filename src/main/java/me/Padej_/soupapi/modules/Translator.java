@@ -24,7 +24,9 @@ public class Translator extends ConfigurableModule {
     private static int failCounter = 0;
 
     public static void onTick() {
-        if (true) return;
+        // Was hard-disabled with `if (true) return;`, so the option could never do anything. It is
+        // gated on its own setting now, and nothing is sent anywhere while that setting is off.
+        if (!ConfigurableModule.CONFIG.translatorBruhEnabled) return;
 
         long currentTime = System.currentTimeMillis();
 
@@ -75,6 +77,14 @@ public class Translator extends ConfigurableModule {
             }
         }
         return false;
+    }
+
+    /** A finished translation for {@code text}, or {@code null} while it is still in flight. */
+    public static String cachedTranslation(String text) {
+        synchronized (translationCache) {
+            Object value = translationCache.get(text);
+            return value == null ? null : String.valueOf(value);
+        }
     }
 
     public static void queueTranslation(String text) {

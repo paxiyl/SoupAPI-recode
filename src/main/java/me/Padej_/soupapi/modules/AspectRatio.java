@@ -21,15 +21,36 @@ public class AspectRatio extends ConfigurableModule {
         }
     }
 
-    /**
-     * Called once per frame from the FOV event.
-     *
-     * <p>Forge exposes no hook for the projection's aspect ratio — {@code FOVUpdateEvent} only
-     * carries the field of view — so the custom aspect ratio cannot be applied without bytecode
-     * surgery, which this port deliberately avoids. This exists so the module still participates
-     * in the frame and its setting round-trips; see PORTING.md.
-     */
+    /** Kept for the FOV event; the aspect itself is applied in {@link #applyToProjection()}. */
     public static void onFovUpdate() {
+    }
+
+    /**
+     * Stretches the world projection to the configured aspect ratio.
+     *
+     * <p>No Forge event carries the projection's aspect — {@code FOVUpdateEvent} is only the field
+     * of view — so this was written off as impossible for a port with no bytecode patching. It is
+     * not: vanilla builds the perspective in {@code setupCameraTransform} and then calls
+     * {@code orientCamera}, which fires {@code EntityViewRenderEvent.CameraSetup}. By that point
+     * the projection matrix is on the stack, so scaling it along X from there changes exactly what
+     * a different aspect ratio would have changed. The matrix mode is restored afterwards, since
+     * everything downstream assumes model-view.
+     */
+    public static void applyToProjection() {
+        if (!CONFIG.aspectRatioEnabled) return;
+
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        if (mc.displayHeight <= 0) return;
+
+        float actual = (float) mc.displayWidth / (float) mc.displayHeight;
+        float wanted = getRatioByPreset();
+        if (wanted <= 0f || Math.abs(wanted - actual) < 1.0E-4f) return;
+
+        // gluPerspective divides x by the aspect, so the correction is the ratio of the two.
+        float scaleX = actual / wanted;
+        net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);
+        net.minecraft.client.renderer.GlStateManager.scale(scaleX, 1f, 1f);
+        net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);
     }
 
     public enum Preset {

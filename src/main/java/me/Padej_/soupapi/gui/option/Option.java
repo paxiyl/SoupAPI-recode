@@ -21,6 +21,7 @@ public abstract class Option {
 
     private final String label;
     private final String tooltip;
+    private String unavailableReason;
 
     protected Option(String label, String tooltip) {
         this.label = label == null ? "" : label;
@@ -39,6 +40,22 @@ public abstract class Option {
     /** True for rows that are headers rather than controls. */
     public boolean interactive() {
         return true;
+    }
+
+    /**
+     * Why this option does nothing on this version, or {@code null} when it works.
+     *
+     * <p>A few of the mod's options depend on things 1.8.9 does not have. They are kept visible
+     * rather than hidden, marked and explained, because an option that silently does nothing is
+     * worse than one that says why — and because the config file still carries them.
+     */
+    public String unavailableReason() {
+        return unavailableReason;
+    }
+
+    public Option markUnavailable(String reason) {
+        this.unavailableReason = reason;
+        return this;
     }
 
     /** Puts the value back to the one the mod ships with. */

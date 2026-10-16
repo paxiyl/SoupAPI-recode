@@ -162,10 +162,15 @@ public class JumpCircles extends ConfigurableModule {
             float colorAnim = isFadeOut ? 1f - remainingFraction : 1.0f;
             float scale = interpolatedRadius * 2f;
 
-            Color color1 = Palette.getInterpolatedPaletteColor(0.0f);
-            Color color2 = Palette.getInterpolatedPaletteColor(0.33f);
-            Color color3 = Palette.getInterpolatedPaletteColor(0.66f);
-            Color color4 = Palette.getInterpolatedPaletteColor(1.0f);
+            // jumpCirclesColorSpinSpeed rotates which palette colour sits at which corner, so the
+            // gradient travels around the ring instead of being pinned to it. It was read by
+            // nothing before, which is why the option appeared to do nothing.
+            float colorPhase = (System.currentTimeMillis() % 100000L) / 1000f
+                    * (CONFIG.jumpCirclesColorSpinSpeed / 10f);
+            Color color1 = Palette.getInterpolatedPaletteColor(wrap(colorPhase));
+            Color color2 = Palette.getInterpolatedPaletteColor(wrap(colorPhase + 0.33f));
+            Color color3 = Palette.getInterpolatedPaletteColor(wrap(colorPhase + 0.66f));
+            Color color4 = Palette.getInterpolatedPaletteColor(wrap(colorPhase + 1.0f));
 
             modelMatrix.push();
             modelMatrix.translate(x, y, z);
@@ -193,6 +198,12 @@ public class JumpCircles extends ConfigurableModule {
             RenderSystem.disableBlend();
             RenderSystem.enableCull();
         }
+    }
+
+    /** Keeps a palette position inside 0..1, where the palette repeats. */
+    private static float wrap(float position) {
+        float v = position % 1f;
+        return v < 0f ? v + 1f : v;
     }
 
     public enum JumCircleStyle {

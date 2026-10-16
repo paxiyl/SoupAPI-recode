@@ -126,6 +126,7 @@ public final class ForgeEventBridge {
         guard("TargetHud.tick", TargetHud::onTick);
         guard("RPC.tick", RPC::onTick);
         guard("Translator.tick", Translator::onTick);
+        guard("WorldChanger.tick", me.Padej_.soupapi.modules.WorldChanger::onTick);
 
         guard("HitParticle.tick", HitParticle::onTick);
         guard("TotemPopParticles.tick", TotemPopParticles::onTick);
@@ -164,6 +165,8 @@ public final class ForgeEventBridge {
         guard("TotemPopParticles", () -> TotemPopParticles.render(context));
         guard("AmbientParticle", () -> AmbientParticle.render(context));
 
+        guard("ColoredSky", me.Padej_.soupapi.modules.ColoredSky::render);
+        guard("FriendsHighlight", () -> me.Padej_.soupapi.modules.FriendsHighlight.render(context));
         guard("Render3D_Shapes", () -> Render3D_Shapes.render(context));
 
         guard("worldRenderLast", () -> SoupEvents.WORLD_RENDER_LAST.invoke(context));
@@ -204,6 +207,7 @@ public final class ForgeEventBridge {
         SoupEvents.HudRenderContext hud = SoupEvents.hudContext();
         hud.begin(event.partialTicks, context);
 
+        guard("BetterHud", () -> me.Padej_.soupapi.render.BetterHudRenderer.render(context));
         guard("TargetHud", () -> TargetHud.render(context, hud.tickCounter()));
         guard("PotionsHud", () -> {
             if (me.Padej_.soupapi.config.ConfigurableModule.CONFIG.hudBetterPotionsHudEnabled) {
@@ -212,6 +216,7 @@ public final class ForgeEventBridge {
         });
         guard("Watermark", () -> WatermarkRenderer.render(context));
         guard("MouseMove", () -> MouseMove.render(context));
+        guard("NoRender", () -> me.Padej_.soupapi.modules.NoRender.renderFireReplacement(context));
 
         guard("hudRender", () -> SoupEvents.HUD_RENDER.invoke(hud));
 
@@ -291,6 +296,85 @@ public final class ForgeEventBridge {
         if (!CustomFog.shouldApply()) return;
         event.density = CustomFog.getDensity() * 0.1f;
         event.setCanceled(true);
+    }
+
+    /**
+     * Applies the fog's distance curve.
+     *
+     * <p>{@code FogDensity} only covers the exponential curve, so without this the sphere/cylinder
+     * choice did nothing at all. This event fires at the end of vanilla's fog setup, which is where
+     * the 1.21.4 mixin applied the same state.
+     */
+    @SubscribeEvent
+    public void onRenderFog(EntityViewRenderEvent.RenderFogEvent event) {
+        if (!CustomFog.shouldApply()) return;
+        CustomFog.applyFogState();
+    }
+
+    // ---- projection ------------------------------------------------------------------------
+
+    @SubscribeEvent
+    public void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
+        AspectRatio.applyToProjection();
+    }
+
+    // ---- overlays --------------------------------------------------------------------------
+
+    /** Suppresses the burning overlay; {@code NoRender} draws its replacement in the HUD pass. */
+    @SubscribeEvent
+    public void onBlockOverlay(net.minecraftforge.client.event.RenderBlockOverlayEvent event) {
+        if (event.overlayType == net.minecraftforge.client.event.RenderBlockOverlayEvent.OverlayType.FIRE
+                && me.Padej_.soupapi.modules.NoRender.shouldCancelFire()) {
+            event.setCanceled(true);
+        }
+    }
+
+    // ---- sound -----------------------------------------------------------------------------
+
+    /**
+     * Mutes vanilla's hurt sound for the player's own hits when the mod replaces it.
+     *
+     * <p>{@code hitSoundOverwriteEnabled} was read by nothing. 1.8.9 has no attacker-side hit sound
+     * to replace — what you hear is the victim's hurt sound — so "overwrite" is implemented as
+     * silencing that, and only inside a short window after one of the player's own hits, so damage
+     * taken and other players' fights still sound normal.
+     */
+    @SubscribeEvent
+    public void onPlaySound(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
+        me.Padej_.soupapi.config.SoupAPI_Config config =
+                me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
+        if (!config.hitSoundOverwriteEnabled || !config.hitSoundEnabled) return;
+        if (event.sound == null || event.name == null) return;
+        if (!event.name.contains(".hurt")) return;
+        if (me.Padej_.soupapi.utils.HitSound.sinceLastHitMs() > 300L) return;
+        event.result = null;
+    }
+
+    // ---- chat ------------------------------------------------------------------------------
+
+    /**
+     * Feeds Russian chat lines to the translator and shows the result alongside them.
+     *
+     * <p>Nothing called {@code Translator.queueTranslation} on this port — the 1.21.4 version fed it
+     * from a chat mixin — so the translator had no input and its option did nothing.
+     */
+    @SubscribeEvent
+    public void onChatReceived(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
+        if (!me.Padej_.soupapi.config.ConfigurableModule.CONFIG.translatorBruhEnabled) return;
+        if (event.message == null) return;
+
+        String text = event.message.getUnformattedText();
+        if (text == null || text.isEmpty() || !Translator.containsCyrillic(text)) return;
+
+        String translated = Translator.cachedTranslation(text);
+        if (translated != null && !translated.isEmpty()) {
+            event.message = me.Padej_.soupapi.compat.Texts.literal(
+                    text + " \u00a77(" + translated + ")");
+        } else {
+            // Queued now; the next identical line is shown translated, which is as fast as a
+            // rate-limited public translation API allows.
+            Translator.queueTranslation(text);
+        }
     }
 
     // ---- field of view / aspect ------------------------------------------------------------

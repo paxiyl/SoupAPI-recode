@@ -37,6 +37,44 @@ public final class ConfigSchema {
     private static final String OPTION_PREFIX = "text.autoconfig.soupapi.option.";
     private static final String CATEGORY_PREFIX = "text.autoconfig.soupapi.category.";
 
+    /**
+     * Options that cannot work on 1.8.9, and why.
+     *
+     * <p>Each one needs something the version does not have. They stay in the screen, marked and
+     * explained in the footer, instead of being hidden or left looking functional.
+     */
+    private static final Map<String, String> UNAVAILABLE = new LinkedHashMap<String, String>();
+
+    private static final Map<String, String> UNAVAILABLE_CATEGORIES = new LinkedHashMap<String, String>();
+
+    static {
+        String combat = "1.9+ only: 1.8.9 has no attack cooldown, so no sweep, knockback, "
+                + "strong or weak hit classes to set a volume for";
+        UNAVAILABLE.put("hitSoundOverwriteCritVolume", combat);
+        UNAVAILABLE.put("hitSoundOverwriteSweepVolume", combat);
+        UNAVAILABLE.put("hitSoundOverwriteNoDamageVolume", combat);
+        UNAVAILABLE.put("hitSoundOverwriteKnockbackVolume", combat);
+        UNAVAILABLE.put("hitSoundOverwriteStrongVolume", combat);
+        UNAVAILABLE.put("hitSoundOverwriteWeakVolume", combat);
+
+        String scoreboard = "1.8.9 draws the scoreboard inside the HUD with no hook to replace it, "
+                + "and this port uses no bytecode patching";
+        UNAVAILABLE.put("hudBetterScoreboardEnabled", scoreboard);
+        UNAVAILABLE.put("hudBetterScoreboardGlow", scoreboard);
+        UNAVAILABLE.put("hudBetterScoreboardDarker", scoreboard);
+        UNAVAILABLE.put("hudBetterScoreboardColor", scoreboard);
+
+        String hurtFlash = "the damage flash colour is set inside RendererLivingEntity, which has "
+                + "no hook on 1.8.9";
+        UNAVAILABLE.put("hitColorEnabled", hurtFlash);
+        UNAVAILABLE.put("hitColorCustomColor", hurtFlash);
+        UNAVAILABLE.put("hitColorColor", hurtFlash);
+        UNAVAILABLE.put("hitColorAlpha", hurtFlash);
+
+        UNAVAILABLE_CATEGORIES.put("totem",
+                "1.11+ only: the Totem of Undying does not exist on 1.8.9, so nothing can pop one");
+    }
+
     private ConfigSchema() {
     }
 
@@ -72,6 +110,13 @@ public final class ConfigSchema {
 
             Option option = toOption(field, config, defaults);
             if (option != null) {
+                String reason = UNAVAILABLE.get(field.getName());
+                if (reason == null) {
+                    reason = UNAVAILABLE_CATEGORIES.get(categoryId);
+                }
+                if (reason != null) {
+                    option.markUnavailable(reason);
+                }
                 page.add(option);
             }
         }

@@ -110,6 +110,60 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## The settings screen, and which options actually do anything
+
+The screen was rebuilt (`gui/SoupSettingsScreen`, `gui/option/*`). The old one could only edit a
+second, parallel copy of five modules' settings — about thirty options — and drew them as flat
+grey boxes with no scrolling, so the rest sat off the bottom of the screen.
+
+- **`ConfigSchema` reflects over the config.** This is the piece Cloth Config used to generate and
+  that the port never had: categories in declaration order, `@Gui.PrefixText` as group captions,
+  `@BoundedDiscrete` as sliders, `@ColorPicker` as a swatch plus an editable hex field, enums as
+  cycle buttons (or a filtered picker past eight constants — the cape list has 116), `String[]`
+  as its own list editor, and `*_BUTTON` fields as the action buttons they were always meant to
+  be. Labels come from the `text.autoconfig.soupapi.*` keys the lang files already carried.
+- **The duplicate config is gone.** `AmbientParticle`, `AspectRatio`, `CustomFog`, `Capes` and
+  `BetterHudStyles` each read their own `Setting` objects and never looked at the config, so the
+  config entries for ambient particles, fog, the aspect ratio, the hotbar and capes did nothing
+  at all — including when edited in the config file by hand. They read the config now, the
+  `Setting` subsystem is deleted, and `config/soupapi.json` is the only source of truth.
+  `ConfigManager` keeps only which page was last open, in `config/soupapi_gui.json`.
+- **Count:** 22 pages, 236 options, none unreachable (checked against the config class by
+  reflection), of which **204 work** and 32 are marked.
+
+### Features that were ported but never called
+
+Each of these existed as working code with no caller, so the options for them did nothing:
+
+| Feature | How it is wired now |
+|---|---|
+| Potions HUD | Drawn from the overlay event, gated on `hudBetterPotionsHudEnabled` |
+| Swing Hand | `RenderHandEvent` is cancellable and `renderItemInFirstPerson` is public, so vanilla's call is replaced by the same call inside the configured transform |
+| Capes | New `CapeFeatureRenderer`: vanilla's cape model and swing maths with the mod's texture, local player only, plus a threaded download for the custom-cape link |
+| China hat | Registered through `RenderPlayer.addLayer`, which Forge makes public |
+| Better hotbar / health / food / armour / air / XP | `BetterHudStyles` already cancelled vanilla's elements but nothing drew replacements, so turning it on deleted the HUD; `render/BetterHudRenderer` draws them in the mod's own style, using the `gui/` icons that were cut for exactly this |
+| Custom fog shape | `EntityViewRenderEvent.RenderFogEvent`; the density event alone only covers the exponential curve, so sphere vs cylinder did nothing |
+| Aspect ratio | Written off as impossible earlier in this port. It is not: `EntityViewRenderEvent.CameraSetup` fires after the perspective is built, so scaling the projection along X there is exactly what a different aspect ratio does |
+| No fire overlay | `RenderBlockOverlayEvent` (`OverlayType.FIRE`) is cancellable; the replacement band is drawn in the HUD pass |
+| Time and weather changer | Re-applied client-side each tick |
+| Coloured sky | The sky is the only thing that does not write depth, so a far-plane quad with `GL_GEQUAL` covers the sky and nothing else |
+| Friends highlight | Glowing is 1.9+, so friends get a drawn outline box instead |
+| Jump-circle colour spin | Rotates the palette phase around the ring |
+| Chat translator | Nothing fed `queueTranslation`; `ClientChatReceivedEvent` does, and the option no longer sits behind a hard-coded `return` |
+| Hit-sound overwrite | 1.8.9 has no attacker-side hit sound, so this mutes the victim's hurt sound inside a short window after the player's own hit |
+
+### Options the screen marks as unavailable
+
+These need something 1.8.9 does not have. They stay visible, greyed, with the reason in the
+footer, rather than looking functional:
+
+| Options | Why |
+|---|---|
+| The whole Totem page (18) | The Totem of Undying is 1.11+; nothing can pop one |
+| Hit-sound volumes per hit class (6) | Sweep, knockback, strong and weak hits need the 1.9 attack cooldown |
+| Better scoreboard (4) | 1.8.9 draws the scoreboard inside the HUD with no hook, and this port uses no bytecode patching |
+| Hit colour (4) | The damage flash is set inside `RendererLivingEntity`, which has no hook |
+
 ## Global GL state, the shared vertex buffer, and white models
 
 Two faults showed up together on PojavLauncher: held items and block models rendered

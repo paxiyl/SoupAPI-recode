@@ -21,6 +21,7 @@ public class HitSound extends ConfigurableModule {
                 if (now - lastHitTime < 150) return AttackEntityCallback.Result.PASS;
                 lastHitTime = now;
 
+                lastHitTime = now;
                 if (!CONFIG.hitSoundOnlyCrit) {
                     playSound();
                 } else {
@@ -31,6 +32,16 @@ public class HitSound extends ConfigurableModule {
             }
             return AttackEntityCallback.Result.PASS;
         });
+    }
+
+    /**
+     * How long ago the mod played its own hit sound, in milliseconds.
+     *
+     * <p>Used to scope {@code hitSoundOverwriteEnabled}: vanilla's hurt sound is muted only in the
+     * window right after one of the player's own hits, so taking damage still sounds normal.
+     */
+    public static long sinceLastHitMs() {
+        return System.currentTimeMillis() - lastHitTime;
     }
 
     public static void playSound() {

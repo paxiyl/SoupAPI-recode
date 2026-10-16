@@ -267,10 +267,16 @@ public class SoupSettingsScreen extends SoupScreen {
             return;
         }
 
+        boolean unavailable = row.unavailableReason() != null;
         if (hover) {
             Render2D.drawRound(ms, x, y, w, rowHeight - 1, 3, new Color(255, 255, 255, 12));
         }
         int controlX = x + w - CONTROL_W - 4;
+        if (unavailable) {
+            // Readable, but clearly not something to reach for; the footer says why.
+            text = 0xFF6E7380;
+            accent = new Color(110, 115, 128);
+        }
         FontRenderers.sf_bold_mini.drawString(ms,
                 clip(row.label(), controlX - x - 8, FontRenderers.sf_bold_mini),
                 x + 4, y + 6, text);
@@ -412,7 +418,9 @@ public class SoupSettingsScreen extends SoupScreen {
         int y = listBottom() + 3;
         context.fill(left() + 4, y - 2, right() - 4, y - 1, 0x18FFFFFF);
         String hint;
-        if (hovered != null && hovered.tooltip() != null && !hovered.tooltip().isEmpty()) {
+        if (hovered != null && hovered.unavailableReason() != null) {
+            hint = "Not available on 1.8.9 - " + hovered.unavailableReason();
+        } else if (hovered != null && hovered.tooltip() != null && !hovered.tooltip().isEmpty()) {
             hint = hovered.tooltip();
         } else if (hovered != null) {
             hint = hovered.label() + "  -  right-click to reset";
@@ -463,6 +471,10 @@ public class SoupSettingsScreen extends SoupScreen {
             for (Option row : rows) {
                 int rowHeight = row.interactive() ? ROW_H : GROUP_H;
                 if (row.interactive() && mouseY >= y && mouseY < y + rowHeight) {
+                    if (row.unavailableReason() != null) {
+                        stopEditing(true);
+                        return true;
+                    }
                     if (button == 1) {
                         row.reset();
                         stopEditing(false);
