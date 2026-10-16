@@ -60,6 +60,13 @@ public class SoupAPI_Config implements ConfigData {
     public boolean themeParticles = true;
     @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Symbol particleSymbol = me.Padej_.soupapi.utils.Symbol.RANDOM;
+    @ConfigEntry.Category("main")
+    public boolean themeVisuals = true;
+    @ConfigEntry.Category("main")
+    public boolean themeWorld = false;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Palette.ColorsStyle paletteStyle = Palette.ColorsStyle.QUARTET;
     @ConfigEntry.Category("main")
     @ConfigEntry.ColorPicker
@@ -94,6 +101,9 @@ public class SoupAPI_Config implements ConfigData {
     public boolean trailsRenderHalf = false;
     @ConfigEntry.Category("trails")
     public boolean trailsGlow = true;
+    @ConfigEntry.Category("trails")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Trails.ColorMode trailsColorMode = Trails.ColorMode.GRADIENT_HUD;
     @ConfigEntry.Category("trails")
     public boolean trailsForGliders = false;
     @ConfigEntry.Category("trails")
@@ -147,8 +157,8 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 1, max = 16)
     public int playerEffectsGhostCount = 6;
     @ConfigEntry.Category("player_effects")
-    @ConfigEntry.BoundedDiscrete(min = 1, max = 20)
-    public int playerEffectsGhostInterval = 3;
+    @ConfigEntry.BoundedDiscrete(min = 2, max = 40)
+    public int playerEffectsGhostSpacing = 14;
 
     /**
      * CHINA HAT

@@ -110,6 +110,38 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Third round: thick geometry, real symbols, themes that change the look
+
+**Why the rings looked weak: gl4es ignores `glLineWidth`.** Every ring, halo, wing and beam was
+built from GL lines, which means a one-pixel hairline on PojavLauncher no matter what width was
+asked for (`Caps.thickLinesSupported()` already knew this; nothing acted on it). `Fx.glowRing`,
+`Fx.glowArc` and `Fx.glowLine` build real geometry instead — soft-edged bands made of quads, any
+width, on any driver — and the halo and the player effects are drawn with them now.
+
+**The ghost ran instead of teleporting.** Two reasons, both fixed: snapshots were taken on a tick
+interval, so at walking speed the copies were centimetres apart; and each copy was posed with the
+limb swing it was recorded with, so a row of them animated like one runner. Poses are now recorded
+by **distance travelled** (Ghost Spacing, in tenths of a block) and drawn in a still stance, so they
+read as a line of clones left behind.
+
+**The symbols were thin line drawings.** The twelve originals were redrawn with a much heavier
+stroke, and 31 more were authored: skull, crown, eye, flame, shuriken, pentagram, triquetra, ankh,
+two runes, atom, crossed swords, biohazard, circuit, wave, blossom, leaf, bolt, moon, sun, fang,
+spade, clover, diamond, gear, target, heavy arrow, bold heart, bold infinity, snow crystal and bold
+hexagon — **43 in all**, each selectable individually through a searchable picker rather than only
+appearing at random.
+
+**Themes now change the look, not just the colours.** Each theme additionally names the ring, the
+trail style, the player effect, the halo and the particle symbol that suit it, behind a
+**Theme Visuals** toggle. **Theme Sky & Fog** extends it to the world, which is what a theme needs
+when a texture pack owns the sky. Seven more themes: Vaporwave, Emerald, Candy, Abyss, Solar,
+Monochrome and Storm — 21 in all.
+
+**Also:** five more halo styles (eclipse, galaxy, aura, shards, gyroscope — 11 in all) and trail
+colour modes (HUD gradient, flowing palette, fixed).
+
+The mod now offers **137 selectable styles** across 257 options.
+
 ## Themes, and the second round of visual work
 
 **Themes.** Every colour in the mod comes through `Palette`, so a theme simply answers in place of

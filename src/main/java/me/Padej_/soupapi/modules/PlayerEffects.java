@@ -16,7 +16,7 @@ import me.Padej_.soupapi.compat.VertexFormats;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.Render3D_Shapes;
+import me.Padej_.soupapi.render.Fx;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
@@ -137,24 +137,41 @@ public class PlayerEffects extends ConfigurableModule {
         }
     }
 
+    /**
+     * Records a pose once the player has moved far enough from the last one.
+     *
+     * <p>Snapshots used to be taken on a tick interval, so at walking speed the copies were a few
+     * centimetres apart and the effect read as a smeared running animation rather than a row of
+     * clones. Recording by <i>distance</i> instead puts them a fixed gap apart no matter how fast
+     * the player is going, which is what makes them look like a teleport trail.
+     */
     private static void trackHistory(EntityPlayer player) {
-        if (CONFIG.playerEffectsStyle != Style.GHOST) return;
+        if (me.Padej_.soupapi.utils.Themes.effectStyle() != Style.GHOST) return;
         List<Pose> poses = HISTORY.get(player);
         if (poses == null) {
             poses = new ArrayList<Pose>();
             HISTORY.put(player, poses);
         }
+
+        double spacing = Math.max(0.2, CONFIG.playerEffectsGhostSpacing / 10.0);
+        if (!poses.isEmpty()) {
+            Pose last = poses.get(poses.size() - 1);
+            double dx = player.posX - last.x;
+            double dy = player.posY - last.y;
+            double dz = player.posZ - last.z;
+            if (dx * dx + dy * dy + dz * dz < spacing * spacing) return;
+        }
+
         poses.add(new Pose(player.posX, player.posY, player.posZ, player.renderYawOffset,
                 player.limbSwing, player.limbSwingAmount, player.ticksExisted,
                 player.isSneaking()));
-        int keep = CONFIG.playerEffectsGhostCount * CONFIG.playerEffectsGhostInterval + 1;
-        while (poses.size() > keep) {
+        while (poses.size() > CONFIG.playerEffectsGhostCount + 1) {
             poses.remove(0);
         }
     }
 
     private static void emit(EntityPlayer player) {
-        Style style = CONFIG.playerEffectsStyle;
+        Style style = me.Padej_.soupapi.utils.Themes.effectStyle();
         float scale = CONFIG.playerEffectsScale / 100f;
         int count = CONFIG.playerEffectsCount;
 
@@ -290,7 +307,7 @@ public class PlayerEffects extends ConfigurableModule {
         if (mc.theWorld == null || mc.thePlayer == null) return;
 
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Style style = CONFIG.playerEffectsStyle;
+        Style style = me.Padej_.soupapi.utils.Themes.effectStyle();
 
         if (style == Style.GHOST) {
             renderGhosts(tickDelta);
@@ -482,8 +499,6 @@ public class PlayerEffects extends ConfigurableModule {
     private static void renderGhosts(float tickDelta) {
         if (drawingGhost) return;
         float alpha = CONFIG.playerEffectsAlpha / 100f;
-        int interval = Math.max(1, CONFIG.playerEffectsGhostInterval);
-        double separation = 0.45 * (CONFIG.playerEffectsScale / 100f);
 
         Vec3 cameraPos = Cameras.get().getPos();
         Vec3 look = mc.thePlayer.getLookVec();
@@ -491,45 +506,33 @@ public class PlayerEffects extends ConfigurableModule {
         for (EntityPlayer player : mc.theWorld.playerEntities) {
             if (!isTarget(player)) continue;
             List<Pose> poses = HISTORY.get(player);
-            if (poses == null || poses.size() < 2) continue;
+            if (poses == null || poses.isEmpty()) continue;
 
             boolean self = player == mc.thePlayer;
             int drawn = 0;
-            double lastX = Double.NaN;
-            double lastY = 0;
-            double lastZ = 0;
 
-            for (int i = poses.size() - 1 - interval; i >= 0 && drawn < CONFIG.playerEffectsGhostCount;
-                 i -= interval) {
+            // The history is already one entry per step, newest last.
+            for (int i = poses.size() - 1; i >= 0 && drawn < CONFIG.playerEffectsGhostCount; i--) {
                 Pose pose = poses.get(i);
-
-                // Far enough from the previous ghost to be its own copy.
-                if (!Double.isNaN(lastX)) {
-                    double dx = pose.x - lastX;
-                    double dy = pose.y - lastY;
-                    double dz = pose.z - lastZ;
-                    if (dx * dx + dy * dy + dz * dz < separation * separation) continue;
-                }
 
                 double toCameraX = pose.x - cameraPos.xCoord;
                 double toCameraY = pose.y - cameraPos.yCoord;
                 double toCameraZ = pose.z - cameraPos.zCoord;
-                double distanceSq = toCameraX * toCameraX + toCameraY * toCameraY + toCameraZ * toCameraZ;
+                double distanceSq = toCameraX * toCameraX + toCameraY * toCameraY
+                        + toCameraZ * toCameraZ;
 
-                // Never inside the camera.
+                // Never inside the camera: a model across the near plane fills the screen.
                 if (distanceSq < 2.2 * 2.2) continue;
 
                 if (self) {
-                    // Only behind: a positive dot product means it is in the direction you face.
-                    double dot = toCameraX * look.xCoord + toCameraY * look.yCoord + toCameraZ * look.zCoord;
+                    // Behind only - a ghost in front of you is a wall between you and your target.
+                    double dot = toCameraX * look.xCoord + toCameraY * look.yCoord
+                            + toCameraZ * look.zCoord;
                     if (dot > 0) continue;
                 }
 
-                float age = (poses.size() - 1 - i) / (float) Math.max(1, poses.size());
-                drawGhost(player, pose, colour(age), alpha * (1f - age * 0.7f), tickDelta);
-                lastX = pose.x;
-                lastY = pose.y;
-                lastZ = pose.z;
+                float age = (poses.size() - i) / (float) Math.max(1, poses.size());
+                drawGhost(player, pose, colour(age), alpha * (1f - age * 0.6f), tickDelta);
                 drawn++;
             }
         }
@@ -582,7 +585,9 @@ public class PlayerEffects extends ConfigurableModule {
             model.isRiding = false;
             model.isChild = false;
             model.swingProgress = 0.0f;
-            model.render(player, pose.limbSwing, pose.limbSwingAmount, pose.age, 0.0f, 0.0f, 0.0625f);
+            // A still stance. Feeding the recorded limb swing in made each copy mid-stride, so a
+            // row of them read as one running animation instead of a trail of teleports.
+            model.render(player, 0.0f, 0.0f, pose.age, 0.0f, 0.0f, 0.0625f);
         } catch (Throwable ignored) {
             // A model that cannot be drawn is not worth a crash.
         } finally {
@@ -672,45 +677,31 @@ public class PlayerEffects extends ConfigurableModule {
         Render2D.endRender();
     }
 
-    /** A horizontal circle of line segments, queued with the mod's other 3D shapes. */
+    /**
+     * A glowing horizontal band.
+     *
+     * <p>These used to be built from GL lines. gl4es - what PojavLauncher runs - ignores
+     * {@code glLineWidth}, so every one of them arrived on a phone as a one-pixel hairline, which
+     * is why the ring-shaped effects looked so thin. {@link Fx} builds real geometry instead.
+     */
     private static void ring(double x, double y, double z, double radius, int segments,
                              Color colour, float alpha) {
-        Color c = Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha))));
-        int steps = Math.max(8, segments);
-        for (int i = 0; i < steps; i++) {
-            double a0 = i * (Math.PI * 2 / steps);
-            double a1 = (i + 1) * (Math.PI * 2 / steps);
-            line(x + Math.cos(a0) * radius, y, z + Math.sin(a0) * radius,
-                    x + Math.cos(a1) * radius, y, z + Math.sin(a1) * radius, c, 1f);
-        }
+        float scale = CONFIG.playerEffectsScale / 100f;
+        Fx.glowRing(x, y, z, radius, Math.max(0.06, radius * 0.18) * scale,
+                Math.max(16, segments), 0.0, 0.0, Fx.withAlpha(colour, alpha));
     }
 
-    /** A circle standing on its edge, rotated about Y by {@code tilt}. */
+    /** A glowing band standing on its edge. */
     private static void verticalRing(double x, double y, double z, double radius, int segments,
                                      double tilt, Color colour, float alpha) {
-        Color c = Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha))));
-        int steps = Math.max(8, segments);
-        for (int i = 0; i < steps; i++) {
-            double a0 = i * (Math.PI * 2 / steps);
-            double a1 = (i + 1) * (Math.PI * 2 / steps);
-            double x0 = Math.cos(a0) * radius * Math.cos(tilt);
-            double z0 = Math.cos(a0) * radius * Math.sin(tilt);
-            double x1 = Math.cos(a1) * radius * Math.cos(tilt);
-            double z1 = Math.cos(a1) * radius * Math.sin(tilt);
-            line(x + x0, y + Math.sin(a0) * radius, z + z0,
-                    x + x1, y + Math.sin(a1) * radius, z + z1, c, 1f);
-        }
+        Fx.glowRing(x, y, z, radius, Math.max(0.06, radius * 0.18), Math.max(16, segments),
+                Math.PI / 2, tilt, Fx.withAlpha(colour, alpha));
     }
 
     private static void line(double x1, double y1, double z1, double x2, double y2, double z2,
                              Color colour, float alpha) {
-        Render3D_Shapes.drawLine(new Vec3(x1, y1, z1), new Vec3(x2, y2, z2),
-                Render2D.injectAlpha(colour, Math.round(255 * Math.max(0f, Math.min(1f, alpha)))));
-    }
-
-    private static void line(double x1, double y1, double z1, double x2, double y2, double z2,
-                             Color colour) {
-        Render3D_Shapes.drawLine(new Vec3(x1, y1, z1), new Vec3(x2, y2, z2), colour);
+        Fx.glowLine(x1, y1, z1, x2, y2, z2, 0.09 * (CONFIG.playerEffectsScale / 100f),
+                Fx.withAlpha(colour, alpha));
     }
 
     private static Color colour(float position) {

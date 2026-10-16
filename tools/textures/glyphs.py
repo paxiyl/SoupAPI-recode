@@ -14,7 +14,7 @@ N = 256
 os.makedirs(OUT, exist_ok=True)
 n = N * SS
 C = n / 2.0
-W = n * 0.052          # stroke width
+W = n * 0.082          # stroke width - heavier than the first pass, which read as hairlines
 R = n * 0.40           # nominal glyph radius
 
 

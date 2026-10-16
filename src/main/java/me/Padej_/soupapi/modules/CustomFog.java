@@ -33,7 +33,7 @@ public class CustomFog extends ConfigurableModule {
      * not exist in 1.8.9 (added in 1.19).
      */
     public static boolean shouldApply() {
-        if (!CONFIG.customFogEnabled) return false;
+        if (!CONFIG.customFogEnabled && !me.Padej_.soupapi.utils.Themes.world()) return false;
         net.minecraft.client.entity.EntityPlayerSP player =
                 net.minecraft.client.Minecraft.getMinecraft().thePlayer;
         return player != null && !player.isPotionActive(net.minecraft.potion.Potion.blindness);

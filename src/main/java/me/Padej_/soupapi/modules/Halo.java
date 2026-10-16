@@ -36,7 +36,17 @@ public class Halo extends ConfigurableModule {
         /** A ring tilted off horizontal, turning slowly. */
         SATURN,
         /** Spikes standing up from a ring, like a crown. */
-        SPIKES
+        SPIKES,
+        /** A dark disc with a burning rim. */
+        ECLIPSE,
+        /** Two spiral arms of sprites turning overhead. */
+        GALAXY,
+        /** A stack of rings rising around the body. */
+        AURA,
+        /** A ring of shards hanging in the air above the head. */
+        SHARDS,
+        /** Three rings at different angles, turning against each other. */
+        GYROSCOPE
     }
 
     public static void render(WorldRenderContext context) {
@@ -52,7 +62,7 @@ public class Halo extends ConfigurableModule {
             if (self && isFirstPerson) continue;
             if (entity.isInvisible()) continue;
 
-            if (CONFIG.haloStyle == Style.SOULS) {
+            if (me.Padej_.soupapi.utils.Themes.haloStyle() == Style.SOULS) {
                 Render3D.renderSoulPair(tickDelta, entity);
             } else {
                 renderHalo(entity, tickDelta);
@@ -65,61 +75,139 @@ public class Halo extends ConfigurableModule {
         double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * tickDelta;
         double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * tickDelta;
 
-        float scale = CONFIG.haloSoulRadius / 100f * 1.6f;
-        float alpha = CONFIG.haloSoulStartSize / 100f;
-        double spin = (mc.theWorld.getTotalWorldTime() + tickDelta) * 0.06;
+        float scale = Math.max(0.2f, CONFIG.haloSoulRadius / 100f) * 1.6f;
+        float alpha = Math.max(0.05f, CONFIG.haloSoulStartSize / 100f);
+        double spin = (mc.theWorld.getTotalWorldTime() + tickDelta) * 0.05;
         double headY = y + entity.height + 0.35;
-        int segments = 28;
+        int segments = 40;
 
-        switch (CONFIG.haloStyle) {
+        switch (me.Padej_.soupapi.utils.Themes.haloStyle()) {
             case RING:
-                Fx.ring(x, headY, z, 0.42 * scale, segments, Fx.withAlpha(Palette.getColor(0f), alpha));
-                Fx.ring(x, headY + 0.02, z, 0.38 * scale, segments,
-                        Fx.withAlpha(Palette.getColor(0.5f), alpha * 0.7f));
-                break;
-            case DOUBLE_RING:
-                Fx.tiltedRing(x, headY, z, 0.45 * scale, segments, 0.0, spin,
+                // A band, not a hairline: wide, bright, and with a dimmer echo under it.
+                Fx.glowRing(x, headY, z, 0.45 * scale, 0.12 * scale, segments, 0.0, 0.0,
                         Fx.withAlpha(Palette.getColor(0f), alpha));
-                Fx.tiltedRing(x, headY + 0.12, z, 0.3 * scale, segments, 0.45, -spin * 1.4,
-                        Fx.withAlpha(Palette.getColor(0.6f), alpha * 0.8f));
+                Fx.glowRing(x, headY - 0.05, z, 0.52 * scale, 0.06 * scale, segments, 0.0, 0.0,
+                        Fx.withAlpha(Palette.getColor(0.5f), alpha * 0.45f));
                 break;
+
+            case DOUBLE_RING:
+                Fx.glowRing(x, headY, z, 0.5 * scale, 0.1 * scale, segments, 0.25, spin,
+                        Fx.withAlpha(Palette.getColor(0f), alpha));
+                Fx.glowRing(x, headY, z, 0.5 * scale, 0.1 * scale, segments, -0.25, -spin,
+                        Fx.withAlpha(Palette.getColor(0.6f), alpha));
+                break;
+
             case RUNE_DISC: {
-                ResourceLocation glyph = TexturesManager.GLYPH_CIRCLE;
+                ResourceLocation glyph = TexturesManager.getRandomGlyphParticle();
                 BufferBuilder buffer = Fx.beginSprites(glyph);
-                int runes = 7;
+                int runes = 8;
                 for (int i = 0; i < runes; i++) {
                     double angle = spin * 2 + i * (Math.PI * 2 / runes);
                     Fx.appendSprite(buffer,
-                            x + Math.cos(angle) * 0.4 * scale,
-                            headY,
-                            z + Math.sin(angle) * 0.4 * scale,
-                            0.28f * scale,
+                            x + Math.cos(angle) * 0.46 * scale, headY,
+                            z + Math.sin(angle) * 0.46 * scale,
+                            0.34f * scale,
                             Fx.withAlpha(Palette.getColor(i / (float) runes), alpha), true);
                 }
                 Fx.endSprites(buffer);
-                Fx.ring(x, headY - 0.01, z, 0.55 * scale, segments,
-                        Fx.withAlpha(Palette.getColor(0.2f), alpha * 0.6f));
+                Fx.glowRing(x, headY - 0.01, z, 0.62 * scale, 0.05 * scale, segments, 0.0, 0.0,
+                        Fx.withAlpha(Palette.getColor(0.2f), alpha * 0.7f));
                 break;
             }
+
             case SATURN:
-                Fx.tiltedRing(x, y + entity.height * 0.55, z, 0.95 * scale, segments * 2, 0.38, spin,
-                        Fx.withAlpha(Palette.getColor(0f), alpha));
-                Fx.tiltedRing(x, y + entity.height * 0.55, z, 1.12 * scale, segments * 2, 0.38, spin,
-                        Fx.withAlpha(Palette.getColor(0.5f), alpha * 0.55f));
+                Fx.glowRing(x, y + entity.height * 0.55, z, 1.0 * scale, 0.16 * scale, segments * 2,
+                        0.38, spin, Fx.withAlpha(Palette.getColor(0f), alpha));
+                Fx.glowRing(x, y + entity.height * 0.55, z, 1.22 * scale, 0.07 * scale, segments * 2,
+                        0.38, spin, Fx.withAlpha(Palette.getColor(0.5f), alpha * 0.5f));
                 break;
+
             case SPIKES: {
-                int spikes = 10;
-                double radius = 0.4 * scale;
+                int spikes = 12;
+                double radius = 0.42 * scale;
                 for (int i = 0; i < spikes; i++) {
                     double angle = spin + i * (Math.PI * 2 / spikes);
                     double sx = x + Math.cos(angle) * radius;
                     double sz = z + Math.sin(angle) * radius;
-                    Color colour = Fx.withAlpha(Palette.getColor(i / (float) spikes), alpha);
-                    Fx.line(sx, headY, sz, sx, headY + 0.3 * scale, sz, colour);
+                    double lift = 0.22 + 0.1 * Math.sin(spin * 4 + i);
+                    Fx.glowLine(sx, headY, sz, sx, headY + lift * scale, sz, 0.07 * scale,
+                            Fx.withAlpha(Palette.getColor(i / (float) spikes), alpha));
                 }
-                Fx.ring(x, headY, z, radius, segments, Fx.withAlpha(Palette.getColor(0f), alpha * 0.8f));
+                Fx.glowRing(x, headY, z, radius, 0.07 * scale, segments,
+                        0.0, 0.0, Fx.withAlpha(Palette.getColor(0f), alpha * 0.8f));
                 break;
             }
+
+            case ECLIPSE:
+                // A bright rim with nothing inside it, like a corona.
+                Fx.glowRing(x, headY + 0.1, z, 0.6 * scale, 0.05 * scale, segments * 2, 1.2, spin,
+                        Fx.withAlpha(Palette.getColor(0f), alpha));
+                Fx.glowRing(x, headY + 0.1, z, 0.66 * scale, 0.14 * scale, segments * 2, 1.2, spin,
+                        Fx.withAlpha(Palette.getColor(0.4f), alpha * 0.35f));
+                break;
+
+            case GALAXY: {
+                BufferBuilder buffer = Fx.beginSprites(
+                        TexturesManager.themed(TexturesManager.FIREFLY));
+                int arms = 2;
+                int perArm = 14;
+                for (int arm = 0; arm < arms; arm++) {
+                    for (int i = 0; i < perArm; i++) {
+                        double t = i / (double) perArm;
+                        double angle = spin * 2 + t * Math.PI * 1.8 + arm * Math.PI;
+                        double radius = (0.15 + t * 0.75) * scale;
+                        Fx.appendSprite(buffer,
+                                x + Math.cos(angle) * radius,
+                                headY + Math.sin(t * Math.PI) * 0.06,
+                                z + Math.sin(angle) * radius,
+                                (0.26f - (float) t * 0.12f) * scale,
+                                Fx.withAlpha(Palette.getColor((float) t), alpha * (1f - (float) t * 0.5f)),
+                                true);
+                    }
+                }
+                Fx.endSprites(buffer);
+                break;
+            }
+
+            case AURA: {
+                int rings = 5;
+                for (int i = 0; i < rings; i++) {
+                    double phase = ((spin * 0.8) + i / (double) rings) % 1.0;
+                    double ringY = y + phase * (entity.height + 0.6);
+                    double radius = (0.75 - phase * 0.35) * scale;
+                    Fx.glowRing(x, ringY, z, radius, 0.09 * scale, segments, 0.0, 0.0,
+                            Fx.withAlpha(Palette.getColor((float) phase),
+                                    alpha * (1f - (float) phase) * 0.9f));
+                }
+                break;
+            }
+
+            case SHARDS: {
+                BufferBuilder buffer = Fx.beginSprites(TexturesManager.GLYPH_TRIANGLE);
+                int shards = 6;
+                for (int i = 0; i < shards; i++) {
+                    double angle = -spin * 1.6 + i * (Math.PI * 2 / shards);
+                    double radius = 0.5 * scale;
+                    Fx.appendSprite(buffer,
+                            x + Math.cos(angle) * radius,
+                            headY + 0.12 + Math.sin(spin * 3 + i) * 0.08,
+                            z + Math.sin(angle) * radius,
+                            0.3f * scale,
+                            Fx.withAlpha(Palette.getColor(i / (float) shards), alpha), false);
+                }
+                Fx.endSprites(buffer);
+                break;
+            }
+
+            case GYROSCOPE:
+                Fx.glowRing(x, headY, z, 0.52 * scale, 0.08 * scale, segments, 0.0, spin,
+                        Fx.withAlpha(Palette.getColor(0f), alpha));
+                Fx.glowRing(x, headY, z, 0.52 * scale, 0.08 * scale, segments, Math.PI / 2, spin * 1.3,
+                        Fx.withAlpha(Palette.getColor(0.33f), alpha));
+                Fx.glowRing(x, headY, z, 0.52 * scale, 0.08 * scale, segments, Math.PI / 4, -spin * 0.8,
+                        Fx.withAlpha(Palette.getColor(0.66f), alpha));
+                break;
+
             default:
                 break;
         }

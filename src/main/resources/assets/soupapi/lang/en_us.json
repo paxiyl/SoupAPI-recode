@@ -301,12 +301,16 @@
   "text.autoconfig.soupapi.option.playerEffectsCount": "Density",
   "text.autoconfig.soupapi.option.playerEffectsScale.@PrefixText": "Shape",
   "text.autoconfig.soupapi.option.playerEffectsGhostCount": "Ghost Count",
-  "text.autoconfig.soupapi.option.playerEffectsGhostInterval": "Ghost Spacing (ticks)",
   "text.autoconfig.soupapi.option.playerEffectsGhostCount.@PrefixText": "Ghost",
   "text.autoconfig.soupapi.option.trailsTarget": "Apply To",
   "text.autoconfig.soupapi.option.themeStyle": "Theme",
   "text.autoconfig.soupapi.option.themeParticles": "Theme Particles",
   "text.autoconfig.soupapi.option.haloStyle": "Style",
   "text.autoconfig.soupapi.option.trailsGlow": "Glow",
-  "text.autoconfig.soupapi.option.hitBubblesAnimation": "Animation"
+  "text.autoconfig.soupapi.option.hitBubblesAnimation": "Animation",
+  "text.autoconfig.soupapi.option.playerEffectsGhostSpacing": "Ghost Spacing (0.1 blocks)",
+  "text.autoconfig.soupapi.option.particleSymbol": "Symbol",
+  "text.autoconfig.soupapi.option.themeVisuals": "Theme Visuals",
+  "text.autoconfig.soupapi.option.themeWorld": "Theme Sky & Fog",
+  "text.autoconfig.soupapi.option.trailsColorMode": "Color Mode"
 }

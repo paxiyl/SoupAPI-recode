@@ -51,19 +51,53 @@ public class TexturesManager extends ConfigurableModule {
     public static final ResourceLocation STAR_UNBLACK = new ResourceLocation("soupapi", "textures/particle/star_unblack.png");
 
     /**
-     * GLYPHS
+     * SYMBOLS
+     *
+     * <p>Every symbol under {@code particle/glyph/}. The set went from twelve thin line drawings to
+     * 43 heavier ones; see {@link Symbol} for picking a single symbol instead of a random one.
      **/
     public static final ResourceLocation GLYPH_ABS = new ResourceLocation("soupapi", "textures/particle/glyph/abs.png");
+    public static final ResourceLocation GLYPH_ANKH = new ResourceLocation("soupapi", "textures/particle/glyph/ankh.png");
     public static final ResourceLocation GLYPH_ARROW = new ResourceLocation("soupapi", "textures/particle/glyph/arrow.png");
+    public static final ResourceLocation GLYPH_ARROW_HEAVY = new ResourceLocation("soupapi", "textures/particle/glyph/arrow_heavy.png");
     public static final ResourceLocation GLYPH_ARROW_LINE = new ResourceLocation("soupapi", "textures/particle/glyph/arrow_line.png");
+    public static final ResourceLocation GLYPH_ATOM = new ResourceLocation("soupapi", "textures/particle/glyph/atom.png");
+    public static final ResourceLocation GLYPH_BIOHAZARD = new ResourceLocation("soupapi", "textures/particle/glyph/biohazard.png");
+    public static final ResourceLocation GLYPH_BLOSSOM = new ResourceLocation("soupapi", "textures/particle/glyph/blossom.png");
+    public static final ResourceLocation GLYPH_BOLT = new ResourceLocation("soupapi", "textures/particle/glyph/bolt.png");
     public static final ResourceLocation GLYPH_CIRCLE = new ResourceLocation("soupapi", "textures/particle/glyph/circle.png");
+    public static final ResourceLocation GLYPH_CIRCUIT = new ResourceLocation("soupapi", "textures/particle/glyph/circuit.png");
+    public static final ResourceLocation GLYPH_CLOVER = new ResourceLocation("soupapi", "textures/particle/glyph/clover.png");
     public static final ResourceLocation GLYPH_CROSS = new ResourceLocation("soupapi", "textures/particle/glyph/cross.png");
+    public static final ResourceLocation GLYPH_CROSS_SWORDS = new ResourceLocation("soupapi", "textures/particle/glyph/cross_swords.png");
+    public static final ResourceLocation GLYPH_CROWN = new ResourceLocation("soupapi", "textures/particle/glyph/crown.png");
+    public static final ResourceLocation GLYPH_DIAMOND_SUIT = new ResourceLocation("soupapi", "textures/particle/glyph/diamond_suit.png");
+    public static final ResourceLocation GLYPH_EYE = new ResourceLocation("soupapi", "textures/particle/glyph/eye.png");
+    public static final ResourceLocation GLYPH_FANG = new ResourceLocation("soupapi", "textures/particle/glyph/fang.png");
+    public static final ResourceLocation GLYPH_FLAME = new ResourceLocation("soupapi", "textures/particle/glyph/flame.png");
     public static final ResourceLocation GLYPH_FLOWER = new ResourceLocation("soupapi", "textures/particle/glyph/flower.png");
     public static final ResourceLocation GLYPH_FOREVER = new ResourceLocation("soupapi", "textures/particle/glyph/forever.png");
+    public static final ResourceLocation GLYPH_GEAR = new ResourceLocation("soupapi", "textures/particle/glyph/gear.png");
+    public static final ResourceLocation GLYPH_HEART_BOLD = new ResourceLocation("soupapi", "textures/particle/glyph/heart_bold.png");
+    public static final ResourceLocation GLYPH_HEXAGON_BOLD = new ResourceLocation("soupapi", "textures/particle/glyph/hexagon_bold.png");
+    public static final ResourceLocation GLYPH_INFINITY_BOLD = new ResourceLocation("soupapi", "textures/particle/glyph/infinity_bold.png");
+    public static final ResourceLocation GLYPH_LEAF = new ResourceLocation("soupapi", "textures/particle/glyph/leaf.png");
     public static final ResourceLocation GLYPH_LINE = new ResourceLocation("soupapi", "textures/particle/glyph/line.png");
+    public static final ResourceLocation GLYPH_MOON = new ResourceLocation("soupapi", "textures/particle/glyph/moon.png");
+    public static final ResourceLocation GLYPH_PENTAGRAM = new ResourceLocation("soupapi", "textures/particle/glyph/pentagram.png");
     public static final ResourceLocation GLYPH_QUAD = new ResourceLocation("soupapi", "textures/particle/glyph/quad.png");
+    public static final ResourceLocation GLYPH_RUNE_ALGIZ = new ResourceLocation("soupapi", "textures/particle/glyph/rune_algiz.png");
+    public static final ResourceLocation GLYPH_RUNE_THURISAZ = new ResourceLocation("soupapi", "textures/particle/glyph/rune_thurisaz.png");
+    public static final ResourceLocation GLYPH_SHURIKEN = new ResourceLocation("soupapi", "textures/particle/glyph/shuriken.png");
+    public static final ResourceLocation GLYPH_SKULL = new ResourceLocation("soupapi", "textures/particle/glyph/skull.png");
+    public static final ResourceLocation GLYPH_SNOW_CRYSTAL = new ResourceLocation("soupapi", "textures/particle/glyph/snow_crystal.png");
+    public static final ResourceLocation GLYPH_SPADE = new ResourceLocation("soupapi", "textures/particle/glyph/spade.png");
     public static final ResourceLocation GLYPH_STAR = new ResourceLocation("soupapi", "textures/particle/glyph/star.png");
+    public static final ResourceLocation GLYPH_SUN = new ResourceLocation("soupapi", "textures/particle/glyph/sun.png");
+    public static final ResourceLocation GLYPH_TARGET = new ResourceLocation("soupapi", "textures/particle/glyph/target.png");
     public static final ResourceLocation GLYPH_TRIANGLE = new ResourceLocation("soupapi", "textures/particle/glyph/triangle.png");
+    public static final ResourceLocation GLYPH_TRIQUETRA = new ResourceLocation("soupapi", "textures/particle/glyph/triquetra.png");
+    public static final ResourceLocation GLYPH_WAVE = new ResourceLocation("soupapi", "textures/particle/glyph/wave.png");
     public static final ResourceLocation GLYPH_ZIGZAG = new ResourceLocation("soupapi", "textures/particle/glyph/zigzag.png");
 
     public static final ResourceLocation ANON_SKIN = new ResourceLocation("soupapi", "textures/skin/anon_skin.png");
@@ -87,14 +121,22 @@ public class TexturesManager extends ConfigurableModule {
     public static final ResourceLocation UHC = new ResourceLocation("soupapi", "textures/gui/mctiers/uhc.png");
     public static final ResourceLocation VANILLA = new ResourceLocation("soupapi", "textures/gui/mctiers/vanilla.png");
 
-    public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
-            GLYPH_ABS, GLYPH_LINE, GLYPH_ARROW, GLYPH_ARROW_LINE,
-            GLYPH_CIRCLE, GLYPH_CROSS, GLYPH_FLOWER, GLYPH_FOREVER,
-            GLYPH_QUAD, GLYPH_STAR, GLYPH_TRIANGLE, GLYPH_ZIGZAG,
+public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
+            GLYPH_ABS, GLYPH_ANKH, GLYPH_ARROW, GLYPH_ARROW_HEAVY,
+            GLYPH_ARROW_LINE, GLYPH_ATOM, GLYPH_BIOHAZARD, GLYPH_BLOSSOM,
+            GLYPH_BOLT, GLYPH_CIRCLE, GLYPH_CIRCUIT, GLYPH_CLOVER,
+            GLYPH_CROSS, GLYPH_CROSS_SWORDS, GLYPH_CROWN, GLYPH_DIAMOND_SUIT,
+            GLYPH_EYE, GLYPH_FANG, GLYPH_FLAME, GLYPH_FLOWER,
+            GLYPH_FOREVER, GLYPH_GEAR, GLYPH_HEART_BOLD, GLYPH_HEXAGON_BOLD,
+            GLYPH_INFINITY_BOLD, GLYPH_LEAF, GLYPH_LINE, GLYPH_MOON,
+            GLYPH_PENTAGRAM, GLYPH_QUAD, GLYPH_RUNE_ALGIZ, GLYPH_RUNE_THURISAZ,
+            GLYPH_SHURIKEN, GLYPH_SKULL, GLYPH_SNOW_CRYSTAL, GLYPH_SPADE,
+            GLYPH_STAR, GLYPH_SUN, GLYPH_TARGET, GLYPH_TRIANGLE,
+            GLYPH_TRIQUETRA, GLYPH_WAVE, GLYPH_ZIGZAG,
     };
 
     public static ResourceLocation getJumpCircle() {
-        switch (CONFIG.jumpCirclesStyle) {
+        switch (Themes.circleStyle()) {
             case CIRCLE:
                 return CIRCLE;
             case PORTAL:
@@ -116,7 +158,7 @@ public class TexturesManager extends ConfigurableModule {
             case SHATTER:
                 return SHATTER_RING;
         }
-        throw new IllegalStateException("Unexpected value: " + CONFIG.jumpCirclesStyle);
+        throw new IllegalStateException("Unexpected value: " + Themes.circleStyle());
     }
 
     public static ResourceLocation getTargetRenderTexture() {
@@ -144,7 +186,7 @@ public class TexturesManager extends ConfigurableModule {
     }
 
     public static ResourceLocation getHitBubbleTexture() {
-        switch (CONFIG.hitBubblesStyle) {
+        switch (Themes.bubbleStyle()) {
             case CIRCLE:
                 return CIRCLE;
             case CIRCLE_BOLD:
@@ -166,7 +208,7 @@ public class TexturesManager extends ConfigurableModule {
             case SHATTER:
                 return SHATTER_RING;
         }
-        throw new IllegalStateException("Unexpected value: " + CONFIG.hitBubblesStyle);
+        throw new IllegalStateException("Unexpected value: " + Themes.bubbleStyle());
     }
 
     public static ResourceLocation getMC_TiersGameModeTexture() {
@@ -205,7 +247,16 @@ public class TexturesManager extends ConfigurableModule {
         return themeParticle != null ? themeParticle : fallback;
     }
 
+    /**
+     * The symbol a glyph particle should use.
+     *
+     * <p>Honours the chosen symbol, falling back to a random one when it is set to Random.
+     */
     public static ResourceLocation getRandomGlyphParticle() {
+        Symbol symbol = CONFIG.particleSymbol;
+        if (symbol != null && symbol != Symbol.RANDOM) {
+            return symbol.texture();
+        }
         int index = random.nextInt(GLYPH_TEXTURES.length);
         return GLYPH_TEXTURES[index];
     }

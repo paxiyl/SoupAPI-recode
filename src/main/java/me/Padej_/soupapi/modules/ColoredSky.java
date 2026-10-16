@@ -31,7 +31,9 @@ public class ColoredSky extends ConfigurableModule {
     private static final float FAR = 0.9998f;
 
     public static void render() {
-        if (!CONFIG.coloredSkyEnabled) return;
+        // A theme that only recolours the HUD barely registers when a texture pack owns the sky,
+        // so Theme World lets the theme tint the sky and the fog as well.
+        if (!CONFIG.coloredSkyEnabled && !me.Padej_.soupapi.utils.Themes.world()) return;
         if (mc.theWorld == null) return;
 
         Color colour = Palette.getColor(0f);
