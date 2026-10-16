@@ -62,7 +62,7 @@ public class Halo extends ConfigurableModule {
             if (self && isFirstPerson) continue;
             if (entity.isInvisible()) continue;
 
-            if (me.Padej_.soupapi.utils.Themes.haloStyle() == Style.SOULS) {
+            if (CONFIG.haloStyle == Style.SOULS) {
                 Render3D.renderSoulPair(tickDelta, entity);
             } else {
                 renderHalo(entity, tickDelta);
@@ -81,7 +81,7 @@ public class Halo extends ConfigurableModule {
         double headY = y + entity.height + 0.35;
         int segments = 40;
 
-        switch (me.Padej_.soupapi.utils.Themes.haloStyle()) {
+        switch (CONFIG.haloStyle) {
             case RING:
                 // A band, not a hairline: wide, bright, and with a dimmer echo under it.
                 Fx.glowRing(x, headY, z, 0.45 * scale, 0.12 * scale, segments, 0.0, 0.0,

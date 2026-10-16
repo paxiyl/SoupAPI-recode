@@ -62,6 +62,10 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public me.Padej_.soupapi.utils.Symbol particleSymbol = me.Padej_.soupapi.utils.Symbol.RANDOM;
     @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.ParticleSprite particleSpriteOverride =
+            me.Padej_.soupapi.utils.ParticleSprite.NONE;
+    @ConfigEntry.Category("main")
     public boolean themeVisuals = true;
     @ConfigEntry.Category("main")
     public boolean themeWorld = false;

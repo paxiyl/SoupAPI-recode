@@ -9,6 +9,7 @@ import me.Padej_.soupapi.modules.Capes;
 import me.Padej_.soupapi.screen.CapeSelectScreen;
 import me.Padej_.soupapi.screen.ConfigHudPositionsScreen;
 import me.Padej_.soupapi.screen.SwingHandScreen;
+import me.Padej_.soupapi.utils.Themes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 
@@ -264,11 +265,23 @@ public final class ConfigSchema {
 
     // ---- helpers ---------------------------------------------------------------------------
 
+    /**
+     * Writes one config field, then lets the theme logic see the edit.
+     *
+     * <p>Every widget in the screen ends up here, which is why the theme hook lives here too:
+     * picking a theme copies its look into the settings, and editing one of the settings a theme
+     * filled in drops the theme to Custom. Doing it at the single write point means no widget has
+     * to know that themes exist, and nothing can be edited behind a theme's back.
+     */
     private static void set(Field field, Object target, Object value) {
         try {
             field.set(target, value);
         } catch (IllegalAccessException e) {
             SoupLog.warn("[SoupAPI] could not write config field " + field.getName(), e);
+            return;
+        }
+        if (target instanceof SoupAPI_Config) {
+            Themes.onEdited(field.getName(), (SoupAPI_Config) target);
         }
     }
 

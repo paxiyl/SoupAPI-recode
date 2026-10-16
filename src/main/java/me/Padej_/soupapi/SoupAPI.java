@@ -49,6 +49,10 @@ public class SoupAPI {
     public void preInit(FMLPreInitializationEvent event) {
         initTime = System.currentTimeMillis();
         configHolder = AutoConfig.register(SoupAPI_Config.class, GsonConfigSerializer::new);
+        // A theme is a preset written into the settings, so a saved one has to be written in once
+        // here: a config from before that change names a theme while the settings still hold the
+        // values the theme used to override at read time.
+        me.Padej_.soupapi.utils.Themes.applySaved();
         SoupLog.info("SoupAPI config loaded");
     }
 

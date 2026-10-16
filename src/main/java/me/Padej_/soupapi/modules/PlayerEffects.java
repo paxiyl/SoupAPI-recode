@@ -146,7 +146,7 @@ public class PlayerEffects extends ConfigurableModule {
      * the player is going, which is what makes them look like a teleport trail.
      */
     private static void trackHistory(EntityPlayer player) {
-        if (me.Padej_.soupapi.utils.Themes.effectStyle() != Style.GHOST) return;
+        if (CONFIG.playerEffectsStyle != Style.GHOST) return;
         List<Pose> poses = HISTORY.get(player);
         if (poses == null) {
             poses = new ArrayList<Pose>();
@@ -171,7 +171,7 @@ public class PlayerEffects extends ConfigurableModule {
     }
 
     private static void emit(EntityPlayer player) {
-        Style style = me.Padej_.soupapi.utils.Themes.effectStyle();
+        Style style = CONFIG.playerEffectsStyle;
         float scale = CONFIG.playerEffectsScale / 100f;
         int count = CONFIG.playerEffectsCount;
 
@@ -307,7 +307,7 @@ public class PlayerEffects extends ConfigurableModule {
         if (mc.theWorld == null || mc.thePlayer == null) return;
 
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Style style = me.Padej_.soupapi.utils.Themes.effectStyle();
+        Style style = CONFIG.playerEffectsStyle;
 
         if (style == Style.GHOST) {
             renderGhosts(tickDelta);

@@ -110,6 +110,41 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Themes are presets now, not a lock
+
+Picking a theme used to change nothing in the settings: the theme answered for the colours, the five
+styles and the particle sprite at read time, so with Halloween active, switching the particle or a
+colour in the GUI did exactly nothing — the theme went on winning, with no way to tell from the
+screen that it would.
+
+A theme is a preset applied to the settings instead. `Theme.apply(config)` copies its look into the
+real fields when one is picked — colours always, the ring/bubble/trail/effect/halo styles with
+`themeVisuals`, the particle sprite with `themeParticles`, the sky and fog with `themeWorld` — and
+nothing overrides anything afterwards: `Palette` reads the four colour pickers, each module reads its
+own style field, and `TexturesManager.themed()` reads a sprite setting.
+
+`Themes.onEdited(field, config)` hangs off the single point every widget writes through
+(`ConfigSchema.set`). It does three things: picking a theme (or toggling what a theme applies)
+copies it in; editing one of the settings the active theme filled in, to a different value, drops
+`themeStyle` to **Custom**; anything else — a radius, a speed, a count — leaves the theme's name
+alone. The look is kept on the way to Custom, because the values are already in the settings; only
+the label gives way, which is the honest thing for it to say once the settings are yours.
+
+Re-picking the same value does not drop the theme, and a style the theme never set (because
+`themeVisuals` was off) does not either.
+
+**The theme's particle sprite became a real setting.** It was reachable only through a theme before;
+it is `Particle Sprite` now — Firefly, Firefly Soft, Dollar, Snowflake, Heart, Star, or Symbol, which
+follows the existing 43-symbol `Symbol` setting. `None` leaves every effect its own sprite. A theme
+writes it when picked, and it can be changed or cleared without one.
+
+A saved config that names a theme has it applied once at startup (`Themes.applySaved()`), so a
+config written before this change keeps the look it had rather than reverting to the defaults with a
+theme's name on it.
+
+The three switches are relabelled to say what they do: **Theme Sets Particles**, **Theme Sets
+Visuals**, **Theme Sets Sky & Fog**.
+
 ## Fifth round: shards that stick, and the last of the hairlines
 
 **Hit particles stick to the body.** The impact burst used to spawn at the hit point and fly off
@@ -162,7 +197,7 @@ setting cannot eat the frame):
 **Symbol trails.** A trail can now be a line of symbols rather than a ribbon — the chain-trail idea
 from the showcase — which with 43 symbols is 43 trails rather than one.
 
-**157 selectable styles across 284 options.**
+**157 selectable styles across 285 options.**
 
 ## Third round: thick geometry, real symbols, themes that change the look
 
@@ -198,8 +233,9 @@ The mod now offers **137 selectable styles** across 257 options.
 
 ## Themes, and the second round of visual work
 
-**Themes.** Every colour in the mod comes through `Palette`, so a theme simply answers in place of
-the four colour pickers — one setting restyles the HUD, trails, particles, circles and effects
+**Themes.** (Superseded — see "Themes are presets now, not a lock" above; a theme writes the
+settings rather than answering for them.) Every colour in the mod comes through `Palette`, so a
+theme simply answers in place of the four colour pickers — one setting restyles the HUD, trails, particles, circles and effects
 together, without overwriting anyone's custom colours. Fourteen presets plus `CUSTOM`: Halloween,
 Christmas, Cyberpunk, Ocean, Lava, Toxic, Sakura, Midnight, Rainbow, Frost, Sunset, Blood, Gold,
 Void. With **Theme Particles** on, the theme also picks the particle sprite (snowflakes for Frost

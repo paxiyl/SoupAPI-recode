@@ -1,52 +1,90 @@
 package me.Padej_.soupapi.utils;
 
-import me.Padej_.soupapi.modules.Halo;
-import me.Padej_.soupapi.modules.HitBubbles;
-import me.Padej_.soupapi.modules.JumpCircles;
-import me.Padej_.soupapi.modules.PlayerEffects;
-import me.Padej_.soupapi.modules.Trails;
+import me.Padej_.soupapi.SoupAPI;
+import me.Padej_.soupapi.config.SoupAPI_Config;
 
-import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Where the rest of the mod asks "what style should I use?".
+ * Applies themes, and notices when you have edited one.
  *
- * <p>Each accessor returns the theme's choice when a theme is active and theme visuals are on, and
- * the player's own setting otherwise. Keeping the decision here means no module has to know that
- * themes exist.
+ * <p>This class used to answer "what style should I use?" for every module, returning the theme's
+ * choice over the player's whenever a theme was active. That made a theme feel like a lock: with
+ * Halloween picked, switching the particle or a colour in the settings changed nothing at all,
+ * because the theme went on winning. Themes are presets now —
+ * {@link Theme#apply(SoupAPI_Config)} copies the look into the settings when one is picked, the
+ * modules read the settings as they always wanted to, and {@link #onEdited} turns the theme into
+ * {@link Theme#CUSTOM} the moment you change something it had filled in. The look stays; only the
+ * label gives way, which is the honest thing for it to say once the settings are yours.
  */
 public final class Themes {
+
+    /**
+     * The settings a theme fills in.
+     *
+     * <p>Editing one of these is what makes a theme custom. Everything else — a radius, a speed, a
+     * toggle a theme never touches — leaves the theme's name alone, so tuning the halo's size does
+     * not claim you have left Halloween.
+     */
+    private static final Set<String> OWNED = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+            "c1", "c2", "c3", "c4", "textColor", "backColor",
+            "jumpCirclesStyle", "hitBubblesStyle", "trailsStyle", "playerEffectsStyle", "haloStyle",
+            "particleSpriteOverride", "particleSymbol")));
+
+    /** The switches that decide how much of a theme gets copied; changing one re-applies it. */
+    private static final Set<String> REAPPLY = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+            "themeStyle", "themeVisuals", "themeParticles", "themeWorld")));
 
     private Themes() {
     }
 
-    /** True when a theme should decide the shapes, not just the colours. */
-    public static boolean visuals() {
-        return Palette.getTheme() != Theme.CUSTOM && CONFIG.themeVisuals;
+    /**
+     * Called after any config field is written from the settings screen.
+     *
+     * <p>Three cases: picking a theme (or changing what a theme applies) copies it in; editing
+     * something the active theme filled in to a different value drops the theme to Custom; anything
+     * else is none of a theme's business.
+     */
+    public static void onEdited(String field, SoupAPI_Config config) {
+        if (config == null || field == null) return;
+
+        if (REAPPLY.contains(field)) {
+            apply(config);
+            return;
+        }
+
+        if (!OWNED.contains(field)) return;
+
+        Theme theme = config.themeStyle;
+        if (theme == null || theme == Theme.CUSTOM) return;
+        if (!theme.agreesWith(field, config)) {
+            config.themeStyle = Theme.CUSTOM;
+        }
     }
 
-    /** True when a theme should also colour the sky and the fog. */
-    public static boolean world() {
-        return Palette.getTheme() != Theme.CUSTOM && CONFIG.themeWorld;
+    /** Copies the active theme's look into the settings. Does nothing for {@link Theme#CUSTOM}. */
+    public static void apply(SoupAPI_Config config) {
+        if (config == null) return;
+        Theme theme = config.themeStyle;
+        if (theme == null || theme == Theme.CUSTOM) return;
+        theme.apply(config);
     }
 
-    public static JumpCircles.JumCircleStyle circleStyle() {
-        return visuals() ? Palette.getTheme().circleStyle() : CONFIG.jumpCirclesStyle;
-    }
-
-    public static HitBubbles.Style bubbleStyle() {
-        return visuals() ? Palette.getTheme().bubbleStyle() : CONFIG.hitBubblesStyle;
-    }
-
-    public static Trails.Style trailStyle() {
-        return visuals() ? Palette.getTheme().trailStyle() : CONFIG.trailsStyle;
-    }
-
-    public static PlayerEffects.Style effectStyle() {
-        return visuals() ? Palette.getTheme().effectStyle() : CONFIG.playerEffectsStyle;
-    }
-
-    public static Halo.Style haloStyle() {
-        return visuals() ? Palette.getTheme().haloStyle() : CONFIG.haloStyle;
+    /**
+     * Copies the saved theme in once, at startup.
+     *
+     * <p>A config written before themes became presets can name a theme while the settings still
+     * hold the defaults the theme used to override. Applying it on load means such a config keeps
+     * the look it had instead of reverting to blue-and-orange with the theme's name on it.
+     */
+    public static void applySaved() {
+        try {
+            apply(SoupAPI.configHolder.get());
+        } catch (Throwable ignored) {
+            // A theme is not worth taking the client down for.
+        }
     }
 }

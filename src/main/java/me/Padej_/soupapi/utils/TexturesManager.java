@@ -136,7 +136,7 @@ public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
     };
 
     public static ResourceLocation getJumpCircle() {
-        switch (Themes.circleStyle()) {
+        switch (CONFIG.jumpCirclesStyle) {
             case CIRCLE:
                 return CIRCLE;
             case PORTAL:
@@ -158,7 +158,7 @@ public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
             case SHATTER:
                 return SHATTER_RING;
         }
-        throw new IllegalStateException("Unexpected value: " + Themes.circleStyle());
+        throw new IllegalStateException("Unexpected value: " + CONFIG.jumpCirclesStyle);
     }
 
     public static ResourceLocation getTargetRenderTexture() {
@@ -186,7 +186,7 @@ public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
     }
 
     public static ResourceLocation getHitBubbleTexture() {
-        switch (Themes.bubbleStyle()) {
+        switch (CONFIG.hitBubblesStyle) {
             case CIRCLE:
                 return CIRCLE;
             case CIRCLE_BOLD:
@@ -208,7 +208,7 @@ public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
             case SHATTER:
                 return SHATTER_RING;
         }
-        throw new IllegalStateException("Unexpected value: " + Themes.bubbleStyle());
+        throw new IllegalStateException("Unexpected value: " + CONFIG.hitBubblesStyle);
     }
 
     public static ResourceLocation getMC_TiersGameModeTexture() {
@@ -238,13 +238,15 @@ public static final ResourceLocation[] GLYPH_TEXTURES = new ResourceLocation[] {
     /**
      * The sprite a particle should use.
      *
-     * <p>With a theme active and themed particles on, the theme's own sprite wins over whatever the
-     * caller picked — that is what makes a theme change the look of the particles too, not just
-     * their colour.
+     * <p>{@code particleSpriteOverride} replaces every effect's own sprite when it is set, which is
+     * what makes a theme change how the particles look and not just their colour. A theme writes it
+     * when it is picked; it is an ordinary setting the rest of the time, so it can be set — and
+     * unset — without one.
      */
     public static ResourceLocation themed(ResourceLocation fallback) {
-        ResourceLocation themeParticle = Palette.getThemeParticle();
-        return themeParticle != null ? themeParticle : fallback;
+        ParticleSprite override = CONFIG.particleSpriteOverride;
+        ResourceLocation sprite = override == null ? null : override.texture();
+        return sprite != null ? sprite : fallback;
     }
 
     /**

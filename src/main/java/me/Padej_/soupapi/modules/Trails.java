@@ -136,7 +136,7 @@ public class Trails extends ConfigurableModule {
             List<TrailSegment> trails = entry.getValue();
             if (trails == null || trails.isEmpty()) continue;
 
-            if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.SYMBOLS) {
+            if (CONFIG.trailsStyle == Trails.Style.SYMBOLS) {
                 renderSymbolTrail(trails, tickDelta);
                 continue;
             }
@@ -176,21 +176,21 @@ public class Trails extends ConfigurableModule {
                 int nextMidAlpha;
                 int nextTopAlpha;
 
-                if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.FADED) {
+                if (CONFIG.trailsStyle == Trails.Style.FADED) {
                     currentBottomAlpha = (int) (computeFadedAlpha(0, height) * (currentAlphaFactor / 255.0f));
                     currentMidAlpha = (int) (computeFadedAlpha(height / 2.0f, height) * (currentAlphaFactor / 255.0f));
                     currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (computeFadedAlpha(height, height) * (currentAlphaFactor / 255.0f));
                     nextBottomAlpha = (int) (computeFadedAlpha(0, height) * (nextAlphaFactor / 255.0f));
                     nextMidAlpha = (int) (computeFadedAlpha(height / 2.0f, height) * (nextAlphaFactor / 255.0f));
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (computeFadedAlpha(height, height) * (nextAlphaFactor / 255.0f));
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.FADED_INVERT) {
+                } else if (CONFIG.trailsStyle == Trails.Style.FADED_INVERT) {
                     currentBottomAlpha = (int) (computeFadedAlphaInvert(0, height) * (currentAlphaFactor / 255.0f));
                     currentMidAlpha = (int) (computeFadedAlphaInvert(height / 2.0f, height) * (currentAlphaFactor / 255.0f));
                     currentTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (computeFadedAlphaInvert(height, height) * (currentAlphaFactor / 255.0f));
                     nextBottomAlpha = (int) (computeFadedAlphaInvert(0, height) * (nextAlphaFactor / 255.0f));
                     nextMidAlpha = (int) (computeFadedAlphaInvert(height / 2.0f, height) * (nextAlphaFactor / 255.0f));
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (computeFadedAlphaInvert(height, height) * (nextAlphaFactor / 255.0f));
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.PULSE) {
+                } else if (CONFIG.trailsStyle == Trails.Style.PULSE) {
                     // A wave of brightness travelling back along the trail.
                     float wave = (float) (0.55 + 0.45 * Math.sin(
                             currentProgressColor * Math.PI * 4 - System.currentTimeMillis() / 160.0));
@@ -202,7 +202,7 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = (int) (nextAlphaFactor * waveNext);
                     nextMidAlpha = (int) (nextAlphaFactor * waveNext);
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (nextAlphaFactor * waveNext * 0.4f);
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.RIBBON) {
+                } else if (CONFIG.trailsStyle == Trails.Style.RIBBON) {
                     // A narrow band through the middle, nothing at the edges.
                     currentBottomAlpha = 0;
                     currentMidAlpha = (int) currentAlphaFactor;
@@ -210,7 +210,7 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = 0;
                     nextMidAlpha = (int) nextAlphaFactor;
                     nextTopAlpha = 0;
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.DOTTED) {
+                } else if (CONFIG.trailsStyle == Trails.Style.DOTTED) {
                     // Every other segment, so the trail reads as a dashed line.
                     boolean on = (i % 2) == 0;
                     int value = on ? (int) currentAlphaFactor : 0;
@@ -221,7 +221,7 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = valueNext;
                     nextMidAlpha = valueNext;
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : valueNext;
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.NEON) {
+                } else if (CONFIG.trailsStyle == Trails.Style.NEON) {
                     // Bright core, faint shoulders.
                     currentBottomAlpha = (int) (currentAlphaFactor * 0.25f);
                     currentMidAlpha = (int) currentAlphaFactor;
@@ -229,7 +229,7 @@ public class Trails extends ConfigurableModule {
                     nextBottomAlpha = (int) (nextAlphaFactor * 0.25f);
                     nextMidAlpha = (int) nextAlphaFactor;
                     nextTopAlpha = CONFIG.trailsRenderHalf ? 0 : (int) (nextAlphaFactor * 0.25f);
-                } else if (me.Padej_.soupapi.utils.Themes.trailStyle() == Trails.Style.GRADIENT) {
+                } else if (CONFIG.trailsStyle == Trails.Style.GRADIENT) {
                     // Solid at the feet, gone by the top, and fading with age along its length.
                     currentBottomAlpha = (int) currentAlphaFactor;
                     currentMidAlpha = (int) (currentAlphaFactor * 0.5f);

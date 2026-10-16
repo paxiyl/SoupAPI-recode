@@ -13,34 +13,31 @@ public class Palette {
     private static final Random random = new Random();
 
     /**
-     * The active theme, or {@link Theme#CUSTOM} when the four colour pickers are in charge.
+     * The theme named in the settings, or {@link Theme#CUSTOM}.
      *
-     * <p>Every colour in the mod comes through this class, so letting a theme answer here restyles
-     * the entire mod from one setting without overwriting anyone's custom colours.
+     * <p>Only the settings screen cares which one it is. A theme no longer answers for the colours
+     * here — it writes them into the four pickers when it is chosen — so that editing one works
+     * instead of being quietly overruled.
      */
     public static Theme getTheme() {
         Theme theme = SoupAPI.configHolder.get().themeStyle;
         return theme == null ? Theme.CUSTOM : theme;
     }
 
-    private static boolean themed() {
-        return getTheme() != Theme.CUSTOM;
-    }
-
     public static int getRawColor1() {
-        return themed() ? getTheme().color1() : SoupAPI.configHolder.get().c1;
+        return SoupAPI.configHolder.get().c1;
     }
 
     public static int getRawColor2() {
-        return themed() ? getTheme().color2() : SoupAPI.configHolder.get().c2;
+        return SoupAPI.configHolder.get().c2;
     }
 
     public static int getRawColor3() {
-        return themed() ? getTheme().color3() : SoupAPI.configHolder.get().c3;
+        return SoupAPI.configHolder.get().c3;
     }
 
     public static int getRawColor4() {
-        return themed() ? getTheme().color4() : SoupAPI.configHolder.get().c4;
+        return SoupAPI.configHolder.get().c4;
     }
 
     public static int getColorsCount() {
@@ -93,7 +90,7 @@ public class Palette {
 
     public static Color getBackColor() {
         int alpha = (int) (255 * (CONFIG.backAlpha / 100f));
-        int back = themed() ? getTheme().backColor() : CONFIG.backColor;
+        int back = CONFIG.backColor;
         return Render2D.injectAlpha(new Color(back), alpha);
     }
 
@@ -144,17 +141,7 @@ public class Palette {
     }
 
     public static int getTextColor() {
-        return (themed() ? getTheme().textColor() : CONFIG.textColor) + 0xFF000000;
-    }
-
-    /**
-     * The sprite particles should use, honouring the theme when themed particles are on.
-     *
-     * <p>Returns {@code null} when the caller should keep its own choice.
-     */
-    public static net.minecraft.util.ResourceLocation getThemeParticle() {
-        if (!themed() || !CONFIG.themeParticles) return null;
-        return getTheme().particleTexture();
+        return CONFIG.textColor + 0xFF000000;
     }
 
     public enum ColorsStyle {
