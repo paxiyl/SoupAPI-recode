@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
 import me.Padej_.soupapi.compat.Texts;
 
 import me.Padej_.soupapi.config.ConfigManager;
@@ -53,7 +55,7 @@ public class CapeSelectScreen extends SoupScreen {
 
                     drawTexture(context, texture, textureX, textureY);
 
-                    if (cape == Capes.cape.getValue()) {
+                    if (cape == ConfigurableModule.CONFIG.capesTexture) {
                         context.drawBorder(textureX - BORDER_SIZE, textureY - BORDER_SIZE, TEXTURE_RENDER_WIDTH + BORDER_SIZE * 2, TEXTURE_RENDER_HEIGHT + BORDER_SIZE * 2, 0xFF00FFFF);
                         context.drawBorder(textureX - BORDER_SIZE - 1, textureY - BORDER_SIZE - 1, 2 + TEXTURE_RENDER_WIDTH + BORDER_SIZE * 2, 2 + TEXTURE_RENDER_HEIGHT + BORDER_SIZE * 2, 0xFF00FFFF);
                     }
@@ -92,7 +94,8 @@ public class CapeSelectScreen extends SoupScreen {
             for (Capes.CapeTextures cape : Capes.CapeTextures.values()) {
                 if (cape.name().startsWith(category)) {
                     if (isMouseOverTexture((int) mouseX, (int) mouseY, textureX, textureY)) {
-                        Capes.cape.setValue(cape);
+                        ConfigurableModule.CONFIG.capesTexture = cape;
+                        ConfigurableModule.saveConfig();
                         ConfigManager.saveConfig();
                         return true;
                     }

@@ -1,0 +1,283 @@
+package me.Padej_.soupapi.gui.option;
+
+import me.Padej_.soupapi.SoupAPI;
+import me.Padej_.soupapi.compat.SoupLog;
+import me.Padej_.soupapi.config.ConfigManager;
+import me.Padej_.soupapi.config.SoupAPI_Config;
+import me.Padej_.soupapi.config.annotation.ConfigEntry;
+import me.Padej_.soupapi.modules.Capes;
+import me.Padej_.soupapi.screen.CapeSelectScreen;
+import me.Padej_.soupapi.screen.ConfigHudPositionsScreen;
+import me.Padej_.soupapi.screen.SwingHandScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+/**
+ * Builds the settings screen's pages by reflecting over the config.
+ *
+ * <p>This is the piece Cloth Config used to provide and that the port was missing: without it the
+ * settings screen could only show the handful of {@code Setting} objects hanging off five
+ * {@code SoupModule}s, leaving all 236 annotated config fields — most of the mod — unreachable in
+ * game. Those five modules read a second, parallel copy of their options, so the config entries for
+ * ambient particles, fog, the aspect ratio, the hotbar and capes did nothing at all; they now read
+ * the config itself, and this is the only schema.
+ *
+ * <p>Labels, category names and group captions come from the same
+ * {@code text.autoconfig.soupapi.*} keys Cloth used, which the lang files already carry.
+ */
+public final class ConfigSchema {
+
+    private static final String OPTION_PREFIX = "text.autoconfig.soupapi.option.";
+    private static final String CATEGORY_PREFIX = "text.autoconfig.soupapi.category.";
+
+    private ConfigSchema() {
+    }
+
+    /** Builds one page per config category, in declaration order. */
+    public static List<OptionPage> build() {
+        return buildConfigPages();
+    }
+
+    // ---- the annotated config --------------------------------------------------------------
+
+    private static List<OptionPage> buildConfigPages() {
+        SoupAPI_Config config = SoupAPI.configHolder.get();
+        SoupAPI_Config defaults = new SoupAPI_Config();
+        Map<String, OptionPage> byCategory = new LinkedHashMap<String, OptionPage>();
+
+        // getFields() follows declaration order on every JVM this runs on, which is what keeps
+        // related options (and their @PrefixText group captions) together.
+        for (Field field : SoupAPI_Config.class.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            ConfigEntry.Category category = field.getAnnotation(ConfigEntry.Category.class);
+            String categoryId = category == null ? "main" : category.value();
+
+            OptionPage page = byCategory.get(categoryId);
+            if (page == null) {
+                page = new OptionPage(categoryId, translate(CATEGORY_PREFIX + categoryId, prettify(categoryId)));
+                byCategory.put(categoryId, page);
+            }
+
+            if (field.isAnnotationPresent(ConfigEntry.Gui.PrefixText.class)) {
+                page.add(new Option.Header(
+                        translate(OPTION_PREFIX + field.getName() + ".@PrefixText", "")));
+            }
+
+            Option option = toOption(field, config, defaults);
+            if (option != null) {
+                page.add(option);
+            }
+        }
+        return new ArrayList<OptionPage>(byCategory.values());
+    }
+
+    private static Option toOption(final Field field, final SoupAPI_Config config,
+                                   SoupAPI_Config defaults) {
+        field.setAccessible(true);
+        String label = translate(OPTION_PREFIX + field.getName(), prettify(field.getName()));
+        String tooltip = tooltipOf(field);
+        Class<?> type = field.getType();
+
+        try {
+            // Fields whose name ends in _BUTTON are single-constant enums the original used as
+            // action buttons; they carry no value worth cycling.
+            if (field.getName().endsWith("_BUTTON")) {
+                Runnable action = actionFor(field.getName());
+                if (action == null) return null;
+                return new Option.Action(label, tooltip, openLabel(), action);
+            }
+
+            if (type == boolean.class) {
+                final boolean defaultValue = field.getBoolean(defaults);
+                return new Option.Toggle(label, tooltip,
+                        () -> {
+                            try {
+                                return field.getBoolean(config);
+                            } catch (IllegalAccessException e) {
+                                return false;
+                            }
+                        },
+                        value -> set(field, config, value),
+                        defaultValue);
+            }
+
+            if (type == int.class) {
+                ConfigEntry.ColorPicker colour = field.getAnnotation(ConfigEntry.ColorPicker.class);
+                final int defaultValue = field.getInt(defaults);
+                if (colour != null) {
+                    return new Option.Colour(label, tooltip,
+                            () -> getInt(field, config),
+                            value -> set(field, config, value),
+                            colour.allowAlpha(), defaultValue);
+                }
+                ConfigEntry.BoundedDiscrete bounds = field.getAnnotation(ConfigEntry.BoundedDiscrete.class);
+                double min = bounds == null ? Integer.MIN_VALUE : bounds.min();
+                double max = bounds == null ? Integer.MAX_VALUE : bounds.max();
+                return new Option.Num(label, tooltip,
+                        () -> getInt(field, config),
+                        value -> set(field, config, (int) Math.round(value)),
+                        min, max, bounds != null, true, defaultValue, 1.0);
+            }
+
+            if (type == float.class || type == double.class) {
+                final double defaultValue = field.getFloat(defaults);
+                ConfigEntry.BoundedDiscrete bounds = field.getAnnotation(ConfigEntry.BoundedDiscrete.class);
+                double min = bounds == null ? -Float.MAX_VALUE : bounds.min();
+                double max = bounds == null ? Float.MAX_VALUE : bounds.max();
+                return new Option.Num(label, tooltip,
+                        () -> getFloat(field, config),
+                        value -> set(field, config, (float) value),
+                        min, max, bounds != null, false, defaultValue, 0.01);
+            }
+
+            if (type.isEnum()) {
+                final Enum<?>[] values = (Enum<?>[]) type.getEnumConstants();
+                final Enum<?> defaultValue = (Enum<?>) field.get(defaults);
+                return new Option.Choice(label, tooltip,
+                        () -> {
+                            try {
+                                return (Enum<?>) field.get(config);
+                            } catch (IllegalAccessException e) {
+                                return defaultValue;
+                            }
+                        },
+                        value -> set(field, config, value),
+                        values, defaultValue);
+            }
+
+            if (type == String.class) {
+                final String defaultValue = (String) field.get(defaults);
+                return new Option.Text(label, tooltip,
+                        () -> {
+                            try {
+                                return (String) field.get(config);
+                            } catch (IllegalAccessException e) {
+                                return "";
+                            }
+                        },
+                        value -> set(field, config, value),
+                        defaultValue);
+            }
+
+            if (type == String[].class) {
+                return new Option.TextList(label, tooltip,
+                        () -> {
+                            try {
+                                return (String[]) field.get(config);
+                            } catch (IllegalAccessException e) {
+                                return new String[0];
+                            }
+                        },
+                        value -> set(field, config, value));
+            }
+        } catch (Throwable t) {
+            SoupLog.warn("[SoupAPI] could not expose config field " + field.getName(), t);
+        }
+        return null;
+    }
+
+    /** The screens the original's {@code *_BUTTON} entries were meant to open. */
+    private static Runnable actionFor(String fieldName) {
+        final Minecraft mc = Minecraft.getMinecraft();
+        if ("configPos_BUTTON".equals(fieldName)) {
+            return () -> mc.displayGuiScreen(new ConfigHudPositionsScreen());
+        }
+        if ("swingHandConfig_BUTTON".equals(fieldName)) {
+            return () -> mc.displayGuiScreen(new SwingHandScreen());
+        }
+        if ("selectCape_BUTTON".equals(fieldName)) {
+            return () -> mc.displayGuiScreen(new CapeSelectScreen());
+        }
+        if ("updateCape_BUTTON".equals(fieldName)) {
+            return Capes::reloadCustomCape;
+        }
+        return null;
+    }
+
+    // ---- persistence -----------------------------------------------------------------------
+
+    /** Writes both config systems to disk. */
+    public static void save() {
+        try {
+            SoupAPI.configHolder.save();
+        } catch (Throwable t) {
+            SoupLog.error("[SoupAPI] could not save the config", t);
+        }
+        try {
+            ConfigManager.saveConfig();
+        } catch (Throwable t) {
+            SoupLog.error("[SoupAPI] could not save the module settings", t);
+        }
+    }
+
+    // ---- helpers ---------------------------------------------------------------------------
+
+    private static void set(Field field, Object target, Object value) {
+        try {
+            field.set(target, value);
+        } catch (IllegalAccessException e) {
+            SoupLog.warn("[SoupAPI] could not write config field " + field.getName(), e);
+        }
+    }
+
+    private static int getInt(Field field, Object target) {
+        try {
+            return field.getInt(target);
+        } catch (IllegalAccessException e) {
+            return 0;
+        }
+    }
+
+    private static double getFloat(Field field, Object target) {
+        try {
+            return field.getFloat(target);
+        } catch (IllegalAccessException e) {
+            return 0.0;
+        }
+    }
+
+    private static String tooltipOf(Field field) {
+        if (!field.isAnnotationPresent(ConfigEntry.Gui.Tooltip.class)) return null;
+        String key = OPTION_PREFIX + field.getName() + ".@Tooltip";
+        String value = translate(key, null);
+        if (value != null) return value;
+        return translate(key + "[0]", null);
+    }
+
+    /**
+     * Looks a key up, falling back when it is missing.
+     *
+     * <p>{@link I18n#format} returns the key itself for a missing entry, so that is the test. It
+     * also throws if the locale has not been built yet, which is why this is guarded: a schema
+     * built too early should fall back to readable field names, not take the client down.
+     */
+    private static String translate(String key, String fallback) {
+        String value;
+        try {
+            value = I18n.format(key);
+        } catch (Throwable t) {
+            return fallback;
+        }
+        return value == null || value.equals(key) ? fallback : value;
+    }
+
+    /** {@code hitParticleIncludeStar} reads as "Hit particle include star". */
+    static String prettify(String identifier) {
+        String spaced = identifier.replace('_', ' ').replaceAll("([a-z0-9])([A-Z])", "$1 $2");
+        spaced = spaced.trim().toLowerCase(Locale.ROOT);
+        if (spaced.isEmpty()) return identifier;
+        return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
+    }
+
+    /** The caption on an action button. */
+    private static String openLabel() {
+        return translate("soupapi.gui.open", "Open");
+    }
+}

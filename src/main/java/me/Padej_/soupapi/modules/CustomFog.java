@@ -1,10 +1,8 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
 import net.minecraft.client.renderer.GlStateManager;
-import me.Padej_.soupapi.SoupModule;
-import me.Padej_.soupapi.settings.impl.BooleanSetting;
-import me.Padej_.soupapi.settings.impl.EnumSetting;
-import me.Padej_.soupapi.settings.impl.SliderSetting;
 import me.Padej_.soupapi.utils.Palette;
 import org.lwjgl.opengl.GL11;
 
@@ -25,17 +23,8 @@ import java.awt.Color;
  * {@code FogShape.SPHERE} falls off with radial distance while {@code CYLINDER} is effectively
  * linear in view distance. Both are implemented natively by gl4es.
  */
-public class CustomFog extends SoupModule {
-    public static final BooleanSetting enabled = new BooleanSetting("Enabled", "description", false);
-    public static final BooleanSetting thick = new BooleanSetting("Enabled", "description", false);
-    public static final EnumSetting<CustomFog.CustomFogShape> shape = new EnumSetting<>("Shape", "description", CustomFogShape.SPHERE, CustomFogShape.class);
-    public static final SliderSetting density = new SliderSetting("Density", "desc", 80, 1, 100, 1);
-    public static final SliderSetting start = new SliderSetting("Start", "desc", 5, 1, 100, 1);
-    public static final SliderSetting end = new SliderSetting("End", "desc", 20, 1, 100, 1);
+public class CustomFog extends ConfigurableModule {
 
-    public CustomFog() {
-        super("Custom Fog", Category.WORLD);
-    }
 
     /**
      * Whether custom fog should replace vanilla's this frame.
@@ -44,7 +33,7 @@ public class CustomFog extends SoupModule {
      * not exist in 1.8.9 (added in 1.19).
      */
     public static boolean shouldApply() {
-        if (!enabled.getValue()) return false;
+        if (!CONFIG.customFogEnabled) return false;
         net.minecraft.client.entity.EntityPlayerSP player =
                 net.minecraft.client.Minecraft.getMinecraft().thePlayer;
         return player != null && !player.isPotionActive(net.minecraft.potion.Potion.blindness);
@@ -57,7 +46,7 @@ public class CustomFog extends SoupModule {
 
     /** Opacity, 0..1, used as the GL fog density in exponential mode. */
     public static float getDensity() {
-        return density.getValue() / 100f;
+        return CONFIG.customFogDensity / 100f;
     }
 
     /**
@@ -65,13 +54,13 @@ public class CustomFog extends SoupModule {
      * overrides whatever vanilla just configured.
      */
     public static void applyFogState() {
-        if (shape.getValue() == CustomFogShape.SPHERE) {
+        if (CONFIG.customFogShape == CustomFogShape.SPHERE) {
             GlStateManager.setFog(GL11.GL_EXP2);
             GlStateManager.setFogDensity(getDensity() * 0.1f);
         } else {
             GlStateManager.setFog(GL11.GL_LINEAR);
-            GlStateManager.setFogStart(start.getValue());
-            GlStateManager.setFogEnd(end.getValue());
+            GlStateManager.setFogStart(CONFIG.customFogStart);
+            GlStateManager.setFogEnd(CONFIG.customFogEnd);
         }
         GlStateManager.enableFog();
     }

@@ -1,128 +1,76 @@
 package me.Padej_.soupapi.config;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.*;
-import me.Padej_.soupapi.SoupModule;
-import me.Padej_.soupapi.gui.SoupSettingsScreen;
-import me.Padej_.soupapi.settings.Setting;
-import me.Padej_.soupapi.settings.impl.BooleanSetting;
-import me.Padej_.soupapi.settings.impl.EnumSetting;
-import me.Padej_.soupapi.settings.impl.MinMaxSliderSetting;
-import me.Padej_.soupapi.settings.impl.SliderSetting;
+import me.Padej_.soupapi.compat.SoupLog;
 import net.minecraft.client.Minecraft;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * Small side-car file for things that are not config options.
+ *
+ * <p>It used to hold a second copy of five modules' settings, which is why changing those options
+ * in the config file did nothing: the modules read this file instead. Those modules now read the
+ * config like everything else, so all that is left here is interface state — which settings page was
+ * open last — kept out of the config proper so it never shows up as an option.
+ */
 public class ConfigManager {
-    private static final Path CONFIG_PATH = Paths.get(Minecraft.getMinecraft().mcDataDir.getAbsolutePath(), "config", "soupapi_config.json");
+
+    private static final Path CONFIG_PATH = Paths.get(
+            Minecraft.getMinecraft().mcDataDir.getAbsolutePath(), "config", "soupapi_gui.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static Map<String, Map<String, Object>> config = new HashMap<>();
-    private static Map<String, String> metadata = new HashMap<>();
+    private static Map<String, String> metadata = new HashMap<String, String>();
+    private static boolean loaded;
 
     public static void saveConfig() {
-        Map<String, Object> fullData = new HashMap<>();
-
-        // Собираем настройки модулей
-        Map<String, Map<String, Object>> modulesConfig = new HashMap<>();
-        for (SoupModule module : SoupSettingsScreen.getAllModules()) {
-            modulesConfig.put(module.getDisplayName().getUnformattedText(), getStringObjectMap(module));
-        }
-
-        fullData.put("modules", modulesConfig);
-        fullData.put("meta", metadata);
-
+        Map<String, Object> data = new HashMap<String, Object>();
+        data.put("meta", metadata);
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
-            Files.write(CONFIG_PATH, GSON.toJson(fullData).getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+            Files.write(CONFIG_PATH, GSON.toJson(data).getBytes("UTF-8"));
+        } catch (Exception e) {
+            SoupLog.warn("[SoupAPI] could not save the interface state", e);
         }
-    }
-
-    private static Map<String, Object> getStringObjectMap(SoupModule module) {
-        Map<String, Object> moduleSettings = new HashMap<>();
-        for (Setting<?> setting : module.getSettings()) {
-            Object value = setting.getValue();
-            if (setting instanceof EnumSetting<?>) {
-                value = value.toString();
-            } else if (setting instanceof MinMaxSliderSetting) {
-                MinMaxSliderSetting minMaxSetting = (MinMaxSliderSetting) setting;
-                value = new float[]{minMaxSetting.getMinValue(), minMaxSetting.getMaxValue()};
-            }
-            moduleSettings.put(setting.getName(), value);
-        }
-        return moduleSettings;
     }
 
     public static void loadConfig() {
+        if (loaded) return;
+        loaded = true;
         if (!Files.exists(CONFIG_PATH)) return;
-
         try {
-            String json = new String(Files.readAllBytes(CONFIG_PATH));
+            String json = new String(Files.readAllBytes(CONFIG_PATH), "UTF-8");
             if (json.trim().isEmpty()) return;
-
-            JsonObject fullData = new JsonParser().parse(json).getAsJsonObject();
-
-            JsonObject modulesJson = fullData.getAsJsonObject("modules");
-            JsonObject metaJson = fullData.getAsJsonObject("meta");
-
-            Type modulesType = new TypeToken<Map<String, Map<String, Object>>>(){}.getType();
-            Map<String, Map<String, Object>> modulesConfig = GSON.fromJson(modulesJson, modulesType);
-            config = (modulesConfig != null ? modulesConfig : new HashMap<String, Map<String, Object>>());
-
-            if (metaJson != null) {
-                Type metaType = new TypeToken<Map<String, String>>(){}.getType();
-                metadata = GSON.fromJson(metaJson, metaType);
-            }
-
-            for (SoupModule module : SoupSettingsScreen.getAllModules()) {
-                Map<String, Object> moduleSettings = config.get(module.getDisplayName());
-                if (moduleSettings == null) continue;
-
-                for (Setting<?> setting : module.getSettings()) {
-                    Object value = moduleSettings.get(setting.getName());
-                    if (value != null) {
-                        try {
-                            if (setting instanceof BooleanSetting) {
-                                ((BooleanSetting) setting).setValue((Boolean) value);
-                            } else if (setting instanceof SliderSetting) {
-                                ((SliderSetting) setting).setValue(((Double) value).floatValue());
-                            } else if (setting instanceof EnumSetting<?>) {
-                                EnumSetting<?> enumSetting = (EnumSetting<?>) setting;
-                                for (Enum<?> enumValue : enumSetting.getValues()) {
-                                    if (enumValue.toString().equals(value)) {
-                                        ((EnumSetting) enumSetting).setValue(enumValue);
-                                        break;
-                                    }
-                                }
-                            } else if (setting instanceof MinMaxSliderSetting) {
-                                MinMaxSliderSetting minMaxSetting = (MinMaxSliderSetting) setting;
-                                double[] array = (double[]) value;
-                                minMaxSetting.setMinValue((float) array[0]);
-                                minMaxSetting.setMaxValue((float) array[1]);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
+            JsonObject root = new JsonParser().parse(json).getAsJsonObject();
+            JsonObject meta = root.getAsJsonObject("meta");
+            if (meta != null) {
+                Type type = new TypeToken<Map<String, String>>() {
+                }.getType();
+                Map<String, String> read = GSON.fromJson(meta, type);
+                if (read != null) {
+                    metadata = read;
                 }
             }
-        } catch (IOException | JsonParseException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            SoupLog.warn("[SoupAPI] could not read the interface state", e);
         }
     }
 
     public static void setMetadata(String key, String value) {
-        if (value == null) metadata.remove(key);
-        else metadata.put(key, value);
+        if (value == null) {
+            metadata.remove(key);
+        } else {
+            metadata.put(key, value);
+        }
     }
 
     public static String getMetadata(String key) {

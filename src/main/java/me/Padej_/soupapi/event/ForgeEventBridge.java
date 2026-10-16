@@ -117,6 +117,7 @@ public final class ForgeEventBridge {
         if (mc == null) return;
 
         guard("fonts", FontRenderers::ensureLoaded);
+        guard("playerLayers", me.Padej_.soupapi.render.PlayerLayers::ensureRegistered);
         guard("entities", () -> EntityUtils.updateEntities(mc));
         guard("overlayReload", OverlayReloadListener::callEvent);
 
@@ -204,6 +205,11 @@ public final class ForgeEventBridge {
         hud.begin(event.partialTicks, context);
 
         guard("TargetHud", () -> TargetHud.render(context, hud.tickCounter()));
+        guard("PotionsHud", () -> {
+            if (me.Padej_.soupapi.config.ConfigurableModule.CONFIG.hudBetterPotionsHudEnabled) {
+                me.Padej_.soupapi.modules.PotionsHud.render(context);
+            }
+        });
         guard("Watermark", () -> WatermarkRenderer.render(context));
         guard("MouseMove", () -> MouseMove.render(context));
 
@@ -236,6 +242,37 @@ public final class ForgeEventBridge {
     public void onAttackEntity(AttackEntityEvent event) {
         if (event.entityPlayer == null || event.target == null) return;
         AttackEntityCallback.EVENT.invoke(event.entityPlayer, event.entityPlayer.worldObj, event.target);
+    }
+
+    // ---- first-person hand -----------------------------------------------------------------
+
+    /**
+     * Applies the Swing Hand placement to the first-person item.
+     *
+     * <p>1.8.9 keeps the first-person transform inside a private method, and Forge's
+     * {@code RenderHandEvent} is the only hook near it — but it is cancellable and
+     * {@code ItemRenderer.renderItemInFirstPerson} is public, so the vanilla call is replaced with
+     * the same call wrapped in the mod's transform. Nothing else about hand rendering changes.
+     */
+    @SubscribeEvent
+    public void onRenderHand(net.minecraftforge.client.event.RenderHandEvent event) {
+        if (!me.Padej_.soupapi.config.ConfigurableModule.CONFIG.swingHandEnabled) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.gameSettings.thirdPersonView != 0 || mc.gameSettings.hideGUI) return;
+        if (mc.entityRenderer == null || mc.entityRenderer.itemRenderer == null) return;
+
+        event.setCanceled(true);
+        net.minecraft.client.renderer.GlStateManager.pushMatrix();
+        try {
+            me.Padej_.soupapi.modules.SwingHand.applyTransform(event.partialTicks);
+            mc.entityRenderer.itemRenderer.renderItemInFirstPerson(event.partialTicks);
+        } catch (Throwable t) {
+            me.Padej_.soupapi.compat.SoupLog.error(
+                    "[SoupAPI] the first-person hand transform failed; it is now disabled", t);
+            me.Padej_.soupapi.config.ConfigurableModule.CONFIG.swingHandEnabled = false;
+        } finally {
+            net.minecraft.client.renderer.GlStateManager.popMatrix();
+        }
     }
 
     // ---- fog -------------------------------------------------------------------------------

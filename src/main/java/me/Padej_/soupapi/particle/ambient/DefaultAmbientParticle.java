@@ -1,5 +1,7 @@
 package me.Padej_.soupapi.particle.ambient;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
 import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.modules.AmbientParticle;
@@ -32,7 +34,7 @@ public class DefaultAmbientParticle {
 
     public DefaultAmbientParticle(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
         this.texture = AVAILABLE_TEXTURES.get(new Random().nextInt(AVAILABLE_TEXTURES.size()));
-        this.color = AmbientParticle.useRandomColor.getValue() ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
+        this.color = ConfigurableModule.CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
         this.posX = posX;
         this.posY = posY;
         this.posZ = posZ;
@@ -62,7 +64,7 @@ public class DefaultAmbientParticle {
         posZ += motionZ;
 
         motionX *= 0.9f;
-        if (AmbientParticle.physic.getValue().equals(AmbientParticle.Physics.FALL)) {
+        if (ConfigurableModule.CONFIG.ambientParticlesPhysic.equals(AmbientParticle.Physics.FALL)) {
             motionY *= 0.9f;
         }
         motionZ *= 0.9f;
@@ -86,7 +88,7 @@ public class DefaultAmbientParticle {
         int alpha = (int) (255 * ((float) age / (float) maxAge));
         Color withAlpha = Render2D.injectAlpha(color, alpha);
 
-        Render2D.drawGlyphs(matrices, texture, withAlpha, AmbientParticle.particleScale.getValue() / 100f);
+        Render2D.drawGlyphs(matrices, texture, withAlpha, ConfigurableModule.CONFIG.ambientParticlesDefaultParticleScale / 100f);
     }
 
     private static Vec3 interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {

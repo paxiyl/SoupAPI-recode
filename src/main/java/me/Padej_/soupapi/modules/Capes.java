@@ -1,24 +1,103 @@
 package me.Padej_.soupapi.modules;
 
-import me.Padej_.soupapi.SoupModule;
 import me.Padej_.soupapi.screen.CapeSelectScreen;
-import me.Padej_.soupapi.settings.impl.BooleanSetting;
-import me.Padej_.soupapi.settings.impl.ButtonSetting;
-import me.Padej_.soupapi.settings.impl.EnumSetting;
-import me.Padej_.soupapi.settings.impl.StringSetting;
+import me.Padej_.soupapi.compat.SoupLog;
+import me.Padej_.soupapi.config.ConfigurableModule;
+import me.Padej_.soupapi.config.SoupAPI_Config;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 
-public class Capes extends SoupModule {
-    public static BooleanSetting enabled = new BooleanSetting("Enabled", "desc", false);
-    @SuppressWarnings("unused")
-    public static ButtonSetting capeSelectButton = new ButtonSetting("Select Cape", "desc", () -> mc.displayGuiScreen(new CapeSelectScreen()));
-    public static final EnumSetting<CapeTextures> cape = new EnumSetting<>("Cape", "description", CapeTextures.CUSTOM_JAVA, CapeTextures.class);
+public class Capes extends ConfigurableModule {
 
-    public static BooleanSetting useCustom = new BooleanSetting("Custom", "desc", false);
-    public static StringSetting link = new StringSetting("Link", "dessdas", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/8/86/MINECON_2019_Cape_%28texture%29.png/revision/latest?cb=20220316113812");
 
-    public Capes() {
-        super("Capes", Category.OTHER);
+
+    // ---- the cape the feature renderer should draw -----------------------------------------
+
+    /** Texture id the downloaded cape is registered under, once it has been uploaded. */
+    private static final ResourceLocation CUSTOM_CAPE_ID =
+            new ResourceLocation("soupapi", "textures/capes/custom_download.png");
+
+    private static volatile java.awt.image.BufferedImage pendingCustomCape;
+    private static volatile boolean customCapeReady;
+    private static volatile String loadedCustomCapeLink;
+
+    /**
+     * The cape texture to draw, or {@code null} when there is nothing to draw.
+     *
+     * <p>A downloaded cape is preferred when custom capes are on and the download has finished;
+     * otherwise the chosen built-in cape is used, so switching custom capes off falls straight back
+     * rather than leaving the player capeless.
+     */
+    public static ResourceLocation activeCapeTexture() {
+        SoupAPI_Config config = ConfigurableModule.CONFIG;
+        if (config.customCapesEnabled) {
+            uploadPendingCape();
+            if (customCapeReady) {
+                return CUSTOM_CAPE_ID;
+            }
+            // Kick the download off the first time the link is seen, so enabling the option is
+            // enough; the user does not have to find the update button first.
+            if (!java.util.Objects.equals(loadedCustomCapeLink, config.customCapesLink)) {
+                reloadCustomCape();
+            }
+        }
+        return config.capesTexture == null ? null : config.capesTexture.getTexturePath();
+    }
+
+    /**
+     * Downloads the cape at {@code customCapesLink} and makes it the active custom cape.
+     *
+     * <p>The download runs on its own thread — a cape served slowly would otherwise freeze the
+     * client — and the decoded image is handed to the render thread, because creating a
+     * {@link DynamicTexture} uploads to GL and must happen there.
+     */
+    public static void reloadCustomCape() {
+        final String link = CONFIG.customCapesLink;
+        loadedCustomCapeLink = link;
+        customCapeReady = false;
+        pendingCustomCape = null;
+        if (link == null || link.trim().isEmpty()) return;
+
+        Thread worker = new Thread(() -> {
+            try {
+                java.net.HttpURLConnection connection =
+                        (java.net.HttpURLConnection) new java.net.URL(link).openConnection();
+                connection.setConnectTimeout(8000);
+                connection.setReadTimeout(8000);
+                // Some hosts refuse the default Java agent.
+                connection.setRequestProperty("User-Agent", "SoupAPI/1.8.9");
+                java.io.InputStream in = connection.getInputStream();
+                try {
+                    java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(in);
+                    if (image == null) {
+                        SoupLog.warn("[Capes] the custom cape link did not return an image");
+                        return;
+                    }
+                    pendingCustomCape = image;
+                } finally {
+                    in.close();
+                }
+            } catch (Throwable t) {
+                SoupLog.warn("[Capes] could not download the custom cape", t);
+            }
+        }, "SoupAPI cape download");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    /** Uploads a downloaded cape on the render thread; a no-op when there is nothing waiting. */
+    private static void uploadPendingCape() {
+        java.awt.image.BufferedImage image = pendingCustomCape;
+        if (image == null) return;
+        pendingCustomCape = null;
+        try {
+            DynamicTexture texture = new DynamicTexture(image);
+            Minecraft.getMinecraft().getTextureManager().loadTexture(CUSTOM_CAPE_ID, texture);
+            customCapeReady = true;
+        } catch (Throwable t) {
+            SoupLog.warn("[Capes] could not upload the custom cape", t);
+        }
     }
 
     public enum Config {

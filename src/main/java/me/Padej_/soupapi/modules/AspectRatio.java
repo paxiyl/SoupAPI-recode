@@ -1,24 +1,13 @@
 package me.Padej_.soupapi.modules;
 
-import me.Padej_.soupapi.SoupModule;
 import me.Padej_.soupapi.config.ConfigurableModule;
-import me.Padej_.soupapi.settings.impl.BooleanSetting;
-import me.Padej_.soupapi.settings.impl.EnumSetting;
-import me.Padej_.soupapi.settings.impl.SliderSetting;
 
-public class AspectRatio extends SoupModule {
-    public static final BooleanSetting enabled = new BooleanSetting("Enabled", "description", false);
-    public static final BooleanSetting usePreset = new BooleanSetting("Use Preset", "description", false);
-    public static final EnumSetting<AspectRatio.Preset> preset = new EnumSetting<>("Preset", "description", Preset._16_9_, AspectRatio.Preset.class);
-    public static final SliderSetting factor = new SliderSetting("Factor", "description", 150, 120, 220, 1);
+public class AspectRatio extends ConfigurableModule {
 
-    public AspectRatio() {
-        super("Aspect Ratio", Category.HUD);
-    }
 
     public static float getRatioByPreset() {
-        if (usePreset.getValue()) {
-            switch (preset.getValue()) {
+        if (CONFIG.aspectRatioUsePreset) {
+            switch (CONFIG.aspectRatioPreset) {
             case _16_9_:
                 return 16f / 9f;
             case _5_4_:
@@ -26,9 +15,9 @@ public class AspectRatio extends SoupModule {
             case _4_3_:
                 return 4f / 3f;
         }
-        throw new IllegalStateException("Unexpected value: " + preset.getValue());
+        throw new IllegalStateException("Unexpected value: " + CONFIG.aspectRatioPreset);
         } else {
-            return factor.getValue() / 100f;
+            return CONFIG.aspectRatioFactor / 100f;
         }
     }
 

@@ -107,7 +107,20 @@ public abstract class SoupScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        render(new DrawContext(Minecraft.getMinecraft()), mouseX, mouseY, partialTicks);
+        try {
+            render(new DrawContext(Minecraft.getMinecraft()), mouseX, mouseY, partialTicks);
+        } catch (ThreadDeath | VirtualMachineError fatal) {
+            throw fatal;
+        } catch (Throwable t) {
+            // A screen that throws mid-draw would otherwise crash the client and leave the shared
+            // vertex buffer half-built for whatever draws next.
+            SoupLog.error("[SoupAPI] " + getClass().getSimpleName() + " failed to draw", t);
+        } finally {
+            // The mod's own draws disable texturing for untextured geometry and leave scissor and
+            // blend state set; hand vanilla's GUI back what it expects.
+            Tessellator.discardPending();
+            RenderSystem.restoreDefaults();
+        }
     }
 
     @Override

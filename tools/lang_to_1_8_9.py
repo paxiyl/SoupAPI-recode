@@ -17,10 +17,14 @@ EXTRA = {
     'en_US': {
         'key.categories.soupapi': 'SoupAPI',
         'key.soupapi.settings': 'Open SoupAPI settings',
+        'soupapi.gui.open': 'Open',
+        'soupapi.screen.soup_settings.title': 'SoupAPI settings',
     },
     'ru_RU': {
         'key.categories.soupapi': 'SoupAPI',
         'key.soupapi.settings': 'Открыть настройки SoupAPI',
+        'soupapi.gui.open': 'Открыть',
+        'soupapi.screen.soup_settings.title': 'Настройки SoupAPI',
     },
 }
 
