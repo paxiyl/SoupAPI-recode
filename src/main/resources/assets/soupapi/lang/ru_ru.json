@@ -422,5 +422,10 @@
   "text.autoconfig.soupapi.option.meleeSounds": "Звуки анимаций",
   "text.autoconfig.soupapi.option.meleeSoundVolume": "Громкость звуков",
   "text.autoconfig.soupapi.option.meleeShowArms": "Показывать руки пака",
-  "text.autoconfig.soupapi.option.resetMeleePlacement_BUTTON": "Сбросить размещение"
+  "text.autoconfig.soupapi.option.resetMeleePlacement_BUTTON": "Сбросить размещение",
+  "text.autoconfig.soupapi.option.meleeShowWhen": "Показывать когда",
+  "text.autoconfig.soupapi.option.meleeAutoAlign": "Автоповорот клинка",
+  "text.autoconfig.soupapi.option.meleePlacements": "Сохранённые размещения",
+  "text.autoconfig.soupapi.option.saveMeleePlacement_BUTTON": "Сохранить для этого оружия",
+  "text.autoconfig.soupapi.option.forgetMeleePlacement_BUTTON": "Забыть размещение оружия"
 }

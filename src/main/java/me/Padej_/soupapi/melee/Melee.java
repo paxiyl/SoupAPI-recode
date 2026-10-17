@@ -52,11 +52,27 @@ public final class Melee extends ConfigurableModule {
         return held;
     }
 
-    /** The weapon that should be drawn, or {@code null} when none should. */
+    /**
+     * The weapon that should be drawn, or {@code null} when none should.
+     *
+     * <p>Gated on what is in the hand. Standing in for a sword is the point of it — the weapon
+     * replaces the hand, so showing it while a block or a bow is held would hide the thing actually
+     * being used.
+     */
     public static MeleeWeapon active() {
         if (!CONFIG.meleeEnabled) return null;
         MeleeWeapon weapon = STATE.weapon();
-        return weapon != null && weapon.loaded() ? weapon : null;
+        if (weapon == null || !weapon.loaded()) return null;
+        if (!holding()) return null;
+        return weapon;
+    }
+
+    /** True when what the player is holding matches the Show When setting. */
+    public static boolean holding() {
+        MeleeTrigger trigger = CONFIG.meleeShowWhen;
+        if (trigger == null || trigger == MeleeTrigger.ALWAYS) return true;
+        if (mc.thePlayer == null) return false;
+        return trigger.matches(mc.thePlayer.getHeldItem());
     }
 
     // ---- ticking ---------------------------------------------------------------------------

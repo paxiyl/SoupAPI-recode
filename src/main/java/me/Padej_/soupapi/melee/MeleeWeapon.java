@@ -40,9 +40,15 @@ public final class MeleeWeapon {
         public final float armOffsetX;
         public final float armOffsetY;
         public final float armOffsetZ;
+        /** The turn that points this blade the same way as every other, as an axis and an angle. */
+        public final float alignDegrees;
+        public final float alignX;
+        public final float alignY;
+        public final float alignZ;
 
         Fit(float scale, float offsetX, float offsetY, float offsetZ, float span,
-            float armScale, float armOffsetX, float armOffsetY, float armOffsetZ) {
+            float armScale, float armOffsetX, float armOffsetY, float armOffsetZ,
+            float alignDegrees, float alignX, float alignY, float alignZ) {
             this.scale = scale;
             this.offsetX = offsetX;
             this.offsetY = offsetY;
@@ -52,6 +58,10 @@ public final class MeleeWeapon {
             this.armOffsetX = armOffsetX;
             this.armOffsetY = armOffsetY;
             this.armOffsetZ = armOffsetZ;
+            this.alignDegrees = alignDegrees;
+            this.alignX = alignX;
+            this.alignY = alignY;
+            this.alignZ = alignZ;
         }
     }
 
@@ -172,7 +182,7 @@ public final class MeleeWeapon {
         float[] weapon = model.bounds(pose, null, "hand");
         float[] whole = model.bounds(pose, null);
         if (weapon == null) weapon = whole;
-        if (weapon == null) return new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f);
+        if (weapon == null) return new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f);
 
         // A weapon this long in blocks at Size 100: half a block of blade reads as a knife in the
         // hand, a whole block reads as a lamppost.
@@ -181,8 +191,64 @@ public final class MeleeWeapon {
         // block further out, so the sleeves are seen from outside rather than from within.
         float[] withArms = whole == null ? blade : place(whole, 1.0f);
 
+        float[] align = align(model, pose, weapon);
         return new Fit(blade[0], blade[1], blade[2], blade[3], blade[4],
-                withArms[0], withArms[1], withArms[2], withArms[3] - 0.35f);
+                withArms[0], withArms[1], withArms[2], withArms[3] - 0.35f,
+                align[0], align[1], align[2], align[3]);
+    }
+
+    /** The direction a held blade should point, in the space the weapon is drawn in. */
+    private static final float[] BLADE_TARGET = normalise(-0.40f, 0.86f, -0.32f);
+
+    /**
+     * The turn that points this weapon's blade where every other weapon's blade points.
+     *
+     * <p>Fitting a weapon moves it and sizes it, and for the first build that was all it did — which
+     * is why some of them came out plainly wrong while others looked fine. The packs do not agree
+     * on which way a weapon faces in its own model: measured here, seven of the eleven point their
+     * blade along -X, Dragon's Fang and Creed point up and away, Sea Gleam points <em>down</em>, and
+     * Mercy points back at the camera. Whatever the mod they were built for does about that, it is
+     * not something this port can read out of the files.
+     *
+     * <p>So the blade is found — the mesh vertex furthest from the weapon's centre, which on a knife
+     * is the tip — and the model is turned so that direction matches {@link #BLADE_TARGET}: up, a
+     * little to the left, a little away. Every weapon then sits in the hand the same way, and the
+     * animation still plays on top of it because this is one fixed turn applied around the weapon's
+     * own centre, not a change to any bone.
+     */
+    private static float[] align(GeoModel model, GeoPose pose, float[] box) {
+        float[] centre = {
+                (box[0] + box[3]) / 2f, (box[1] + box[4]) / 2f, (box[2] + box[5]) / 2f,
+        };
+        float[] tip = model.furthestFrom(pose, centre, "hand");
+        if (tip == null) return new float[]{0f, 0f, 1f, 0f};
+
+        // The model is mirrored in X when drawn, so the direction is measured mirrored too.
+        float[] direction = normalise(-(tip[0] - centre[0]), tip[1] - centre[1], tip[2] - centre[2]);
+        if (direction == null) return new float[]{0f, 0f, 1f, 0f};
+
+        float dot = direction[0] * BLADE_TARGET[0] + direction[1] * BLADE_TARGET[1]
+                + direction[2] * BLADE_TARGET[2];
+        dot = Math.max(-1f, Math.min(1f, dot));
+        float[] axis = {
+                direction[1] * BLADE_TARGET[2] - direction[2] * BLADE_TARGET[1],
+                direction[2] * BLADE_TARGET[0] - direction[0] * BLADE_TARGET[2],
+                direction[0] * BLADE_TARGET[1] - direction[1] * BLADE_TARGET[0],
+        };
+        float length = (float) Math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+        if (length < 1.0E-5f) {
+            // Already aligned, or pointing exactly the other way; turn about any perpendicular.
+            if (dot > 0f) return new float[]{0f, 0f, 1f, 0f};
+            return new float[]{180f, 0f, 0f, 1f};
+        }
+        float degrees = (float) Math.toDegrees(Math.acos(dot));
+        return new float[]{degrees, axis[0] / length, axis[1] / length, axis[2] / length};
+    }
+
+    private static float[] normalise(float x, float y, float z) {
+        float length = (float) Math.sqrt(x * x + y * y + z * z);
+        if (length < 1.0E-6f) return null;
+        return new float[]{x / length, y / length, z / length};
     }
 
     /** Returns {scale, offsetX, offsetY, offsetZ, span} for a box and a target size in blocks. */
@@ -212,7 +278,9 @@ public final class MeleeWeapon {
     }
 
     public Fit fit() {
-        return fit == null ? new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f) : fit;
+        return fit == null
+                ? new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f)
+                : fit;
     }
 
     /** Frees the model's display lists and textures; the JSON stays parsed for a fast re-draw. */

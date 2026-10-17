@@ -33,6 +33,9 @@ public class EnumPickerScreen extends SoupScreen {
 
     private String query = "";
     private double scroll;
+    /** Drag-to-scroll, for a launcher with no scroll wheel. */
+    private double dragY = -1;
+
 
     public EnumPickerScreen(SoupScreen parent, Option.Choice option) {
         super(Texts.literal(option.label()));
@@ -120,13 +123,59 @@ public class EnumPickerScreen extends SoupScreen {
         }
         RenderSystem.disableScissor();
 
+        renderScrollArrows(context, ms, accent, mouseX, mouseY);
+
         super.render(context, mouseX, mouseY, delta);
+    }
+
+
+    /**
+     * Up and down buttons on the right edge of the list.
+     *
+     * <p>PojavLauncher has no scroll wheel, and a list of forty themes or a pack of eleven weapons
+     * is not reachable without one. The list can also be dragged.
+     */
+    private void renderScrollArrows(DrawContext context, MatrixStack ms, Color accent,
+                                    int mouseX, int mouseY) {
+        int x = right() - 16;
+        for (int i = 0; i < 2; i++) {
+            boolean up = i == 0;
+            int y = up ? listTop() + 2 : bottom() - 16;
+            boolean hover = mouseX >= x && mouseX <= x + 12 && mouseY >= y && mouseY <= y + 14;
+            Render2D.drawRound(ms, x, y, 12, 14, 3, new Color(255, 255, 255, hover ? 48 : 26));
+            int cx = x + 6;
+            int cy = y + 7;
+            for (int row = 0; row < 3; row++) {
+                int half = up ? row : 2 - row;
+                context.fill(cx - half, cy - 2 + row, cx + half + 1, cy - 1 + row,
+                        new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 230).getRGB());
+            }
+        }
+    }
+
+    /** True when the click was on one of the arrows, which then scrolls the list. */
+    private boolean clickScrollArrows(double mouseX, double mouseY) {
+        int x = right() - 16;
+        if (mouseX < x || mouseX > x + 12) return false;
+        int upY = listTop() + 2;
+        int downY = bottom() - 16;
+        if (mouseY >= upY && mouseY <= upY + 14) {
+            scroll -= ROW_H * 3;
+            return true;
+        }
+        if (mouseY >= downY && mouseY <= downY + 14) {
+            scroll += ROW_H * 3;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (clickScrollArrows(mouseX, mouseY)) return true;
+        dragY = mouseY;
         if (mouseY >= listTop() && mouseY <= bottom()
-                && mouseX >= left() + 6 && mouseX <= right() - 6) {
+                && mouseX >= left() + 6 && mouseX <= right() - 20) {
             int index = (int) ((mouseY - listTop() + scroll) / ROW_H);
             List<Enum<?>> values = matches();
             if (index >= 0 && index < values.size()) {
@@ -137,6 +186,23 @@ public class EnumPickerScreen extends SoupScreen {
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX,
+                                double deltaY) {
+        if (dragY >= 0) {
+            scroll -= mouseY - dragY;
+            dragY = mouseY;
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        dragY = -1;
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

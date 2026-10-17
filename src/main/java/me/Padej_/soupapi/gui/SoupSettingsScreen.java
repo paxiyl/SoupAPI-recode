@@ -45,7 +45,21 @@ public class SoupSettingsScreen extends SoupScreen {
     private static final int GROUP_H = 15;
     private static final int SIDE_ROW_H = 15;
     private static final int CONTROL_W = 78;
-    private static final int SCROLLBAR_W = 3;
+    /**
+     * The scroll rail is wide enough to hit with a thumb.
+     *
+     * <p>PojavLauncher has no scroll wheel, and dragging the list works but fights with the rows
+     * underneath it, so there is a real rail: two arrow buttons and a thumb you can drag or tap
+     * past. Three pixels of decoration was not something anyone could use on a phone.
+     */
+    private static final int SCROLLBAR_W = 10;
+
+    /** The square arrow buttons at each end of the rail. */
+    private static final int ARROW_H = 12;
+
+    /** True while the rail's thumb is being dragged. */
+    private boolean draggingBar;
+    private double barGrabOffset;
 
     private List<OptionPage> pages = new ArrayList<OptionPage>();
     private int selectedPage;
@@ -132,7 +146,19 @@ public class SoupSettingsScreen extends SoupScreen {
     }
 
     private int contentRight() {
-        return right() - 4;
+        return right() - 6 - SCROLLBAR_W;
+    }
+
+    private int barX() {
+        return right() - 4 - SCROLLBAR_W;
+    }
+
+    private int barTop() {
+        return listTop() + ARROW_H;
+    }
+
+    private int barBottom() {
+        return listBottom() - ARROW_H;
     }
 
     private int searchX() {
@@ -273,7 +299,8 @@ public class SoupSettingsScreen extends SoupScreen {
         }
         RenderSystem.disableScissor();
 
-        renderScrollbar(context, x + w + 1, top, bottom, totalHeight(rows), contentScroll, accent);
+        renderScrollbar(context, barX(), top, bottom, totalHeight(rows), contentScroll, accent,
+                mouseX, mouseY);
     }
 
     private void renderRow(DrawContext context, MatrixStack ms, Option row, int x, int y, int w,
@@ -427,18 +454,57 @@ public class SoupSettingsScreen extends SoupScreen {
         }
     }
 
+    /**
+     * The scroll rail: an up arrow, a draggable thumb, a down arrow.
+     *
+     * <p>Drawn even when everything fits, so the control does not appear and disappear under the
+     * thumb as a page is filtered.
+     */
     private void renderScrollbar(DrawContext context, int x, int top, int bottom, int total,
-                                 double scroll, Color accent) {
+                                 double scroll, Color accent, int mouseX, int mouseY) {
+        MatrixStack ms = new MatrixStack();
         int view = bottom - top;
-        if (total <= view) return;
-        int barHeight = Math.max(12, (int) ((double) view * view / total));
-        int travel = view - barHeight;
-        int barY = top + (int) (travel * (scroll / (double) (total - view)));
-        me.Padej_.soupapi.compat.MatrixStack ms = new me.Padej_.soupapi.compat.MatrixStack();
+        boolean needed = total > view;
+
         Render2D.drawRound(ms, x, top, SCROLLBAR_W, view, SCROLLBAR_W / 2f,
-                new Color(255, 255, 255, 18));
-        Render2D.drawRound(ms, x, barY, SCROLLBAR_W, barHeight, SCROLLBAR_W / 2f,
-                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 190));
+                new Color(255, 255, 255, 16));
+
+        arrow(context, ms, x, top, true, accent, mouseX, mouseY, needed);
+        arrow(context, ms, x, bottom - ARROW_H, false, accent, mouseX, mouseY, needed);
+
+        if (!needed) return;
+        int railTop = top + ARROW_H;
+        int railHeight = view - ARROW_H * 2;
+        int thumbHeight = Math.max(18, (int) ((double) railHeight * view / total));
+        int travel = railHeight - thumbHeight;
+        int thumbY = railTop + (int) (travel * (scroll / (double) (total - view)));
+        boolean hover = inside(mouseX, mouseY, x, thumbY, SCROLLBAR_W, thumbHeight);
+        Render2D.drawRound(ms, x + 1, thumbY, SCROLLBAR_W - 2, thumbHeight, (SCROLLBAR_W - 2) / 2f,
+                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(),
+                        draggingBar || hover ? 235 : 180));
+    }
+
+    private void arrow(DrawContext context, MatrixStack ms, int x, int y, boolean up, Color accent,
+                       int mouseX, int mouseY, boolean enabled) {
+        boolean hover = enabled && inside(mouseX, mouseY, x, y, SCROLLBAR_W, ARROW_H);
+        Render2D.drawRound(ms, x, y, SCROLLBAR_W, ARROW_H, 3,
+                new Color(255, 255, 255, hover ? 46 : 26));
+        int colour = enabled
+                ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 230).getRGB()
+                : 0x55FFFFFF;
+        // A small triangle, drawn as three rows of pixels so it stays crisp at any GUI scale.
+        int cx = x + SCROLLBAR_W / 2;
+        int cy = y + ARROW_H / 2;
+        for (int i = 0; i < 3; i++) {
+            int half = up ? i : 2 - i;
+            int row = up ? cy - 2 + i : cy - 2 + i;
+            context.fill(cx - half, row, cx + half + 1, row + 1, colour);
+        }
+    }
+
+    /** How far one arrow press or one rail tap moves the list. */
+    private int scrollStep() {
+        return ROW_H * 3;
     }
 
     /** A one-pixel frame, drawn as four fills so it stays crisp at any GUI scale. */
@@ -494,6 +560,34 @@ public class SoupSettingsScreen extends SoupScreen {
             return true;
         }
         searchFocused = false;
+
+        // The scroll rail: arrows, thumb, or a tap on the track to page.
+        if (mouseX >= barX() - 2 && mouseX <= barX() + SCROLLBAR_W + 2
+                && mouseY >= listTop() && mouseY <= listBottom()) {
+            stopEditing(true);
+            List<Option> rows = visibleRows();
+            int view = listBottom() - listTop();
+            int total = totalHeight(rows);
+            if (mouseY <= listTop() + ARROW_H) {
+                contentScroll -= scrollStep();
+            } else if (mouseY >= listBottom() - ARROW_H) {
+                contentScroll += scrollStep();
+            } else if (total > view) {
+                int railTop = barTop();
+                int railHeight = barBottom() - barTop();
+                int thumbHeight = Math.max(18, (int) ((double) railHeight * view / total));
+                int travel = railHeight - thumbHeight;
+                int thumbY = railTop + (int) (travel * (contentScroll / (double) (total - view)));
+                if (mouseY >= thumbY && mouseY <= thumbY + thumbHeight) {
+                    draggingBar = true;
+                    barGrabOffset = mouseY - thumbY;
+                } else {
+                    contentScroll += mouseY < thumbY ? -view * 0.8 : view * 0.8;
+                }
+            }
+            contentScroll = clampScroll(contentScroll, total, view);
+            return true;
+        }
 
         // Sidebar.
         if (mouseX >= left() && mouseX <= left() + SIDEBAR_W
@@ -635,6 +729,23 @@ public class SoupSettingsScreen extends SoupScreen {
             }
             return true;
         }
+        if (draggingBar) {
+            List<Option> rows = visibleRows();
+            int view = listBottom() - listTop();
+            int total = totalHeight(rows);
+            if (total > view) {
+                int railTop = barTop();
+                int railHeight = barBottom() - barTop();
+                int thumbHeight = Math.max(18, (int) ((double) railHeight * view / total));
+                int travel = railHeight - thumbHeight;
+                if (travel > 0) {
+                    double fraction = (mouseY - barGrabOffset - railTop) / (double) travel;
+                    contentScroll = clampScroll(fraction * (total - view), total, view);
+                }
+            }
+            return true;
+        }
+
         if (draggingList) {
             double dy = mouseY - lastDragY;
             lastDragY = mouseY;
@@ -657,6 +768,7 @@ public class SoupSettingsScreen extends SoupScreen {
             return true;
         }
         draggingList = false;
+        draggingBar = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 

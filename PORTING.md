@@ -110,6 +110,40 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Pointing every blade the same way
+
+Fixing the scale left some weapons still plainly wrong, and the reason is that fitting a weapon only
+moved it and sized it — it never turned it. The packs do not agree on which way a weapon faces in
+its own model. Measured here: seven of the eleven point their blade along -X, Dragon's Fang and Creed
+point up and away, Sea Gleam points **down**, and Mercy points back at the camera. Nothing in the
+files says which way is forward, and the view anchors that might have implied it are the ones that
+already disagree by sixty units.
+
+So the blade is found and the model is turned to match. The tip is the posed mesh vertex furthest
+from the weapon's centre, which on a knife is the point; the direction from centre to tip is turned
+onto one target — up, a little left, a little away — as a single rotation about the weapon's own
+centre. The turns it works out range from 28 degrees for Creed to 143 for Sea Gleam, and afterwards
+all eleven sit in the hand the same way. The animation plays on top of it untouched, because this is
+one fixed rotation around a point, not a change to any bone. `Auto-Align The Blade` turns it off.
+
+**Placement can be saved per weapon.** One set of sliders cannot suit eleven weapons of different
+shapes: a position that puts a dagger where you want it puts a greatsword through your face. The
+sliders stay global — they are what a weapon starts from — and `Save Placement For This Weapon`
+gives the weapon in hand its own copy, which is what it is drawn with from then on. The other ten
+keep following the sliders. Stored as one readable line per weapon in the config.
+
+**The weapon only appears when you are holding one.** `Show When` defaults to Sword: the weapon
+replaces the hand, so drawing it over a bow or a stack of blocks would hide the thing actually being
+used. Sword, sword or axe, any tool, any item, or always.
+
+## A scroll bar you can actually hit
+
+PojavLauncher has no scroll wheel, and three pixels of decoration is not a control. The settings
+list has a real rail now: an up arrow, a thumb you can drag or tap past, a down arrow, ten pixels
+wide. Tapping the track pages by a screenful. The weapon list and the enum pickers — forty-three
+themes, a hundred and twenty capes — get arrows of their own and can be dragged, which is what made
+them reachable at all without a wheel.
+
 ## What the first screenshots showed
 
 The weapons drew, and looked like shattered glass: enormous flat pink sheets across the screen with

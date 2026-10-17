@@ -286,6 +286,84 @@ public final class GeoModel {
         }
     }
 
+    /**
+     * The posed mesh vertex furthest from {@code from}, in model units.
+     *
+     * <p>On a weapon measured from its own centre that is the tip of the blade, which is what tells
+     * the renderer which way the thing points — something the model files never say.
+     */
+    public float[] furthestFrom(GeoPose pose, float[] from, String nameExclude) {
+        float[] best = null;
+        float bestDistance = -1f;
+        float[] out = new float[3];
+        for (GeoBone root : roots) {
+            float[] found = furthest(root, pose, new Mat4(), from, nameExclude, out);
+            if (found == null) continue;
+            float dx = found[0] - from[0];
+            float dy = found[1] - from[1];
+            float dz = found[2] - from[2];
+            float distance = dx * dx + dy * dy + dz * dz;
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                best = new float[]{found[0], found[1], found[2]};
+            }
+        }
+        return best;
+    }
+
+    private float[] furthest(GeoBone bone, GeoPose pose, Mat4 parent, float[] from,
+                             String nameExclude, float[] scratch) {
+        int i = bone.index;
+        float sx = pose.scaleX(i);
+        float sy = pose.scaleY(i);
+        float sz = pose.scaleZ(i);
+        if (Math.abs(sx) < 1.0E-4f && Math.abs(sy) < 1.0E-4f && Math.abs(sz) < 1.0E-4f) return null;
+
+        Mat4 m = parent.copy()
+                .translate(pose.posX(i), pose.posY(i), pose.posZ(i))
+                .translate(bone.pivotX, bone.pivotY, bone.pivotZ)
+                .rotateDeg(bone.rotZ + pose.rotZ(i), 0f, 0f, 1f)
+                .rotateDeg(bone.rotY + pose.rotY(i), 0f, 1f, 0f)
+                .rotateDeg(bone.rotX + pose.rotX(i), 1f, 0f, 0f)
+                .scale(sx, sy, sz)
+                .translate(-bone.pivotX, -bone.pivotY, -bone.pivotZ);
+
+        float[] best = null;
+        float bestDistance = -1f;
+        boolean skip = nameExclude != null && bone.name.contains(nameExclude);
+        if (!skip) {
+            for (GeoCube cube : bone.cubes) {
+                for (int corner = 0; corner < 8; corner++) {
+                    float x = (corner & 1) != 0 ? cube.x1 : cube.x0;
+                    float y = (corner & 4) != 0 ? cube.y1 : cube.y0;
+                    float z = (corner & 2) != 0 ? cube.z1 : cube.z0;
+                    m.transform(x, y, z, scratch);
+                    float dx = scratch[0] - from[0];
+                    float dy = scratch[1] - from[1];
+                    float dz = scratch[2] - from[2];
+                    float distance = dx * dx + dy * dy + dz * dz;
+                    if (distance > bestDistance) {
+                        bestDistance = distance;
+                        best = new float[]{scratch[0], scratch[1], scratch[2]};
+                    }
+                }
+            }
+        }
+        for (GeoBone child : bone.children) {
+            float[] found = furthest(child, pose, m, from, nameExclude, scratch);
+            if (found == null) continue;
+            float dx = found[0] - from[0];
+            float dy = found[1] - from[1];
+            float dz = found[2] - from[2];
+            float distance = dx * dx + dy * dy + dz * dz;
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                best = found;
+            }
+        }
+        return best;
+    }
+
     /** The posed position of a bone's pivot, in model units — used to hang effects off a blade. */
     public boolean pivotOf(String name, GeoPose pose, float[] out) {
         GeoBone bone = byName.get(name);

@@ -89,7 +89,8 @@ public final class MeleeRenderer extends ConfigurableModule {
     /** Puts the matrix where the model should be drawn, including bob, sway and the kick. */
     private static void place(MeleeWeapon weapon, float partialTicks) {
         MeleeWeapon.Fit fit = weapon.fit();
-        float size = CONFIG.meleeSize / 100f;
+        MeleePlacement.Values placement = MeleePlacement.of(weapon);
+        float size = placement.size / 100f;
         boolean arms = CONFIG.meleeShowArms;
         float fitScale = arms ? fit.armScale : fit.scale;
         float fitX = arms ? fit.armOffsetX : fit.offsetX;
@@ -99,16 +100,25 @@ public final class MeleeRenderer extends ConfigurableModule {
         if (CONFIG.meleeBob) bob(partialTicks);
         if (CONFIG.meleeSway) sway();
 
+        // Where the weapon sits in the view.
         GlStateManager.translate(
-                fitX * size + CONFIG.meleeOffsetX / 100f,
-                fitY * size + CONFIG.meleeOffsetY / 100f,
-                fitZ * size - CONFIG.meleeDistance / 100f);
+                placement.offsetX / 100f,
+                placement.offsetY / 100f,
+                -placement.distance / 100f);
 
-        if (CONFIG.meleeYaw != 0) GlStateManager.rotate(CONFIG.meleeYaw, 0f, 1f, 0f);
-        if (CONFIG.meleePitch != 0) GlStateManager.rotate(CONFIG.meleePitch, 1f, 0f, 0f);
-        if (CONFIG.meleeRoll != 0) GlStateManager.rotate(CONFIG.meleeRoll, 0f, 0f, 1f);
+        // Then the turns, about the weapon's own centre: first the one that points every blade the
+        // same way, then whatever the player has set on top of it.
+        if (CONFIG.meleeAutoAlign && !arms && fit.alignDegrees != 0f) {
+            GlStateManager.rotate(fit.alignDegrees, fit.alignX, fit.alignY, fit.alignZ);
+        }
+        if (placement.yaw != 0) GlStateManager.rotate(placement.yaw, 0f, 1f, 0f);
+        if (placement.pitch != 0) GlStateManager.rotate(placement.pitch, 1f, 0f, 0f);
+        if (placement.roll != 0) GlStateManager.rotate(placement.roll, 0f, 0f, 1f);
 
         shake(weapon);
+
+        // Finally bring the weapon's centre to the origin, so every turn above pivots around it.
+        GlStateManager.translate(fitX * size, fitY * size, fitZ * size);
 
         float scale = fitScale * size / 16f;
         GlStateManager.scale(-scale, scale, scale);

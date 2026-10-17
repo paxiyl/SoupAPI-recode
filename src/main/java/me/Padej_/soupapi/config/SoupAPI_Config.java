@@ -921,6 +921,10 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("melee")
     public boolean meleeThirdPerson = true;
     @ConfigEntry.Category("melee")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.melee.MeleeTrigger meleeShowWhen =
+            me.Padej_.soupapi.melee.MeleeTrigger.SWORD;
+    @ConfigEntry.Category("melee")
     public boolean meleeShowArms = false;
     @ConfigEntry.Category("melee")
     public boolean resetMeleePlacement_BUTTON = false;
@@ -931,6 +935,14 @@ public class SoupAPI_Config implements ConfigData {
     public int meleeSoundVolume = 100;
 
     @ConfigEntry.Gui.PrefixText // Melee Placement
+    @ConfigEntry.Category("melee")
+    public boolean meleeAutoAlign = true;
+    @ConfigEntry.Category("melee")
+    public String[] meleePlacements = new String[0];
+    @ConfigEntry.Category("melee")
+    public boolean saveMeleePlacement_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean forgetMeleePlacement_BUTTON = false;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleeSize = 100;
