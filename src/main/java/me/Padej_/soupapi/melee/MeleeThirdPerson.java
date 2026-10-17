@@ -48,10 +48,11 @@ public final class MeleeThirdPerson extends ConfigurableModule {
             GlStateManager.rotate(-90f, 1f, 0f, 0f);
             GlStateManager.rotate(180f, 0f, 1f, 0f);
 
-            float scale = fit.scale * size / 16f;
+            float scale = fit.scale * size / 16f;   // always the weapon-only fit here
             GlStateManager.translate(fit.offsetX * size, fit.offsetY * size, fit.offsetZ * size);
             GlStateManager.scale(-scale, scale, scale);
 
+            model.setHidden("hand", true);
             mc.getTextureManager().bindTexture(texture);
             GlStateManager.color(1f, 1f, 1f, 1f);
             model.render(pose);

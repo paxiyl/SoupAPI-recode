@@ -420,5 +420,7 @@
   "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Sky Uses Theme",
   "text.autoconfig.soupapi.option.coloredSkyAlpha": "Sky Opacity",
   "text.autoconfig.soupapi.option.meleeSounds": "Animation Sounds",
-  "text.autoconfig.soupapi.option.meleeSoundVolume": "Sound Volume"
+  "text.autoconfig.soupapi.option.meleeSoundVolume": "Sound Volume",
+  "text.autoconfig.soupapi.option.meleeShowArms": "Show The Pack's Arms",
+  "text.autoconfig.soupapi.option.resetMeleePlacement_BUTTON": "Reset Placement"
 }

@@ -99,6 +99,18 @@ public final class GeoModel {
         return count;
     }
 
+    /**
+     * Hides or shows every bone whose name contains {@code match}.
+     *
+     * <p>Used to drop the arms a gun pack ships with: they are posed for the mod the pack was built
+     * for, and on a body that already has arms they are one pair too many.
+     */
+    public void setHidden(String match, boolean hidden) {
+        for (GeoBone bone : bones) {
+            if (bone.name.contains(match)) bone.hidden = hidden;
+        }
+    }
+
     public GeoPose newPose() {
         return new GeoPose(bones.size());
     }
@@ -134,7 +146,7 @@ public final class GeoModel {
         if (sx != 1f || sy != 1f || sz != 1f) GlStateManager.scale(sx, sy, sz);
         GlStateManager.translate(-bone.pivotX, -bone.pivotY, -bone.pivotZ);
 
-        if (bone.displayList != 0) {
+        if (bone.displayList != 0 && !bone.hidden) {
             GlStateManager.callList(bone.displayList);
         }
         for (int c = 0; c < bone.children.size(); c++) {
@@ -217,16 +229,26 @@ public final class GeoModel {
      * the model rather than guessed per weapon.
      */
     public float[] bounds(GeoPose pose, String nameFilter) {
+        return bounds(pose, nameFilter, null);
+    }
+
+    /**
+     * @param nameFilter  when set, only bones whose name contains it are measured
+     * @param nameExclude when set, bones whose name contains it are left out — which is how the
+     *                    weapon is measured without the arms it is held in
+     */
+    public float[] bounds(GeoPose pose, String nameFilter, String nameExclude) {
         float[] box = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE,
                 -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
         for (GeoBone root : roots) {
-            measure(root, pose, new Mat4(), box, nameFilter);
+            measure(root, pose, new Mat4(), box, nameFilter, nameExclude);
         }
         if (box[0] > box[3]) return null;
         return box;
     }
 
-    private void measure(GeoBone bone, GeoPose pose, Mat4 parent, float[] box, String nameFilter) {
+    private void measure(GeoBone bone, GeoPose pose, Mat4 parent, float[] box, String nameFilter,
+                         String nameExclude) {
         int i = bone.index;
         float sx = pose.scaleX(i);
         float sy = pose.scaleY(i);
@@ -242,7 +264,9 @@ public final class GeoModel {
                 .scale(sx, sy, sz)
                 .translate(-bone.pivotX, -bone.pivotY, -bone.pivotZ);
 
-        if (nameFilter == null || bone.name.contains(nameFilter)) {
+        boolean included = nameFilter == null || bone.name.contains(nameFilter);
+        if (nameExclude != null && bone.name.contains(nameExclude)) included = false;
+        if (included) {
             float[] out = new float[3];
             for (GeoCube cube : bone.cubes) {
                 for (int corner = 0; corner < 8; corner++) {
@@ -258,7 +282,7 @@ public final class GeoModel {
             }
         }
         for (GeoBone child : bone.children) {
-            measure(child, pose, m, box, nameFilter);
+            measure(child, pose, m, box, nameFilter, nameExclude);
         }
     }
 

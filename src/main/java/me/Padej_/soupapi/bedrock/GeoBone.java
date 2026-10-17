@@ -16,6 +16,8 @@ public final class GeoBone {
     public final List<GeoBone> children = new ArrayList<GeoBone>();
 
     GeoBone parent;
+    /** Set when the caller wants this bone's geometry left out; children still draw. */
+    boolean hidden;
     /** Index into the model's flat bone array; also the index into a pose. */
     int index;
     /** The compiled display list for this bone's cubes, or 0 when it has none. */

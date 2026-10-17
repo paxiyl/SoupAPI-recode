@@ -110,6 +110,40 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## What the first screenshots showed
+
+The weapons drew, and looked like shattered glass: enormous flat pink sheets across the screen with
+something metallic buried inside. Three separate causes, each visible in the shots.
+
+**The arms were setting the scale.** The fit normalised the whole model — and most of that model is
+a metre of forearm reaching back toward the camera. Normalising that to a block left the blade tiny
+and the sleeves vast, and since the arms pass the camera on their way back, what filled the screen
+was the inside of a sleeve. The blade sets the scale now (0.55 blocks at Size 100), measured with
+the hand bones excluded, and it is the blade that gets centred.
+
+**The arms are off by default.** They are authored around the view anchor of the mod the pack was
+built for, and this port cannot use that anchor — the packs disagree about where it is. Rendered
+against a blade-centred fit they are simply in the wrong place. `Show The Pack's Arms` turns them
+on and switches to a second fit measured at load: the whole assembly framed to a block and pushed a
+third of a block further out, so the arms are seen from outside. Both were checked by rendering them
+offline; the weapon-only mode is the one that reads as a weapon in a hand.
+
+**The rim light was painting the model flat.** It used the inverted-hull trick — draw the model
+slightly larger, keep only the far faces — which needs front-face culling. The model is drawn
+mirrored in X, which flips the winding, so culling the front culled the half it was meant to keep
+and left a solid sheet of accent colour over the artwork. It draws before the textured pass now,
+additive and writing no depth, so the real model covers the middle and only the rim survives; no
+culling games, and nothing to get backwards.
+
+**And the effects were louder than the weapon.** Glow at 110% over the pack's specular map blew out
+to white, the rim light sat on top of that, three phantom copies smeared the geometry across the
+frame, and with a pink theme every one of those passes was pink. The weapon is the subject now: glow
+at 45%, rim light, phantom copies, swing rings and chromatic split all off by default, and the
+additive passes ordered so the artwork is drawn on top of them rather than under.
+
+There is also a `Reset Placement` button, because size, distance, offsets and angles are the
+settings most likely to end up somewhere unusable while being tuned.
+
 ## The download, and the 500 MB of texture memory behind it
 
 Bundling the pack took the jar to 22 MB, which turned out to be too big to download on the phone it

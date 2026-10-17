@@ -255,6 +255,24 @@ public final class ConfigSchema {
         if ("rescanMeleePacks_BUTTON".equals(fieldName)) {
             return me.Padej_.soupapi.melee.MeleePack::rescan;
         }
+        if ("resetMeleePlacement_BUTTON".equals(fieldName)) {
+            // Size, distance, offsets, angles and the kick, back to the fitted defaults - the one
+            // group of settings most likely to be left somewhere unusable while being tuned.
+            return () -> {
+                SoupAPI_Config defaults = new SoupAPI_Config();
+                SoupAPI_Config config = SoupAPI.configHolder.get();
+                config.meleeSize = defaults.meleeSize;
+                config.meleeDistance = defaults.meleeDistance;
+                config.meleeOffsetX = defaults.meleeOffsetX;
+                config.meleeOffsetY = defaults.meleeOffsetY;
+                config.meleeOffsetZ = defaults.meleeOffsetZ;
+                config.meleeYaw = defaults.meleeYaw;
+                config.meleePitch = defaults.meleePitch;
+                config.meleeRoll = defaults.meleeRoll;
+                config.meleeCameraShake = defaults.meleeCameraShake;
+                save();
+            };
+        }
         return null;
     }
 

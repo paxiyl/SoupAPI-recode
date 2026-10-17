@@ -20,21 +20,38 @@ import java.util.List;
  */
 public final class MeleeWeapon {
 
-    /** How the first-person placement was worked out, so the settings screen can say so. */
+    /**
+     * How the first-person placement was worked out, so the settings screen can say so.
+     *
+     * <p>Two fits, because the answer depends on whether the pack's arms are drawn. With the weapon
+     * alone the blade sets the scale and sits where a held knife sits. With the arms the whole
+     * assembly has to be framed and pushed out, because the arms reach back past the camera and
+     * close up you are looking at the inside of a sleeve.
+     */
     public static final class Fit {
         public final float scale;
         public final float offsetX;
         public final float offsetY;
         public final float offsetZ;
-        /** The idle pose's size in blocks, for the picker's size column. */
+        /** The weapon's own size in blocks, for the picker's size column. */
         public final float span;
+        /** The same, fitted to the whole model so the arms are in frame too. */
+        public final float armScale;
+        public final float armOffsetX;
+        public final float armOffsetY;
+        public final float armOffsetZ;
 
-        Fit(float scale, float offsetX, float offsetY, float offsetZ, float span) {
+        Fit(float scale, float offsetX, float offsetY, float offsetZ, float span,
+            float armScale, float armOffsetX, float armOffsetY, float armOffsetZ) {
             this.scale = scale;
             this.offsetX = offsetX;
             this.offsetY = offsetY;
             this.offsetZ = offsetZ;
             this.span = span;
+            this.armScale = armScale;
+            this.armOffsetX = armOffsetX;
+            this.armOffsetY = armOffsetY;
+            this.armOffsetZ = armOffsetZ;
         }
     }
 
@@ -138,26 +155,48 @@ public final class MeleeWeapon {
      *
      * <p>A pack's models carry their own view anchors, and those anchors disagree between weapons —
      * in this one pack the same bone names sit sixty units apart — so taking one of them as the eye
-     * puts half the weapons out of frame. The idle pose is measured instead and scaled to fill a
-     * chosen share of the view at a chosen distance, which lands every weapon of every pack in the
-     * same place. The settings then nudge it from there.
+     * puts half the weapons out of frame. The idle pose is measured instead.
+     *
+     * <p>What is measured is the <em>weapon</em>, not the whole model. Measuring everything meant
+     * the arms decided the size, and the arms are a metre of forearm reaching back toward the
+     * camera: normalising that to a block left the blade small, the sleeves enormous, and the
+     * assembly sprawling off every edge of the screen. A knife should be about half a block of
+     * blade, however long the arms holding it are, so the blade is what sets the scale and what
+     * gets centred; the arms land wherever they fall, which is behind it, where they belong.
      */
     private Fit measure(GeoModel model, GeoAnimations animations, GeoPose pose) {
         GeoClip idle = animations.first("static_idle", "idle", "draw");
         pose.reset();
         if (idle != null) pose.sample(model, idle, 0f, 1f);
-        float[] box = model.bounds(pose, null);
-        if (box == null) return new Fit(1f, 0f, 0f, 0f, 0f);
 
+        float[] weapon = model.bounds(pose, null, "hand");
+        float[] whole = model.bounds(pose, null);
+        if (weapon == null) weapon = whole;
+        if (weapon == null) return new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f);
+
+        // A weapon this long in blocks at Size 100: half a block of blade reads as a knife in the
+        // hand, a whole block reads as a lamppost.
+        float[] blade = place(weapon, 0.55f);
+        // With the arms in, the whole assembly is framed to about a block and pushed a third of a
+        // block further out, so the sleeves are seen from outside rather than from within.
+        float[] withArms = whole == null ? blade : place(whole, 1.0f);
+
+        return new Fit(blade[0], blade[1], blade[2], blade[3], blade[4],
+                withArms[0], withArms[1], withArms[2], withArms[3] - 0.35f);
+    }
+
+    /** Returns {scale, offsetX, offsetY, offsetZ, span} for a box and a target size in blocks. */
+    private static float[] place(float[] box, float target) {
         float spanX = (box[3] - box[0]) / 16f;
         float spanY = (box[4] - box[1]) / 16f;
-        float span = Math.max(spanX, spanY);
-        float scale = span > 1.0E-4f ? 1f / span : 1f;
-        // The centre is mirrored in X with the model itself, so the offset is too.
+        float spanZ = (box[5] - box[2]) / 16f;
+        float span = Math.max(spanX, Math.max(spanY, spanZ));
+        float scale = span > 1.0E-4f ? target / span : 1f;
+        // The model is mirrored in X when it is drawn, so its centre offset is mirrored too.
         float centreX = -(box[0] + box[3]) / 32f * scale;
         float centreY = (box[1] + box[4]) / 32f * scale;
         float centreZ = (box[2] + box[5]) / 32f * scale;
-        return new Fit(scale, -centreX, -centreY, -centreZ, span);
+        return new float[]{scale, -centreX, -centreY, -centreZ, span};
     }
 
     public GeoModel model() {
@@ -173,7 +212,7 @@ public final class MeleeWeapon {
     }
 
     public Fit fit() {
-        return fit == null ? new Fit(1f, 0f, 0f, 0f, 0f) : fit;
+        return fit == null ? new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f) : fit;
     }
 
     /** Frees the model's display lists and textures; the JSON stays parsed for a fast re-draw. */

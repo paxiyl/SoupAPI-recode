@@ -53,15 +53,24 @@ public final class MeleeRenderer extends ConfigurableModule {
 
             place(weapon, partialTicks);
 
-            // The base pass: the weapon as the pack drew it.
+            // Anything additive that should sit *behind* the weapon is drawn first, without
+            // writing depth; the textured pass then covers the middle of it and only what sticks
+            // out past the silhouette survives. Drawing these afterwards instead - which is what
+            // the first version did - paints a flat sheet of accent colour over the artwork and
+            // buries the weapon in its own glow.
+            if (CONFIG.meleeOutline) outline(weapon, model, pose);
+            if (CONFIG.meleePhantom) phantoms(weapon, model, texture);
+
+            model.setHidden("hand", !CONFIG.meleeShowArms);
+
+            // The weapon as the pack drew it.
             GlStateManager.color(1f, 1f, 1f, 1f);
+            GlStateManager.depthMask(true);
             mc.getTextureManager().bindTexture(texture);
             model.render(pose);
 
-            if (CONFIG.meleePhantom) phantoms(weapon, model, texture);
-            if (CONFIG.meleeGlow) glow(weapon, model, pose);
-            if (CONFIG.meleeOutline) outline(weapon, model, pose);
             if (CONFIG.meleeChroma) chroma(weapon, model, pose, texture);
+            if (CONFIG.meleeGlow) glow(weapon, model, pose);
             MeleeEffects.render(weapon, partialTicks);
         } catch (Throwable t) {
             me.Padej_.soupapi.compat.SoupLog.error(
@@ -81,14 +90,19 @@ public final class MeleeRenderer extends ConfigurableModule {
     private static void place(MeleeWeapon weapon, float partialTicks) {
         MeleeWeapon.Fit fit = weapon.fit();
         float size = CONFIG.meleeSize / 100f;
+        boolean arms = CONFIG.meleeShowArms;
+        float fitScale = arms ? fit.armScale : fit.scale;
+        float fitX = arms ? fit.armOffsetX : fit.offsetX;
+        float fitY = arms ? fit.armOffsetY : fit.offsetY;
+        float fitZ = arms ? fit.armOffsetZ : fit.offsetZ;
 
         if (CONFIG.meleeBob) bob(partialTicks);
         if (CONFIG.meleeSway) sway();
 
         GlStateManager.translate(
-                fit.offsetX * size + CONFIG.meleeOffsetX / 100f,
-                fit.offsetY * size + CONFIG.meleeOffsetY / 100f,
-                fit.offsetZ * size - CONFIG.meleeDistance / 100f);
+                fitX * size + CONFIG.meleeOffsetX / 100f,
+                fitY * size + CONFIG.meleeOffsetY / 100f,
+                fitZ * size - CONFIG.meleeDistance / 100f);
 
         if (CONFIG.meleeYaw != 0) GlStateManager.rotate(CONFIG.meleeYaw, 0f, 1f, 0f);
         if (CONFIG.meleePitch != 0) GlStateManager.rotate(CONFIG.meleePitch, 1f, 0f, 0f);
@@ -96,7 +110,7 @@ public final class MeleeRenderer extends ConfigurableModule {
 
         shake(weapon);
 
-        float scale = fit.scale * size / 16f;
+        float scale = fitScale * size / 16f;
         GlStateManager.scale(-scale, scale, scale);
     }
 
@@ -178,6 +192,8 @@ public final class MeleeRenderer extends ConfigurableModule {
         float alpha = CONFIG.meleeGlowStrength / 100f * pulse;
 
         GlStateManager.depthMask(false);
+        GlStateManager.enableDepth();
+        GlStateManager.depthFunc(GL11.GL_LEQUAL);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GlStateManager.disableLighting();
@@ -194,9 +210,12 @@ public final class MeleeRenderer extends ConfigurableModule {
     /**
      * A rim of colour around the silhouette.
      *
-     * <p>Drawn as the model again, slightly larger, with only its far faces kept and the depth test
-     * inverted — so what survives is the sliver that pokes out past the real model. A shader would
-     * do this with a fresnel term; 1.8.9 has no shader to put one in, and gl4es would not run it.
+     * <p>The model again, slightly larger and additive, drawn before the textured pass and writing
+     * no depth: the real model then covers the middle and only the sliver that pokes out past the
+     * silhouette is left. A shader would do this with a fresnel term; 1.8.9 has no shader to put one
+     * in, and gl4es would not run it. The first version tried the inverted-hull trick instead and
+     * culled front faces — which, with the model mirrored in X, culls the wrong half and paints the
+     * whole weapon flat.
      */
     private static void outline(MeleeWeapon weapon, GeoModel model, GeoPose pose) {
         Color colour = glowColour();
@@ -209,13 +228,9 @@ public final class MeleeRenderer extends ConfigurableModule {
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GlStateManager.disableLighting();
         GlStateManager.disableTexture2D();
-        GlStateManager.enableCull();
-        GlStateManager.cullFace(GL11.GL_FRONT);
         GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
                 colour.getBlue() / 255f, CONFIG.meleeOutlineStrength / 100f);
         model.render(pose);
-        GlStateManager.cullFace(GL11.GL_BACK);
-        GlStateManager.disableCull();
         GlStateManager.enableTexture2D();
         GlStateManager.enableLighting();
         GlStateManager.depthMask(true);

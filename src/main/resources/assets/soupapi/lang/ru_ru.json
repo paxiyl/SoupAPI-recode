@@ -420,5 +420,7 @@
   "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Небо по теме",
   "text.autoconfig.soupapi.option.coloredSkyAlpha": "Непрозрачность неба",
   "text.autoconfig.soupapi.option.meleeSounds": "Звуки анимаций",
-  "text.autoconfig.soupapi.option.meleeSoundVolume": "Громкость звуков"
+  "text.autoconfig.soupapi.option.meleeSoundVolume": "Громкость звуков",
+  "text.autoconfig.soupapi.option.meleeShowArms": "Показывать руки пака",
+  "text.autoconfig.soupapi.option.resetMeleePlacement_BUTTON": "Сбросить размещение"
 }

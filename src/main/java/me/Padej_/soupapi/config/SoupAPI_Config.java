@@ -921,6 +921,10 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("melee")
     public boolean meleeThirdPerson = true;
     @ConfigEntry.Category("melee")
+    public boolean meleeShowArms = false;
+    @ConfigEntry.Category("melee")
+    public boolean resetMeleePlacement_BUTTON = false;
+    @ConfigEntry.Category("melee")
     public boolean meleeSounds = true;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
@@ -932,13 +936,13 @@ public class SoupAPI_Config implements ConfigData {
     public int meleeSize = 100;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
-    public int meleeDistance = 95;
+    public int meleeDistance = 70;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
-    public int meleeOffsetX = 10;
+    public int meleeOffsetX = 22;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
-    public int meleeOffsetY = -12;
+    public int meleeOffsetY = -30;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
     public int meleeOffsetZ = 0;
@@ -956,7 +960,7 @@ public class SoupAPI_Config implements ConfigData {
     public int meleeAnimationSpeed = 100;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
-    public int meleeCameraShake = 60;
+    public int meleeCameraShake = 25;
     @ConfigEntry.Category("melee")
     public boolean meleeBob = true;
     @ConfigEntry.Category("melee")
@@ -978,18 +982,18 @@ public class SoupAPI_Config implements ConfigData {
     public int meleeGlowColor = 0x5cf0ff;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
-    public int meleeGlowStrength = 110;
+    public int meleeGlowStrength = 45;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
-    public int meleeGlowPulse = 70;
+    public int meleeGlowPulse = 50;
     @ConfigEntry.Category("melee")
-    public boolean meleeOutline = true;
+    public boolean meleeOutline = false;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
-    public int meleeOutlineStrength = 70;
+    public int meleeOutlineStrength = 45;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 1, max = 120)
-    public int meleeOutlineWidth = 25;
+    public int meleeOutlineWidth = 15;
     @ConfigEntry.Category("melee")
     public boolean meleeChroma = false;
     @ConfigEntry.Category("melee")
@@ -1001,7 +1005,7 @@ public class SoupAPI_Config implements ConfigData {
 
     @ConfigEntry.Gui.PrefixText // Melee Motion Effects
     @ConfigEntry.Category("melee")
-    public boolean meleePhantom = true;
+    public boolean meleePhantom = false;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 1, max = 6)
     public int meleePhantomCount = 3;
@@ -1010,7 +1014,7 @@ public class SoupAPI_Config implements ConfigData {
     public int meleePhantomGap = 2;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
-    public int meleePhantomStrength = 55;
+    public int meleePhantomStrength = 40;
     @ConfigEntry.Category("melee")
     public boolean meleeTrail = true;
     @ConfigEntry.Category("melee")
@@ -1018,10 +1022,10 @@ public class SoupAPI_Config implements ConfigData {
     public int meleeTrailLength = 16;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
-    public int meleeTrailWidth = 100;
+    public int meleeTrailWidth = 55;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
-    public int meleeTrailStrength = 90;
+    public int meleeTrailStrength = 65;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleeTrailFade = 120;
@@ -1029,12 +1033,12 @@ public class SoupAPI_Config implements ConfigData {
     public boolean meleeSparks = true;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 1, max = 60)
-    public int meleeSparkCount = 12;
+    public int meleeSparkCount = 6;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleeSparkSize = 100;
     @ConfigEntry.Category("melee")
-    public boolean meleePulse = true;
+    public boolean meleePulse = false;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleePulseSize = 90;
