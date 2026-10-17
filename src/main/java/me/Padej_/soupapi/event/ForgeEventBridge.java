@@ -137,6 +137,9 @@ public final class ForgeEventBridge {
         guard("JumpParticles.tick", JumpParticles::onTick);
         guard("AmbientParticle.tick", AmbientParticle::onTick);
 
+        guard("Melee.tick", me.Padej_.soupapi.melee.Melee::onTick);
+        guard("WorldAmbience.tick", me.Padej_.soupapi.modules.WorldAmbience::onTick);
+
         guard("settingsShortcut", () -> SoupSettingsShortcut.tick(mc));
         guard("endClientTick", () -> SoupEvents.fireEndClientTick(mc));
     }
@@ -157,6 +160,7 @@ public final class ForgeEventBridge {
         WorldRenderContext context = SoupEvents.worldContext();
         context.begin(cameraEntity, tickDelta);
 
+        guard("WorldAmbience", () -> me.Padej_.soupapi.modules.WorldAmbience.render(context));
         guard("TargetRender", () -> TargetRender.renderTarget(context));
         guard("HitBubbles", () -> HitBubbles.render(context));
         guard("Halo", () -> Halo.render(context));
@@ -268,9 +272,17 @@ public final class ForgeEventBridge {
      */
     @SubscribeEvent
     public void onRenderHand(net.minecraftforge.client.event.RenderHandEvent event) {
-        if (!me.Padej_.soupapi.config.ConfigurableModule.CONFIG.swingHandEnabled) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.gameSettings.thirdPersonView != 0 || mc.gameSettings.hideGUI) return;
+
+        // A carried melee weapon replaces the hand outright, animations and all.
+        if (me.Padej_.soupapi.melee.Melee.active() != null) {
+            event.setCanceled(true);
+            me.Padej_.soupapi.melee.MeleeRenderer.renderFirstPerson(event.partialTicks);
+            return;
+        }
+
+        if (!me.Padej_.soupapi.config.ConfigurableModule.CONFIG.swingHandEnabled) return;
         if (mc.entityRenderer == null || mc.entityRenderer.itemRenderer == null) return;
 
         event.setCanceled(true);
@@ -285,6 +297,14 @@ public final class ForgeEventBridge {
         } finally {
             net.minecraft.client.renderer.GlStateManager.popMatrix();
         }
+    }
+
+    /** Draws the carried melee weapon on the player's own body in third person. */
+    @SubscribeEvent
+    public void onRenderPlayerPost(net.minecraftforge.client.event.RenderPlayerEvent.Post event) {
+        if (event.entityPlayer == null || event.renderer == null) return;
+        guard("Melee.thirdPerson", () -> me.Padej_.soupapi.melee.MeleeThirdPerson.render(
+                event.entityPlayer, event.renderer, event.partialRenderTick));
     }
 
     // ---- fog -------------------------------------------------------------------------------

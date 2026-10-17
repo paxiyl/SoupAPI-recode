@@ -110,6 +110,84 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Weapons from a gun pack, with their own animations
+
+The mod can now carry a melee weapon out of a TaCZ-style gun pack: the Bedrock model, the animation
+set, the hand model that comes with it, and the pack's own idle, draw, swing, inspect and sprint
+clips.
+
+**Packs are read from disk, not bundled.** A pack is someone else's artwork — the one this was
+written against is marked All Rights Reserved — and this repository is public, so nothing from it is
+committed here. It is also the better arrangement: any pack laid out the same way loads, and the jar
+stays its own size. Discovery looks for a `gunpack.meta.json` inside any zip, jar or folder in
+`soupapi/melee/`, `mods/`, `resourcepacks/`, `tacz/`, `tacz_packs/` and `gunpacks/`, plus whatever
+`Extra Pack Folder` points at, so a pack already installed as a mod is found where it already is.
+
+### What had to be built
+
+| Piece | What it does |
+|---|---|
+| `bedrock/GeoModel` | Parses Bedrock geometry — bones, pivots, per-face UVs, cube rotation, inflate — and compiles each bone's cubes into a display list |
+| `bedrock/GeoChannel` | One animated channel, with all four keyframe shapes these packs use: a vector, a bare number, `pre`/`post` steps, and `catmullrom` smoothing |
+| `bedrock/GeoClip` / `GeoAnimations` | A clip's per-bone tracks and its length, derived from the keyframes when the file does not declare one |
+| `bedrock/GeoPose` | One frame as flat arrays, so a second clip can be layered over the first by writing over the bones it touches |
+| `melee/MeleeState` | The state machine, read off the clip names rather than the pack's Lua |
+| `melee/MeleePack` | Discovery, zip and folder reading, lang names, and on-demand texture registration |
+| `melee/MeleeRenderer` | The first-person pass, the glow, the rim light, the phantom copies and the chromatic split |
+| `melee/MeleeEffects` | The edge trail, the sparks, the swing ring and the orbiting symbols, all in the weapon's own space |
+
+**The Lua state machines are not run, and do not need to be.** Each pack ships its logic as Lua for
+a mod loader that is five major versions away. The clip names say what that logic does:
+`static_idle` holds, `draw` plays once on equip, `melee_1..3` cycle one per swing, `inspect` plays
+once, `run_start`/`run`/`run_end` wrap the sprint loop. That is the whole machine, and it is
+reproduced as two tracks — a stance and whatever is happening over it — each cross-fading so a swing
+starts from where the hands are rather than snapping to its first keyframe.
+
+**Placement is fitted, not guessed.** The models carry their own view anchors (`camera`, `view`,
+`idle_view`, `positioning`), and those anchors disagree between weapons in the same pack: measured
+against `camera`, four of the eleven put the hands sixty units above the eye instead of ten below.
+Taking any one of them as the eye leaves half the pack out of frame. Instead the idle pose is
+measured when the weapon loads, normalised to a block and placed at a set distance in front of the
+eye, which lands every weapon of every pack in the same place. Size, distance, three offsets and
+three rotations then move it from there.
+
+**Why display lists.** One weapon here reaches 953 cubes — nearly six thousand quads — and the pack
+totals 5,586. Pushed through the tessellator every frame that is real cost on gl4es, where every
+immediate-mode quad is CPU work; and the glow, the rim light and three phantom copies would each pay
+it again. Compiled once per bone, a frame is forty-odd matrices and forty-odd `glCallList` runs, and
+each extra pass is one more run per bone rather than one more rebuild.
+
+**Controls.** `M` and `N` step through the weapons you have left switched on, `H` inspects, `J`
+turns the weapon on and off. The settings screen's Melee page has a `Weapon List` button: click a
+row to carry it, click the switch on the right to drop it out of the cycle.
+
+**The effects** are separate toggles rather than one style: glow (masked by the pack's own specular
+map, so the parts the artist marked shiny are the parts that light up), rim light, chromatic split,
+phantom copies of the poses the swing actually held, an edge trail, sparks, a ring that leaves the
+blade, and orbiting symbols. None of them touch the animation.
+
+## Ambience: what a theme puts in the air
+
+A theme changed colours, then shapes; what it could not change was the air. Forty ambience styles now
+fill the space around the player — Matrix rain as columns of glyphs brightest at the head, snow,
+blizzard, embers, ash, fireflies, petals, leaves, rain, bubbles, spores, dust, sparks, starfield,
+meteors, aurora, souls, hearts, confetti, glitch, void motes, plankton, sandstorm, feathers, blood
+rain, frost shards, gold dust, neon rain, circuit motes, pentagrams, skulls, lanterns, jellyfish,
+rune fall, digital snow, solar flares and thunderbugs among them.
+
+It is a volume that travels with the camera, not a weather system: particles that leave the box wrap
+to the far side of it, which reads as endless and costs a fixed number of sprites rather than
+scaling with the render distance.
+
+**Twenty-one new themes**, each naming its own ambience: Matrix, Matrix Red, Inferno, Arctic, Neon
+Tokyo, Bloodmoon, Spirit, Phantom, Glacier, Desert, Jungle, Nebula, Supernova, Aurora, Cherry Night,
+Arcade, Obsidian, Seafoam, Festival, Witchcraft and Thunder — forty-three in all.
+
+**The sky actually changes now.** `Theme Sky & Fog` used to tint at a fixed 59% over whatever the
+texture pack drew, which a Matrix theme cannot survive: green text over a blue sky is not a black
+sky. The sky quad takes a colour and an opacity, a theme writes both when it is picked, and the ones
+built around a black sky ask for 96%.
+
 ## Themes are presets now, not a lock
 
 Picking a theme used to change nothing in the settings: the theme answered for the colours, the five
@@ -197,7 +275,7 @@ setting cannot eat the frame):
 **Symbol trails.** A trail can now be a line of symbols rather than a ribbon — the chain-trail idea
 from the showcase — which with 43 symbols is 43 trails rather than one.
 
-**157 selectable styles across 285 options.**
+**157 selectable styles across 285 options.** (353 options and 40 ambience styles as of the melee round.)
 
 ## Third round: thick geometry, real symbols, themes that change the look
 
@@ -500,8 +578,22 @@ committed either; no audio has been fabricated for it, so that one sound stays s
 **Verified here:** the mod compiles cleanly against Forge 1.8.9/MCP, `./gradlew build`
 succeeds, and the output jar is correctly reobfuscated to SRG names, carries Java 8
 bytecode (major version 52), contains `mcmod.info`, all 182 assets, and the shaded JNA.
+The settings schema reaches all 353 config fields with none unreachable, all 43 themes apply
+cleanly, and every ambience style names a sprite that exists.
+
+For the weapon packs, a probe loads a real pack through the mod's own code and checks each weapon
+end to end: all eleven parse (5,586 cubes, 118 clips), every clip poses at twenty points along its
+length without a NaN or a runaway coordinate, every weapon has an idle, a draw and attack clips, the
+fitted placement is finite and sane, and the hand meshes and a blade bone are found.
+
+The geometry and animation maths was also checked by eye before it was written: the same transforms
+were implemented offline in Python, the posed models rendered to PNGs with a software rasteriser,
+and the convention corrected against what the images showed — which is how the mirrored X axis and
+the disagreeing view anchors were found.
 
 **Not verified here:** nothing has been run in-game. This environment has no 1.8.9
 client and no Android device, so runtime behaviour and visual fidelity — especially the
-custom HUD layout, particle positioning and the Pojav paths — still need testing on
-both desktop and PojavLauncher.
+custom HUD layout, particle positioning, the weapon's placement in the hand and the Pojav paths —
+still need testing on both desktop and PojavLauncher. The weapon placement in particular is fitted
+rather than matched to the mod the packs were built for, so the defaults are a starting point and
+the size, distance, offset and rotation sliders exist because they will be wanted.

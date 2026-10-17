@@ -60,6 +60,7 @@ public class SoupAPI {
     public void init(FMLInitializationEvent event) {
         ForgeEventBridge.register();
         me.Padej_.soupapi.screen.SoupSettingsShortcut.register();
+        me.Padej_.soupapi.melee.Melee.register();
 
         HitBubbles.registerOnHit();
 

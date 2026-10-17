@@ -36,7 +36,8 @@ public class ColoredSky extends ConfigurableModule {
         if (!CONFIG.coloredSkyEnabled) return;
         if (mc.theWorld == null) return;
 
-        Color colour = Palette.getColor(0f);
+        Color colour = CONFIG.coloredSkyUseTheme
+                ? Palette.getColor(0f) : new Color(CONFIG.coloredSkyColor);
 
         GlStateManager.matrixMode(GL11.GL_PROJECTION);
         GlStateManager.pushMatrix();
@@ -56,7 +57,7 @@ public class ColoredSky extends ConfigurableModule {
 
             BufferBuilder buffer = Tessellator.getInstance()
                     .begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-            int alpha = 150;
+            int alpha = Math.max(0, Math.min(255, Math.round(CONFIG.coloredSkyAlpha * 2.55f)));
             buffer.vertex(0f, 0f, FAR).color(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);
             buffer.vertex(0f, 1f, FAR).color(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);
             buffer.vertex(1f, 1f, FAR).color(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);

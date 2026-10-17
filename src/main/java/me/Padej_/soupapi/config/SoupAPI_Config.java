@@ -70,6 +70,8 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("main")
     public boolean themeWorld = false;
     @ConfigEntry.Category("main")
+    public boolean themeAmbience = true;
+    @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Palette.ColorsStyle paletteStyle = Palette.ColorsStyle.QUARTET;
     @ConfigEntry.Category("main")
@@ -424,6 +426,14 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.PrefixText // Colored Sky
     @ConfigEntry.Category("world")
     public boolean coloredSkyEnabled = false;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int coloredSkyColor = 0x66a0ff;
+    @ConfigEntry.Category("colored_sky")
+    public boolean coloredSkyUseTheme = true;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int coloredSkyAlpha = 60;
 
     @ConfigEntry.Gui.PrefixText // Custom Fog
     @ConfigEntry.Category("world")
@@ -889,4 +899,191 @@ public class SoupAPI_Config implements ConfigData {
     public boolean trajectoriesPreviewLandSideOutline = false;
     @ConfigEntry.Category("trajectories")
     public boolean trajectoriesPreviewLandSideFill = false;
+
+    /**
+     * MELEE
+     **/
+    @ConfigEntry.Gui.PrefixText // Melee
+    @ConfigEntry.Category("melee")
+    public boolean meleeEnabled = false;
+    @ConfigEntry.Category("melee")
+    public String meleeWeapon = "";
+    @ConfigEntry.Category("melee")
+    public String[] meleeDisabled = new String[0];
+    @ConfigEntry.Category("melee")
+    public String meleePackPath = "";
+    @ConfigEntry.Category("melee")
+    public boolean selectMelee_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean rescanMeleePacks_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean meleeAnnounce = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeThirdPerson = true;
+
+    @ConfigEntry.Gui.PrefixText // Melee Placement
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeSize = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeDistance = 95;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetX = 10;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetY = -12;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetZ = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeYaw = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleePitch = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeRoll = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int meleeAnimationSpeed = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeCameraShake = 60;
+    @ConfigEntry.Category("melee")
+    public boolean meleeBob = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeBobStrength = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSway = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeSwayStrength = 100;
+
+    @ConfigEntry.Gui.PrefixText // Melee Glow
+    @ConfigEntry.Category("melee")
+    public boolean meleeGlow = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeGlowUseTheme = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.ColorPicker
+    public int meleeGlowColor = 0x5cf0ff;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeGlowStrength = 110;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeGlowPulse = 70;
+    @ConfigEntry.Category("melee")
+    public boolean meleeOutline = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeOutlineStrength = 70;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 120)
+    public int meleeOutlineWidth = 25;
+    @ConfigEntry.Category("melee")
+    public boolean meleeChroma = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeChromaStrength = 35;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 100)
+    public int meleeChromaSpread = 12;
+
+    @ConfigEntry.Gui.PrefixText // Melee Motion Effects
+    @ConfigEntry.Category("melee")
+    public boolean meleePhantom = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 6)
+    public int meleePhantomCount = 3;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 4)
+    public int meleePhantomGap = 2;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePhantomStrength = 55;
+    @ConfigEntry.Category("melee")
+    public boolean meleeTrail = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 2, max = 40)
+    public int meleeTrailLength = 16;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeTrailWidth = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeTrailStrength = 90;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeTrailFade = 120;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSparks = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 60)
+    public int meleeSparkCount = 12;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeSparkSize = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleePulse = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleePulseSize = 90;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePulseStrength = 80;
+    @ConfigEntry.Category("melee")
+    public boolean meleeRunes = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 16)
+    public int meleeRuneCount = 5;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeRuneRadius = 80;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeRuneSize = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int meleeRuneSpeed = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeRuneStrength = 80;
+
+    /**
+     * AMBIENCE
+     **/
+    @ConfigEntry.Gui.PrefixText // Ambience
+    @ConfigEntry.Category("ambience")
+    public boolean ambienceEnabled = false;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Ambience ambienceStyle = me.Padej_.soupapi.utils.Ambience.NONE;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 150)
+    public int ambienceDensity = 45;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 4, max = 48)
+    public int ambienceRadius = 14;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int ambienceHeight = 9;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int ambienceSpeed = 100;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int ambienceSize = 100;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int ambienceAlpha = 80;
+    @ConfigEntry.Category("ambience")
+    public boolean ambienceUseTheme = true;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.ColorPicker
+    public int ambienceColor = 0x00ff41;
 }

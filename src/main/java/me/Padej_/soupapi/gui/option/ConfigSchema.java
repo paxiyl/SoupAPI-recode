@@ -244,6 +244,17 @@ public final class ConfigSchema {
         if ("updateCape_BUTTON".equals(fieldName)) {
             return Capes::reloadCustomCape;
         }
+        if ("selectMelee_BUTTON".equals(fieldName)) {
+            return () -> {
+                net.minecraft.client.gui.GuiScreen current = mc.currentScreen;
+                mc.displayGuiScreen(new me.Padej_.soupapi.melee.MeleeSelectScreen(
+                        current instanceof me.Padej_.soupapi.compat.SoupScreen
+                                ? (me.Padej_.soupapi.compat.SoupScreen) current : null));
+            };
+        }
+        if ("rescanMeleePacks_BUTTON".equals(fieldName)) {
+            return me.Padej_.soupapi.melee.MeleePack::rescan;
+        }
         return null;
     }
 

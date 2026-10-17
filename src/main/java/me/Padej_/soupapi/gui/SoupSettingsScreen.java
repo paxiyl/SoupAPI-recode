@@ -152,10 +152,17 @@ public class SoupSettingsScreen extends SoupScreen {
         Color accent = Palette.getColor(0f);
         int text = Palette.getTextColor();
 
-        // Dim the world, then the window itself.
-        context.fill(0, 0, this.width, this.height, 0xB4000000);
-        Render2D.drawRound(ms, left(), top(), right() - left(), bottom() - top(), 4,
-                new Color(back.getRed(), back.getGreen(), back.getBlue(), 235));
+        // Dim the world, then the window itself: a soft shadow, the panel, a hairline edge.
+        context.fill(0, 0, this.width, this.height, 0xC0000000);
+        for (int i = 4; i >= 1; i--) {
+            Render2D.drawRound(ms, left() - i, top() - i,
+                    right() - left() + i * 2, bottom() - top() + i * 2, 5 + i,
+                    new Color(0, 0, 0, 26 - i * 4));
+        }
+        Render2D.drawRound(ms, left(), top(), right() - left(), bottom() - top(), 5,
+                new Color(back.getRed(), back.getGreen(), back.getBlue(), 242));
+        outline(context, left(), top(), right(), bottom(),
+                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 46).getRGB());
 
         renderHeader(context, ms, mouseX, mouseY, accent, text);
         renderSidebar(context, ms, mouseX, mouseY, accent, text);
@@ -169,8 +176,11 @@ public class SoupSettingsScreen extends SoupScreen {
                               Color accent, int text) {
         FontRenderer font = FontRenderers.sf_bold;
         font.drawString(ms, "SoupAPI", left() + 8, top() + 7, accent.getRGB());
-        FontRenderers.sf_bold_mini.drawString(ms, "settings",
-                left() + 10 + font.getStringWidth("SoupAPI"), top() + 8, 0xFF9AA0B0);
+        float titleWidth = font.getStringWidth("SoupAPI");
+        context.fill(left() + 8, top() + 16, (int) (left() + 8 + titleWidth), top() + 17,
+                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 140).getRGB());
+        FontRenderers.sf_bold_mini.drawString(ms, me.Padej_.soupapi.SoupAPI.VERSION,
+                left() + 12 + titleWidth, top() + 8, 0xFF7A8090);
 
         // Search field.
         int x = searchX();
@@ -186,6 +196,11 @@ public class SoupSettingsScreen extends SoupScreen {
             float caret = x + 4 + FontRenderers.sf_bold_mini.getStringWidth(
                     clip(searchQuery, 82, FontRenderers.sf_bold_mini));
             context.fill((int) caret, y + 2, (int) caret + 1, y + 10, text);
+        }
+        if (!searchQuery.isEmpty()) {
+            String found = matchCount() + " found";
+            FontRenderers.sf_bold_mini.drawString(ms, found,
+                    x - 6 - FontRenderers.sf_bold_mini.getStringWidth(found), y + 3, 0xFF7A8090);
         }
 
         context.fill(left() + 4, listTop() - 2, right() - 4, listTop() - 1, 0x22FFFFFF);
@@ -214,9 +229,13 @@ public class SoupSettingsScreen extends SoupScreen {
             } else if (hover) {
                 Render2D.drawRound(ms, x, y, w, SIDE_ROW_H - 2, 3, new Color(255, 255, 255, 18));
             }
+            String count = String.valueOf(page.interactiveCount());
+            float countWidth = FontRenderers.sf_bold_mini.getStringWidth(count);
             FontRenderers.sf_bold_mini.drawString(ms,
-                    clip(page.title(), w - 10, FontRenderers.sf_bold_mini),
+                    clip(page.title(), w - 14 - countWidth, FontRenderers.sf_bold_mini),
                     x + 6, y + 4, selected ? accent.getRGB() : text);
+            FontRenderers.sf_bold_mini.drawString(ms, count, x + w - 5 - countWidth, y + 4,
+                    selected ? 0xFFB0B6C6 : 0xFF6A7080);
             y += SIDE_ROW_H;
         }
         RenderSystem.disableScissor();
@@ -237,15 +256,18 @@ public class SoupSettingsScreen extends SoupScreen {
 
         RenderSystem.enableScissor(x, top, x + w, bottom);
         int y = (int) (top - contentScroll);
+        int index = 0;
         for (Option row : rows) {
             int rowHeight = row.interactive() ? ROW_H : GROUP_H;
+            if (row.interactive()) index++;
             if (y + rowHeight >= top && y <= bottom) {
                 boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= Math.max(top, y)
                         && mouseY <= Math.min(bottom, y + rowHeight);
                 if (hover && row.interactive()) {
                     hovered = row;
                 }
-                renderRow(context, ms, row, x, y, w, rowHeight, mouseX, mouseY, hover, accent, text);
+                renderRow(context, ms, row, x, y, w, rowHeight, mouseX, mouseY, hover,
+                        (index & 1) == 1, accent, text);
             }
             y += rowHeight;
         }
@@ -255,7 +277,7 @@ public class SoupSettingsScreen extends SoupScreen {
     }
 
     private void renderRow(DrawContext context, MatrixStack ms, Option row, int x, int y, int w,
-                           int rowHeight, int mouseX, int mouseY, boolean hover,
+                           int rowHeight, int mouseX, int mouseY, boolean hover, boolean banded,
                            Color accent, int text) {
         if (!row.interactive()) {
             // Group caption.
@@ -268,8 +290,11 @@ public class SoupSettingsScreen extends SoupScreen {
         }
 
         boolean unavailable = row.unavailableReason() != null;
+        if (banded) {
+            Render2D.drawRound(ms, x, y, w, rowHeight - 1, 3, new Color(255, 255, 255, 6));
+        }
         if (hover) {
-            Render2D.drawRound(ms, x, y, w, rowHeight - 1, 3, new Color(255, 255, 255, 12));
+            Render2D.drawRound(ms, x, y, w, rowHeight - 1, 3, new Color(255, 255, 255, 14));
         }
         int controlX = x + w - CONTROL_W - 4;
         if (unavailable) {
@@ -409,9 +434,34 @@ public class SoupSettingsScreen extends SoupScreen {
         int barHeight = Math.max(12, (int) ((double) view * view / total));
         int travel = view - barHeight;
         int barY = top + (int) (travel * (scroll / (double) (total - view)));
-        context.fill(x, top, x + SCROLLBAR_W, bottom, 0x14FFFFFF);
-        context.fill(x, barY, x + SCROLLBAR_W, barY + barHeight,
-                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 170).getRGB());
+        me.Padej_.soupapi.compat.MatrixStack ms = new me.Padej_.soupapi.compat.MatrixStack();
+        Render2D.drawRound(ms, x, top, SCROLLBAR_W, view, SCROLLBAR_W / 2f,
+                new Color(255, 255, 255, 18));
+        Render2D.drawRound(ms, x, barY, SCROLLBAR_W, barHeight, SCROLLBAR_W / 2f,
+                new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 190));
+    }
+
+    /** A one-pixel frame, drawn as four fills so it stays crisp at any GUI scale. */
+    private void outline(DrawContext context, int left, int top, int right, int bottom, int colour) {
+        context.fill(left, top, right, top + 1, colour);
+        context.fill(left, bottom - 1, right, bottom, colour);
+        context.fill(left, top, left + 1, bottom, colour);
+        context.fill(right - 1, top, right, bottom, colour);
+    }
+
+    /** How many options the search matches, across every page. */
+    private int matchCount() {
+        int count = 0;
+        for (OptionPage page : pages) {
+            for (Option row : page.rows()) {
+                if (row.interactive()
+                        && row.label().toLowerCase(java.util.Locale.ROOT)
+                                .contains(searchQuery.toLowerCase(java.util.Locale.ROOT))) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private void renderFooter(DrawContext context, MatrixStack ms, int text) {

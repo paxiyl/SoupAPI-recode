@@ -19,12 +19,20 @@ EXTRA = {
         'key.soupapi.settings': 'Open SoupAPI settings',
         'soupapi.gui.open': 'Open',
         'soupapi.screen.soup_settings.title': 'SoupAPI settings',
+        'key.soupapi.melee.next': 'Next melee weapon',
+        'key.soupapi.melee.previous': 'Previous melee weapon',
+        'key.soupapi.melee.inspect': 'Inspect melee weapon',
+        'key.soupapi.melee.toggle': 'Toggle melee weapon',
     },
     'ru_RU': {
         'key.categories.soupapi': 'SoupAPI',
         'key.soupapi.settings': 'Открыть настройки SoupAPI',
         'soupapi.gui.open': 'Открыть',
         'soupapi.screen.soup_settings.title': 'Настройки SoupAPI',
+        'key.soupapi.melee.next': 'Следующее оружие',
+        'key.soupapi.melee.previous': 'Предыдущее оружие',
+        'key.soupapi.melee.inspect': 'Осмотреть оружие',
+        'key.soupapi.melee.toggle': 'Включить/выключить оружие',
     },
 }
 

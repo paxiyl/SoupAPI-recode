@@ -32,11 +32,12 @@ public final class Themes {
     private static final Set<String> OWNED = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
             "c1", "c2", "c3", "c4", "textColor", "backColor",
             "jumpCirclesStyle", "hitBubblesStyle", "trailsStyle", "playerEffectsStyle", "haloStyle",
-            "particleSpriteOverride", "particleSymbol")));
+            "particleSpriteOverride", "particleSymbol",
+            "ambienceStyle", "coloredSkyColor", "coloredSkyAlpha")));
 
     /** The switches that decide how much of a theme gets copied; changing one re-applies it. */
     private static final Set<String> REAPPLY = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
-            "themeStyle", "themeVisuals", "themeParticles", "themeWorld")));
+            "themeStyle", "themeVisuals", "themeParticles", "themeWorld", "themeAmbience")));
 
     private Themes() {
     }
@@ -63,6 +64,12 @@ public final class Themes {
         if (!theme.agreesWith(field, config)) {
             config.themeStyle = Theme.CUSTOM;
         }
+    }
+
+    /** What the active theme puts in the air, or {@link Ambience#NONE}. */
+    public static Ambience ambience() {
+        Theme theme = Palette.getTheme();
+        return theme == null ? Ambience.NONE : theme.ambience();
     }
 
     /** Copies the active theme's look into the settings. Does nothing for {@link Theme#CUSTOM}. */
