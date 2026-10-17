@@ -38,6 +38,9 @@ def write_base(lum, path):
 
 
 def write_unblack(lum, path):
+    """Kept for reference, no longer called: under the additive blend every draw in the mod uses,
+    an _unblack file is mathematically identical to its base, and nothing bound one. Shipping both
+    cost 3.2 MB of a download for no visible difference."""
     """White RGB, alpha = luminance."""
     v = np.clip(lum, 0, 1)
     a = (v * 255.0 + 0.5).astype(np.uint8)

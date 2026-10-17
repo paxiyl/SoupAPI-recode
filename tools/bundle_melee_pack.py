@@ -12,10 +12,9 @@ folder, which is what the built-in reader walks instead of enumerating the class
 """
 import collections
 import json
-import io
-import os
 import pathlib
 import shutil
+import subprocess
 import sys
 import tempfile
 import zipfile
@@ -29,8 +28,59 @@ SOUNDS_JSON = RESOURCES / 'sounds.json'
 # Left out on purpose: the Lua state machines (a runtime 1.8.9 does not have, and the mod
 # reproduces what they do from the clip names), the pack's own mod metadata, which would only
 # confuse anyone reading the jar, and the "- 副本" duplicate slot icons.
-SKIP_DIRS = ('scripts/', 'META-INF/')
+SKIP_DIRS = ('scripts/', 'META-INF/', 'data/%s/recipes/')
 SKIP_MARKERS = (' - 副本',)
+
+# Files that only matter to the loader the pack was built for.
+SKIP_FILES = ('pack.mcmeta', 'logo.png')
+SKIP_SUFFIXES = ('gunpack_info.json', 'sounds.json', 'lang/zh_cn.json')
+
+
+def shrink_json(blob):
+    """Re-emits a model or animation file without whitespace, rounding to four decimals.
+
+    A pack writes its JSON pretty-printed, and an animation is tens of thousands of numbers given to
+    seven decimals - half a degree of rotation at the tenth of a millimetre. The models and clips
+    here come to 5.5 MB pretty-printed and under 2 MB compact, which is the difference between a
+    download that works on a phone and one that does not. Nothing visible changes: four decimals of
+    a degree is a thousandth of a pixel at arm's length.
+    """
+    def round_floats(value):
+        if isinstance(value, float):
+            rounded = round(value, 4)
+            return int(rounded) if rounded == int(rounded) else rounded
+        if isinstance(value, list):
+            return [round_floats(v) for v in value]
+        if isinstance(value, dict):
+            return collections.OrderedDict((k, round_floats(v)) for k, v in value.items())
+        return value
+
+    parsed = json.loads(blob.decode('utf-8-sig'), object_pairs_hook=collections.OrderedDict)
+    return json.dumps(round_floats(parsed), ensure_ascii=False,
+                      separators=(',', ':')).encode('utf-8')
+
+
+def shrink_ogg(blob, name):
+    """Re-encodes a sound to mono at a bitrate suited to a game effect.
+
+    The pack ships 48 kHz stereo at about 320 kbps, which is mastering quality for a knife swing and
+    6.9 MB of the download. Minecraft pans mono sounds and plays stereo ones flat, so mono is also
+    the more correct choice here. Needs ffmpeg; without it the original is kept.
+    """
+    with tempfile.TemporaryDirectory() as directory:
+        source = pathlib.Path(directory) / 'in.ogg'
+        target = pathlib.Path(directory) / 'out.ogg'
+        source.write_bytes(blob)
+        try:
+            subprocess.run(
+                ['ffmpeg', '-v', 'error', '-y', '-i', str(source),
+                 '-ac', '1', '-ar', '44100', '-c:a', 'libvorbis', '-b:a', '80k', str(target)],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        except (OSError, subprocess.CalledProcessError) as error:
+            print('  keeping %s as it is (%s)' % (name, error))
+            return blob
+        out = target.read_bytes()
+        return out if 0 < len(out) < len(blob) else blob
 
 
 def pack_files(source):
@@ -76,9 +126,11 @@ def main(argv):
     sound_bytes = 0
 
     for name, blob in sorted(files.items()):
-        if any(skip in name for skip in SKIP_DIRS):
+        if any(skip % namespace in name if '%s' in skip else skip in name for skip in SKIP_DIRS):
             continue
         if any(marker in name for marker in SKIP_MARKERS):
+            continue
+        if name in SKIP_FILES or name.endswith(SKIP_SUFFIXES):
             continue
 
         if name.startswith(sound_prefix) and name.endswith('.ogg'):
@@ -86,6 +138,7 @@ def main(argv):
             relative = name[len(sound_prefix):]
             target = SOUNDS.parent / relative
             target.parent.mkdir(parents=True, exist_ok=True)
+            blob = shrink_ogg(blob, relative)
             target.write_bytes(blob)
             sound_bytes += len(blob)
             # The path already begins with the pack's own melee/ folder, so the event is just
@@ -101,6 +154,11 @@ def main(argv):
             ])
             continue
 
+        if name.endswith('.json'):
+            try:
+                blob = shrink_json(blob)
+            except ValueError as error:
+                print('  leaving %s alone (%s)' % (name, error))
         target = base / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(blob)

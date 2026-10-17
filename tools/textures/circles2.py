@@ -27,7 +27,6 @@ def emit(name, build, glow=(0.55, 0.35)):
     build(d)
     lum = bloom(lum_of(shrink(m, N)), *glow)
     write_base(lum, f'{OUT}/{name}.png')
-    write_unblack(lum, f'{OUT}/{name}_unblack.png')
     print('wrote', name)
 
 

@@ -102,6 +102,5 @@ def star():
 for name, fn in (('dollar', dollar), ('snowflake', snowflake), ('heart', heart), ('star', star)):
     lum = soften(fn())
     write_base(lum, f'{OUT}/{name}.png')
-    write_unblack(lum, f'{OUT}/{name}_unblack.png')
 
 print('particles ok')

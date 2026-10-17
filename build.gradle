@@ -65,6 +65,15 @@ jar {
     }
     exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/maven/**'
 
+    // JNA ships a native stub for twenty-odd platforms. Minecraft 1.8.9 runs on four of them, and
+    // the only thing JNA is here for is Discord rich presence, which is desktop-only anyway. The
+    // rest were 2.5 MB of AIX, SunOS, MIPS and s390x in every download.
+    exclude 'com/sun/jna/aix-*/**', 'com/sun/jna/sunos-*/**', 'com/sun/jna/freebsd-*/**',
+            'com/sun/jna/openbsd-*/**', 'com/sun/jna/linux-mips64el/**', 'com/sun/jna/linux-s390x/**',
+            'com/sun/jna/linux-ppc/**', 'com/sun/jna/linux-ppc64le/**', 'com/sun/jna/linux-armel/**',
+            'com/sun/jna/linux-riscv64/**', 'com/sun/jna/linux-loongarch64/**',
+            'com/sun/jna/win32-x86/**', 'com/sun/jna/darwin-ppc/**'
+
     manifest {
         attributes 'FMLCorePluginContainsFMLMod': 'false'
     }

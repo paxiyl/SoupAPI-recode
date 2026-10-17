@@ -21,11 +21,6 @@ public class TexturesManager extends ConfigurableModule {
     public static final ResourceLocation MAGIC_RING = new ResourceLocation("soupapi", "textures/jump_circles/magic_ring.png");
     public static final ResourceLocation SHATTER_RING = new ResourceLocation("soupapi", "textures/jump_circles/shatter_ring.png");
 
-    private static final ResourceLocation CIRCLE_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_unblack.png");
-    private static final ResourceLocation CIRCLE_BOLD_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/circle_bold_unblack.png");
-    private static final ResourceLocation HEXAGON_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/hexagon_unblack.png");
-    private static final ResourceLocation PORTAL_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/portal_unblack.png");
-    private static final ResourceLocation SOUP_UNBLACK = new ResourceLocation("soupapi", "textures/jump_circles/soup_unblack.png");
 
     public static final ResourceLocation LEGACY = new ResourceLocation("soupapi", "textures/target_render/legacy.png");
     private static final ResourceLocation SCIFI = new ResourceLocation("soupapi", "textures/target_render/scifi.png");
@@ -38,17 +33,11 @@ public class TexturesManager extends ConfigurableModule {
     private static final ResourceLocation JEKA = new ResourceLocation("soupapi", "textures/target_render/jeka.png");
 
     public static final ResourceLocation FIREFLY = new ResourceLocation("soupapi", "textures/particle/firefly.png");
-    public static final ResourceLocation FIREFLY_GLOW = new ResourceLocation("soupapi", "textures/particle/firefly_glow.png");
     public static final ResourceLocation FIREFLY_ALT = new ResourceLocation("soupapi", "textures/particle/firefly_alt.png");
-    public static final ResourceLocation FIREFLY_ALT_GLOW = new ResourceLocation("soupapi", "textures/particle/firefly_alt_glow.png");
     public static final ResourceLocation DOLLAR = new ResourceLocation("soupapi", "textures/particle/dollar.png");
-    public static final ResourceLocation DOLLAR_UNBLACK = new ResourceLocation("soupapi", "textures/particle/dollar_unblack.png");
     public static final ResourceLocation SNOWFLAKE = new ResourceLocation("soupapi", "textures/particle/snowflake.png");
-    public static final ResourceLocation SNOWFLAKE_UNBLACK = new ResourceLocation("soupapi", "textures/particle/snowflake_unblack.png");
     public static final ResourceLocation HEART = new ResourceLocation("soupapi", "textures/particle/heart.png");
-    public static final ResourceLocation HEART_UNBLACK = new ResourceLocation("soupapi", "textures/particle/heart_unblack.png");
     public static final ResourceLocation STAR = new ResourceLocation("soupapi", "textures/particle/star.png");
-    public static final ResourceLocation STAR_UNBLACK = new ResourceLocation("soupapi", "textures/particle/star_unblack.png");
 
     /**
      * SYMBOLS

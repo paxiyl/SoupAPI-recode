@@ -103,5 +103,4 @@ write_base(p2, f'{OUT}/portal_2.png')
 
 sp = soup()
 write_base(sp, f'{OUT}/soup.png')
-write_unblack(sp, f'{OUT}/soup_unblack.png')
 print('circles ok')

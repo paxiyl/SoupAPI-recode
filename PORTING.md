@@ -110,6 +110,39 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## The download, and the 500 MB of texture memory behind it
+
+Bundling the pack took the jar to 22 MB, which turned out to be too big to download on the phone it
+is for. Going looking for the weight found a worse problem than the download.
+
+**The textures were sized for the art, not for the screen.** The MCTiers icons were 3375x3375 for an
+eighteen-pixel HUD icon. The capes were 2048x1024 for a region a player model samples at 10x16. A
+GPU does not care what a PNG weighs on disk, it cares what it costs once uploaded — four bytes a
+pixel, every pixel — and the set as shipped came to **528 MB of texture memory**. On a phone running
+gl4es that is not a download problem, it is a will-it-run problem. `tools/shrink_textures.py` caps
+each group at a few times the largest size it is ever drawn at (128 for the HUD icons, 512 for the
+capes, rings and target sprites), which leaves room for GUI scale 4 and a ring filling the screen:
+36 files, 506 MB of texture memory saved, and nothing visibly different.
+
+**3.2 MB of textures nothing drew.** Every ring and particle shipped twice, as a base and an
+`_unblack` twin. Under the additive blend every one of those draws uses the two are mathematically
+identical — and the code bound the base every time; all eleven `_unblack` constants were declared and
+never read. They are gone, and the generators no longer emit them.
+
+**The pack's own files.** Its JSON is pretty-printed and gives rotations to seven decimals, which is
+a thousandth of a pixel at arm's length: re-emitted compact and rounded to four, the models and clips
+went from 5.0 MB to 3.2 MB. Its sounds were 48 kHz stereo at ~320 kbps — mastering quality for a
+knife swing, and 6.9 MB of the download; at mono 80 kbps they are 1.8 MB, and mono is the more
+correct choice anyway because Minecraft only pans mono sounds. Also dropped: the pack's loader
+metadata, its logo, its recipes and its duplicate slot icons.
+
+**JNA's twenty-odd platform stubs.** It is shaded in for Discord rich presence, which is desktop
+only, and it was shipping native stubs for AIX, SunOS, MIPS, s390x and PPC. The jar task keeps the
+four platforms Minecraft 1.8.9 runs on.
+
+Together: **22.4 MB to 8.7 MB**, with the whole weapon pack in it — smaller than the jar was before
+the pack existed.
+
 ## Weapons from a gun pack, with their own animations
 
 The mod can now carry a melee weapon out of a TaCZ-style gun pack: the Bedrock model, the animation
