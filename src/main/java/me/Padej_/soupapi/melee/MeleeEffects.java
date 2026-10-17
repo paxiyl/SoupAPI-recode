@@ -112,16 +112,31 @@ public final class MeleeEffects extends ConfigurableModule {
         return HISTORY_POSES[index];
     }
 
+    /**
+     * Records where the edge is, while a swing is running.
+     *
+     * <p>The tip is the posed mesh vertex furthest from the weapon's centre — the same point the
+     * placement uses to decide which way the blade faces. The first version took the pivot of the
+     * furthest bone instead, and a pivot can sit anywhere: on some weapons that was a point out in
+     * space beside the model, so the trail drew a bright band running parallel to the weapon and
+     * never touching it.
+     */
     private static void rememberTip(GeoModel model, GeoPose pose) {
-        if (bladeBone == null) return;
-        float[] tip = new float[3];
-        if (!model.pivotOf(bladeBone, pose, tip)) return;
-
-        boolean swinging = Melee.state().attacking();
-        if (swinging) {
-            TRAIL.add(0, new float[]{tip[0], tip[1], tip[2], 1f});
-            if (CONFIG.meleeSparks) spawnSparks(tip);
+        if (!Melee.state().attacking()) {
+            // Nothing to trail between swings, and a stale trail is a glowing streak hanging in
+            // mid-air next to the weapon.
+            if (!TRAIL.isEmpty()) TRAIL.clear();
+            return;
         }
+
+        float[] box = model.bounds(pose, null, MeleeWeapon.ARM_MESH);
+        if (box == null) return;
+        float[] centre = {(box[0] + box[3]) / 2f, (box[1] + box[4]) / 2f, (box[2] + box[5]) / 2f};
+        float[] tip = model.furthestFrom(pose, centre, MeleeWeapon.ARM_MESH);
+        if (tip == null) return;
+
+        TRAIL.add(0, new float[]{tip[0], tip[1], tip[2], 1f});
+        if (CONFIG.meleeSparks) spawnSparks(tip);
         int limit = Math.max(2, CONFIG.meleeTrailLength);
         while (TRAIL.size() > limit) {
             TRAIL.remove(TRAIL.size() - 1);
@@ -183,9 +198,12 @@ public final class MeleeEffects extends ConfigurableModule {
         if (weapon == null || !CONFIG.meleePulse) return;
         GeoModel model = weapon.model();
         GeoPose pose = weapon.pose();
-        if (model == null || pose == null || bladeBone == null) return;
-        float[] tip = new float[3];
-        if (!model.pivotOf(bladeBone, pose, tip)) return;
+        if (model == null || pose == null) return;
+        float[] box = model.bounds(pose, null, MeleeWeapon.ARM_MESH);
+        if (box == null) return;
+        float[] centre = {(box[0] + box[3]) / 2f, (box[1] + box[4]) / 2f, (box[2] + box[5]) / 2f};
+        float[] tip = model.furthestFrom(pose, centre, MeleeWeapon.ARM_MESH);
+        if (tip == null) return;
         Ring ring = new Ring();
         ring.x = tip[0];
         ring.y = tip[1];

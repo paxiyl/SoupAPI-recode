@@ -199,7 +199,7 @@ public final class Melee extends ConfigurableModule {
     /** Fires an attack animation on the rising edge of the player's swing. */
     private static void swing() {
         boolean now = mc.thePlayer.isSwingInProgress;
-        if (now && !swinging && !STATE.attacking()) {
+        if (now && !swinging && STATE.canAttack()) {
             if (STATE.inspecting()) STATE.cancel();
             STATE.attack();
             MeleeEffects.onSwing();

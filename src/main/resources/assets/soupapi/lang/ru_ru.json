@@ -427,5 +427,22 @@
   "text.autoconfig.soupapi.option.meleeAutoAlign": "Автоповорот клинка",
   "text.autoconfig.soupapi.option.meleePlacements": "Сохранённые размещения",
   "text.autoconfig.soupapi.option.saveMeleePlacement_BUTTON": "Сохранить для этого оружия",
-  "text.autoconfig.soupapi.option.forgetMeleePlacement_BUTTON": "Забыть размещение оружия"
+  "text.autoconfig.soupapi.option.forgetMeleePlacement_BUTTON": "Забыть размещение оружия",
+  "text.autoconfig.soupapi.option.meleeRunAnimation": "Анимация бега",
+  "text.autoconfig.soupapi.option.meleeHands.@PrefixText": "Руки",
+  "text.autoconfig.soupapi.option.meleeHands": "Показывать руки",
+  "text.autoconfig.soupapi.option.meleeLeftHand": "И левую руку",
+  "text.autoconfig.soupapi.option.meleeHandsReach": "Вынос рук",
+  "text.autoconfig.soupapi.option.meleeHandsSpread": "Разведение рук",
+  "text.autoconfig.soupapi.option.meleeHandsPitch": "Наклон рук",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetX": "Смещение рук X",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetY": "Смещение рук Y",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetZ": "Смещение рук Z",
+  "text.autoconfig.soupapi.option.meleeHandsSwing": "Замах рук",
+  "text.autoconfig.soupapi.option.skyStyle": "Стиль неба (Plain = по теме)",
+  "text.autoconfig.soupapi.option.skySpeed": "Скорость неба",
+  "text.autoconfig.soupapi.option.skyScale": "Масштаб неба",
+  "text.autoconfig.soupapi.option.skyColor2": "Второй цвет неба",
+  "text.autoconfig.soupapi.option.skyDarkColor": "Ночной цвет неба",
+  "text.autoconfig.soupapi.option.skyStars": "Звёзды"
 }

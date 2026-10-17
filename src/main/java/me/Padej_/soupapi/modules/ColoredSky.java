@@ -36,6 +36,12 @@ public class ColoredSky extends ConfigurableModule {
         if (!CONFIG.coloredSkyEnabled) return;
         if (mc.theWorld == null) return;
 
+        // A moving sky replaces the flat tint entirely.
+        if (AnimatedSky.style() != me.Padej_.soupapi.utils.SkyStyle.PLAIN) {
+            AnimatedSky.render();
+            return;
+        }
+
         Color colour = CONFIG.coloredSkyUseTheme
                 ? Palette.getColor(0f) : new Color(CONFIG.coloredSkyColor);
 

@@ -26,6 +26,18 @@ public class HitEffects extends ConfigurableModule {
     public enum Style {
         /** Triangular shards thrown outward. */
         SHARDS,
+        /** Shards that spiral away rather than fly straight. */
+        SPIRAL,
+        /** A halo that hangs on the target and fades. */
+        HALO,
+        /** Two rings that cross, thrown at an angle. */
+        GYRO,
+        /** A dense cone of shards driven into the target, like buckshot. */
+        SHRAPNEL,
+        /** One bright flash, then a slow expanding shell. */
+        NOVA,
+        /** Symbols that rise off the target. */
+        ASCEND,
         /** Dense shards with a flat ring, like breaking glass. */
         GLASS,
         /** Arrow heads driven into the body. */
@@ -147,6 +159,63 @@ public class HitEffects extends ConfigurableModule {
                             .texture(TexturesManager.GLYPH_DIAMOND_SUIT));
                 }
                 break;
+            case SPIRAL: {
+                int steps = Math.max(6, count);
+                for (int i = 0; i < steps; i++) {
+                    double angle = i / (double) steps * Math.PI * 4;
+                    double radius = 0.12 + i / (double) steps * 0.55 * size;
+                    FxParticles.spawn(new FxParticles.Particle(
+                            x + Math.cos(angle) * radius, y + i / (double) steps * 0.7 * size,
+                            z + Math.sin(angle) * radius,
+                            (int) (life * 1.4), size * 0.28f, colour(i / (float) steps))
+                            .motion(Math.cos(angle) * 0.05 * speed, 0.03 * speed,
+                                    Math.sin(angle) * 0.05 * speed)
+                            .texture(TexturesManager.GLYPH_TRIANGLE).fadeIn());
+                }
+                break;
+            }
+            case HALO: {
+                double height = target == null ? 0.0 : target.height * 0.55;
+                ring(x, y + height, z, size * 0.75f, size * 0.35f, (int) (life * 2.2), 0.0);
+                ring(x, y + height, z, size * 0.55f, size * 0.25f, (int) (life * 2.6), 0.0);
+                break;
+            }
+            case GYRO:
+                ring(x, y, z, size * 0.35f, size * 1.3f, life, Math.PI / 4);
+                ring(x, y, z, size * 0.35f, size * 1.3f, life, -Math.PI / 4);
+                ring(x, y, z, size * 0.25f, size * 0.9f, (int) (life * 1.4), Math.PI / 2);
+                break;
+            case SHRAPNEL:
+                if (CONFIG.hitEffectsStick) {
+                    stick(target, count * 3, size * 0.18f, life * 5, TexturesManager.GLYPH_TRIANGLE);
+                } else {
+                    burst(x, y, z, count * 3, 0.4 * speed, size * 0.16f, life,
+                            TexturesManager.GLYPH_TRIANGLE, 0.04, false);
+                }
+                break;
+            case NOVA:
+                FxParticles.spawn(new FxParticles.Particle(x, y, z, Math.max(3, life / 3),
+                        size * 1.4f, colour(0f)).texture(TexturesManager.FIREFLY));
+                sphere(x, y, z, count * 3, 0.12 * speed, size * 0.14f, (int) (life * 2.0),
+                        TexturesManager.themed(TexturesManager.FIREFLY));
+                ring(x, y, z, size * 0.2f, size * 2.2f, (int) (life * 1.8), 0.0);
+                break;
+            case ASCEND: {
+                int steps = Math.max(4, count / 2);
+                double height = target == null ? 1.0 : target.height;
+                for (int i = 0; i < steps; i++) {
+                    double angle = MathUtility.random(0f, (float) (Math.PI * 2));
+                    double radius = MathUtility.random(0.1f, 0.5f) * size;
+                    FxParticles.spawn(new FxParticles.Particle(
+                            x + Math.cos(angle) * radius,
+                            y + MathUtility.random(0f, (float) height * 0.6f),
+                            z + Math.sin(angle) * radius,
+                            (int) (life * 2.4), size * 0.42f, colour(i / (float) steps))
+                            .motion(0, 0.035 * speed, 0)
+                            .texture(TexturesManager.getRandomGlyphParticle()).fadeIn());
+                }
+                break;
+            }
             default:
                 break;
         }

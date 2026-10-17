@@ -427,5 +427,22 @@
   "text.autoconfig.soupapi.option.meleeAutoAlign": "Auto-Align The Blade",
   "text.autoconfig.soupapi.option.meleePlacements": "Saved Placements",
   "text.autoconfig.soupapi.option.saveMeleePlacement_BUTTON": "Save Placement For This Weapon",
-  "text.autoconfig.soupapi.option.forgetMeleePlacement_BUTTON": "Forget This Weapon's Placement"
+  "text.autoconfig.soupapi.option.forgetMeleePlacement_BUTTON": "Forget This Weapon's Placement",
+  "text.autoconfig.soupapi.option.meleeRunAnimation": "Sprint Animation",
+  "text.autoconfig.soupapi.option.meleeHands.@PrefixText": "Hands",
+  "text.autoconfig.soupapi.option.meleeHands": "Show Your Hands",
+  "text.autoconfig.soupapi.option.meleeLeftHand": "Left Hand Too",
+  "text.autoconfig.soupapi.option.meleeHandsReach": "Hands Reach",
+  "text.autoconfig.soupapi.option.meleeHandsSpread": "Hands Spread",
+  "text.autoconfig.soupapi.option.meleeHandsPitch": "Hands Pitch",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetX": "Hands Offset X",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetY": "Hands Offset Y",
+  "text.autoconfig.soupapi.option.meleeHandsOffsetZ": "Hands Offset Z",
+  "text.autoconfig.soupapi.option.meleeHandsSwing": "Hands Swing",
+  "text.autoconfig.soupapi.option.skyStyle": "Sky Style (Plain = follow theme)",
+  "text.autoconfig.soupapi.option.skySpeed": "Sky Speed",
+  "text.autoconfig.soupapi.option.skyScale": "Sky Scale",
+  "text.autoconfig.soupapi.option.skyColor2": "Sky Second Color",
+  "text.autoconfig.soupapi.option.skyDarkColor": "Sky Night Color",
+  "text.autoconfig.soupapi.option.skyStars": "Sky Stars"
 }

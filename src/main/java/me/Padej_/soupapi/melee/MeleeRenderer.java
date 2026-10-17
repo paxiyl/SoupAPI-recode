@@ -44,6 +44,10 @@ public final class MeleeRenderer extends ConfigurableModule {
 
         MeleeEffects.track(weapon, partialTicks);
 
+        // The player's own arms first, in the view's own frame: they hold the weapon, and nothing
+        // about them touches the weapon's placement.
+        MeleeHands.render(Melee.state().attacking() ? Melee.state().progress() : 0f);
+
         GlStateManager.pushMatrix();
         try {
             GlStateManager.disableCull();           // the X mirror flips the winding
@@ -61,7 +65,7 @@ public final class MeleeRenderer extends ConfigurableModule {
             if (CONFIG.meleeOutline) outline(weapon, model, pose);
             if (CONFIG.meleePhantom) phantoms(weapon, model, texture);
 
-            model.setHidden("hand", !CONFIG.meleeShowArms);
+            model.setHidden(MeleeWeapon.ARM_MESH, !CONFIG.meleeShowArms);
 
             // The weapon as the pack drew it.
             GlStateManager.color(1f, 1f, 1f, 1f);
@@ -191,7 +195,11 @@ public final class MeleeRenderer extends ConfigurableModule {
      * up, and the shape of the glow follows the artwork instead of flooding the whole model.
      */
     private static void glow(MeleeWeapon weapon, GeoModel model, GeoPose pose) {
+        // Without the pack's specular map there is no mask, and glowing through the base texture
+        // lights the whole weapon evenly - which is what "Free Dark Star" looked like, since it is
+        // the one weapon here that ships no _s file.
         ResourceLocation mask = weapon.glowMask();
+        if (mask == null) return;
         Color colour = glowColour();
         float pulse = 1f;
         if (CONFIG.meleeGlowPulse > 0) {
@@ -210,7 +218,7 @@ public final class MeleeRenderer extends ConfigurableModule {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
         GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
                 colour.getBlue() / 255f, alpha);
-        mc.getTextureManager().bindTexture(mask != null ? mask : weapon.texture());
+        mc.getTextureManager().bindTexture(mask);
         model.render(pose);
         GlStateManager.enableLighting();
         GlStateManager.depthMask(true);

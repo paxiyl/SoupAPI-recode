@@ -82,6 +82,15 @@ public final class MeleeWeapon {
     private Fit fit;
     private boolean failed;
 
+    /**
+     * The suffix of the bones that are the pack's arms.
+     *
+     * <p>Exactly {@code lefthand_pos} and {@code righthand_pos} in every pack here. Matched as a
+     * suffix on purpose: "hand" anywhere in the name also catches a weapon's own {@code hand} or
+     * {@code handle}, and two of these weapons have one.
+     */
+    public static final String ARM_MESH = "hand_pos";
+
     /** Bones that are anchors rather than geometry; never used as a blade tip. */
     private static final String[] ANCHORS = {
             "camera", "view", "idle_view", "refit_view", "iron_view", "positioning",
@@ -179,7 +188,7 @@ public final class MeleeWeapon {
         pose.reset();
         if (idle != null) pose.sample(model, idle, 0f, 1f);
 
-        float[] weapon = model.bounds(pose, null, "hand");
+        float[] weapon = model.bounds(pose, null, ARM_MESH);
         float[] whole = model.bounds(pose, null);
         if (weapon == null) weapon = whole;
         if (weapon == null) return new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f);
@@ -220,7 +229,7 @@ public final class MeleeWeapon {
         float[] centre = {
                 (box[0] + box[3]) / 2f, (box[1] + box[4]) / 2f, (box[2] + box[5]) / 2f,
         };
-        float[] tip = model.furthestFrom(pose, centre, "hand");
+        float[] tip = model.furthestFrom(pose, centre, ARM_MESH);
         if (tip == null) return new float[]{0f, 0f, 1f, 0f};
 
         // The model is mirrored in X when drawn, so the direction is measured mirrored too.
@@ -361,7 +370,7 @@ public final class MeleeWeapon {
         float bestDistance = -1f;
         float[] out = new float[3];
         for (me.Padej_.soupapi.bedrock.GeoBone bone : model.bones()) {
-            if (!bone.hasGeometry() || isAnchor(bone.name) || bone.name.contains("hand")) continue;
+            if (!bone.hasGeometry() || isAnchor(bone.name) || bone.name.endsWith(ARM_MESH)) continue;
             if (!model.pivotOf(bone.name, pose, out)) continue;
             float distance = out[0] * out[0] + out[1] * out[1] + out[2] * out[2];
             if (distance > bestDistance) {

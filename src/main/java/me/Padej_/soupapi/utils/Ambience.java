@@ -53,7 +53,31 @@ public enum Ambience {
     RUNE_FALL,
     DIGITAL_SNOW,
     SOLAR_FLARE,
-    THUNDERBUGS;
+    THUNDERBUGS,
+    /** Paper lanterns and sparks rising together. */
+    FIREWORKS,
+    /** Slow drifting motes of ash and light, like a cathedral. */
+    MOTES,
+    /** Fast horizontal streaks, as though moving at speed. */
+    SLIPSTREAM,
+    /** Hexagons tumbling down. */
+    HEX_FALL,
+    /** Eyes opening and closing in the dark. */
+    WATCHERS,
+    /** Clock faces turning in the air. */
+    CLOCKWORK,
+    /** Shards of ice hanging and falling. */
+    ICE_FALL,
+    /** Coins spinning down. */
+    COIN_RAIN,
+    /** Arrows raining past. */
+    ARROW_RAIN,
+    /** Crosses drifting upward, slowly. */
+    VIGIL,
+    /** Triangles rising like bubbles in glass. */
+    PRISM,
+    /** Infinity signs tumbling. */
+    FOREVER_FALL;
 
     /** Whether the particles fall, rise, or hang about. */
     public float gravity() {
@@ -89,7 +113,18 @@ public enum Ambience {
             case SOLAR_FLARE:
                 return 0.14f;
             case HEARTS:
+            case VIGIL:
+            case PRISM:
                 return 0.08f;
+            case FIREWORKS:
+                return 0.2f;
+            case HEX_FALL:
+            case ICE_FALL:
+            case COIN_RAIN:
+            case FOREVER_FALL:
+                return -0.2f;
+            case ARROW_RAIN:
+                return -1.1f;
             case METEORS:
                 return -0.9f;
             default:
@@ -119,6 +154,16 @@ public enum Ambience {
             case GLITCH:
             case DIGITAL_SNOW:
                 return 0.3f;
+            case SLIPSTREAM:
+                return 0.7f;
+            case MOTES:
+            case WATCHERS:
+            case CLOCKWORK:
+                return 0.07f;
+            case HEX_FALL:
+            case COIN_RAIN:
+            case FOREVER_FALL:
+                return 0.18f;
             case MATRIX_RAIN:
             case NEON_RAIN:
             case RAIN:
@@ -199,6 +244,30 @@ public enum Ambience {
                 return "glyph/blossom";
             case RUNE_FALL:
                 return "glyph/rune_algiz";
+            case FIREWORKS:
+                return "star";
+            case MOTES:
+                return "firefly_alt";
+            case SLIPSTREAM:
+                return "glyph/line";
+            case HEX_FALL:
+                return "glyph/hexagon_bold";
+            case WATCHERS:
+                return "glyph/eye";
+            case CLOCKWORK:
+                return "glyph/gear";
+            case ICE_FALL:
+                return "glyph/snow_crystal";
+            case COIN_RAIN:
+                return "dollar";
+            case ARROW_RAIN:
+                return "glyph/arrow_heavy";
+            case VIGIL:
+                return "glyph/cross";
+            case PRISM:
+                return "glyph/triangle";
+            case FOREVER_FALL:
+                return "glyph/infinity_bold";
             default:
                 return "firefly";
         }
@@ -213,7 +282,9 @@ public enum Ambience {
     /** True for the ones that should spin as they travel. */
     public boolean spins() {
         return this == SNOWFLAKE_SPIN || this == CONFETTI || this == LEAVES
-                || this == PENTAGRAMS || this == GLITCH;
+                || this == PENTAGRAMS || this == GLITCH || this == HEX_FALL
+                || this == COIN_RAIN || this == CLOCKWORK || this == FOREVER_FALL
+                || this == PRISM;
     }
 
     /** A size multiplier, so a glyph column and a dust mote are not the same size. */
@@ -237,7 +308,13 @@ public enum Ambience {
             case RAIN:
             case DRIZZLE:
             case BLOOD_RAIN:
+            case SLIPSTREAM:
                 return 0.8f;
+            case WATCHERS:
+            case CLOCKWORK:
+                return 1.2f;
+            case MOTES:
+                return 0.3f;
             default:
                 return 0.7f;
         }

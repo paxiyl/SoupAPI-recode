@@ -33,7 +33,8 @@ public final class Themes {
             "c1", "c2", "c3", "c4", "textColor", "backColor",
             "jumpCirclesStyle", "hitBubblesStyle", "trailsStyle", "playerEffectsStyle", "haloStyle",
             "particleSpriteOverride", "particleSymbol",
-            "ambienceStyle", "coloredSkyColor", "coloredSkyAlpha")));
+            "ambienceStyle", "coloredSkyColor", "coloredSkyAlpha",
+            "skyStyle", "skyColor2", "skyDarkColor")));
 
     /** The switches that decide how much of a theme gets copied; changing one re-applies it. */
     private static final Set<String> REAPPLY = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
@@ -70,6 +71,12 @@ public final class Themes {
     public static Ambience ambience() {
         Theme theme = Palette.getTheme();
         return theme == null ? Ambience.NONE : theme.ambience();
+    }
+
+    /** What the active theme's sky does, or {@link SkyStyle#PLAIN}. */
+    public static SkyStyle skyStyle() {
+        Theme theme = Palette.getTheme();
+        return theme == null ? SkyStyle.PLAIN : theme.skyStyle();
     }
 
     /** Copies the active theme's look into the settings. Does nothing for {@link Theme#CUSTOM}. */

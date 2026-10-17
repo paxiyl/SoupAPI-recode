@@ -52,7 +52,7 @@ public final class MeleeThirdPerson extends ConfigurableModule {
             GlStateManager.translate(fit.offsetX * size, fit.offsetY * size, fit.offsetZ * size);
             GlStateManager.scale(-scale, scale, scale);
 
-            model.setHidden("hand", true);
+            model.setHidden(MeleeWeapon.ARM_MESH, true);
             mc.getTextureManager().bindTexture(texture);
             GlStateManager.color(1f, 1f, 1f, 1f);
             model.render(pose);

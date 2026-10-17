@@ -434,6 +434,24 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("colored_sky")
     @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
     public int coloredSkyAlpha = 60;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.SkyStyle skyStyle = me.Padej_.soupapi.utils.SkyStyle.PLAIN;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 400)
+    public int skySpeed = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
+    public int skyScale = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int skyColor2 = 0x7a2fff;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int skyDarkColor = 0x05060e;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int skyStars = 140;
 
     @ConfigEntry.Gui.PrefixText // Custom Fog
     @ConfigEntry.Category("world")
@@ -926,6 +944,33 @@ public class SoupAPI_Config implements ConfigData {
             me.Padej_.soupapi.melee.MeleeTrigger.SWORD;
     @ConfigEntry.Category("melee")
     public boolean meleeShowArms = false;
+
+    @ConfigEntry.Gui.PrefixText // Melee Hands
+    @ConfigEntry.Category("melee")
+    public boolean meleeHands = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeLeftHand = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
+    public int meleeHandsReach = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
+    public int meleeHandsSpread = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -60, max = 60)
+    public int meleeHandsPitch = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetX = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetY = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetZ = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeHandsSwing = 100;
     @ConfigEntry.Category("melee")
     public boolean resetMeleePlacement_BUTTON = false;
     @ConfigEntry.Category("melee")
@@ -937,6 +982,8 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.PrefixText // Melee Placement
     @ConfigEntry.Category("melee")
     public boolean meleeAutoAlign = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeRunAnimation = false;
     @ConfigEntry.Category("melee")
     public String[] meleePlacements = new String[0];
     @ConfigEntry.Category("melee")

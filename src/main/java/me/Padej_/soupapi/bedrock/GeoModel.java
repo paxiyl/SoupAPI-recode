@@ -100,14 +100,17 @@ public final class GeoModel {
     }
 
     /**
-     * Hides or shows every bone whose name contains {@code match}.
+     * Hides or shows every bone whose name <em>ends with</em> {@code suffix}.
      *
-     * <p>Used to drop the arms a gun pack ships with: they are posed for the mod the pack was built
-     * for, and on a body that already has arms they are one pair too many.
+     * <p>A suffix and not a substring, and that distinction was a real bug: the arms in these packs
+     * are the bones {@code lefthand_pos} and {@code righthand_pos}, but matching "hand" anywhere in
+     * the name also caught Desmoulins' Edge's {@code hand} (156 cubes — its grip) and the Executor's
+     * {@code handle} (84 cubes). Both were hidden and left out of the fit, so those two weapons were
+     * drawn with their largest piece missing and sized as though it were not there.
      */
-    public void setHidden(String match, boolean hidden) {
+    public void setHidden(String suffix, boolean hidden) {
         for (GeoBone bone : bones) {
-            if (bone.name.contains(match)) bone.hidden = hidden;
+            if (bone.name.endsWith(suffix)) bone.hidden = hidden;
         }
     }
 
@@ -234,8 +237,10 @@ public final class GeoModel {
 
     /**
      * @param nameFilter  when set, only bones whose name contains it are measured
-     * @param nameExclude when set, bones whose name contains it are left out — which is how the
-     *                    weapon is measured without the arms it is held in
+     * @param nameExclude when set, bones whose name <em>ends with</em> it are left out — which is
+     *                    how the weapon is measured without the arms it is held in. A suffix,
+     *                    because two of these weapons have their own parts named "hand" and
+     *                    "handle"
      */
     public float[] bounds(GeoPose pose, String nameFilter, String nameExclude) {
         float[] box = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE,
@@ -265,7 +270,7 @@ public final class GeoModel {
                 .translate(-bone.pivotX, -bone.pivotY, -bone.pivotZ);
 
         boolean included = nameFilter == null || bone.name.contains(nameFilter);
-        if (nameExclude != null && bone.name.contains(nameExclude)) included = false;
+        if (nameExclude != null && bone.name.endsWith(nameExclude)) included = false;
         if (included) {
             float[] out = new float[3];
             for (GeoCube cube : bone.cubes) {
@@ -330,7 +335,7 @@ public final class GeoModel {
 
         float[] best = null;
         float bestDistance = -1f;
-        boolean skip = nameExclude != null && bone.name.contains(nameExclude);
+        boolean skip = nameExclude != null && bone.name.endsWith(nameExclude);
         if (!skip) {
             for (GeoCube cube : bone.cubes) {
                 for (int corner = 0; corner < 8; corner++) {

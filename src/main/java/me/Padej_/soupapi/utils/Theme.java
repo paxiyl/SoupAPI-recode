@@ -287,6 +287,81 @@ public enum Theme {
         return ambience;
     }
 
+    /**
+     * What this theme's sky does.
+     *
+     * <p>Derived from the ambience rather than stored, because the two belong together: a theme
+     * raining code wants a sky of falling code behind it, and one full of embers wants a sky that
+     * glows from the horizon.
+     */
+    public SkyStyle skyStyle() {
+        switch (ambience) {
+            case MATRIX_RAIN:
+            case MATRIX_RISE:
+            case DIGITAL_SNOW:
+                return SkyStyle.CODE_FALL;
+            case NEON_RAIN:
+            case CIRCUIT_MOTES:
+                return SkyStyle.CIRCUIT_SKY;
+            case SNOW:
+            case SNOWFLAKE_SPIN:
+            case FROST_SHARDS:
+                return SkyStyle.SILK;
+            case BLIZZARD:
+                return SkyStyle.STORM_FRONT;
+            case EMBERS:
+            case SOLAR_FLARE:
+            case ASH:
+                return SkyStyle.EMBER_SKY;
+            case FIREFLIES:
+            case SPORES:
+                return SkyStyle.NEBULA;
+            case PETALS:
+            case LEAVES:
+            case FEATHERS:
+                return SkyStyle.SUNSET;
+            case RAIN:
+            case DRIZZLE:
+                return SkyStyle.SCANLINES;
+            case BLOOD_RAIN:
+                return SkyStyle.VOID_RIFT;
+            case BUBBLES:
+            case PLANKTON:
+            case JELLYFISH:
+                return SkyStyle.OCEAN_DEPTH;
+            case STARFIELD:
+            case METEORS:
+                return SkyStyle.VORTEX;
+            case AURORA:
+                return SkyStyle.AURORA;
+            case SOULS:
+            case PENTAGRAMS:
+            case SKULLS:
+                return SkyStyle.ECLIPSE;
+            case HEARTS:
+            case CONFETTI:
+                return SkyStyle.BANDS;
+            case GLITCH:
+                return SkyStyle.PLASMA;
+            case VOID_MOTES:
+                return SkyStyle.VOID_RIFT;
+            case SANDSTORM:
+            case DUST:
+                return SkyStyle.SPEED_LINES;
+            case GOLD_DUST:
+            case LANTERNS:
+                return SkyStyle.RIPPLE;
+            case THUNDERBUGS:
+                return SkyStyle.STORM_FRONT;
+            case RUNE_FALL:
+                return SkyStyle.LATTICE;
+            case SPARKS:
+                return SkyStyle.HEX_GRID;
+            default:
+                return SkyStyle.PLAIN;
+        }
+    }
+
     /** The colour this theme paints the sky, when it is allowed to paint the sky at all. */
     public int skyColor() {
         return back;
@@ -364,6 +439,9 @@ public enum Theme {
             config.coloredSkyEnabled = true;
             config.coloredSkyColor = skyColor();
             config.coloredSkyAlpha = skyAlpha();
+            config.skyStyle = SkyStyle.PLAIN;   // PLAIN here means "follow the theme"
+            config.skyColor2 = c2;
+            config.skyDarkColor = back;
             config.customFogEnabled = true;
         }
     }
@@ -411,6 +489,12 @@ public enum Theme {
                 return !config.themeWorld || config.coloredSkyColor == skyColor();
             case "coloredSkyAlpha":
                 return !config.themeWorld || config.coloredSkyAlpha == skyAlpha();
+            case "skyStyle":
+                return !config.themeWorld || config.skyStyle == SkyStyle.PLAIN;
+            case "skyColor2":
+                return !config.themeWorld || config.skyColor2 == c2;
+            case "skyDarkColor":
+                return !config.themeWorld || config.skyDarkColor == back;
             default:
                 return true;
         }

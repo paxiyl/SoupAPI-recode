@@ -1,6 +1,7 @@
 package me.Padej_.soupapi.melee;
 
 import me.Padej_.soupapi.bedrock.GeoClip;
+import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.bedrock.GeoModel;
 import me.Padej_.soupapi.bedrock.GeoPose;
 
@@ -96,6 +97,20 @@ public final class MeleeState {
         return main.clip != null && main.clip.name.startsWith("melee");
     }
 
+    /**
+     * Whether another swing can start.
+     *
+     * <p>These clips run one and a half to two seconds, and the first version would not start a new
+     * one until the old had finished — so spam-clicking dropped every click but the first and the
+     * weapon kept swinging on its own long after. A swing can be cut into once it is past its own
+     * halfway point, which is where the pack's own sound cues sit.
+     */
+    public boolean canAttack() {
+        if (main.clip == null) return true;
+        if (!attacking()) return true;
+        return progress() >= 0.45f;
+    }
+
     public boolean inspecting() {
         return main.clip != null && main.clip.name.startsWith("inspect");
     }
@@ -166,7 +181,12 @@ public final class MeleeState {
             main.clear();
         }
 
-        GeoClip stance = running && weapon.run() != null ? weapon.run() : weapon.idle();
+        // The sprint clips move the weapon a long way off the idle pose, because they were
+        // authored around the view anchor of the mod the pack was built for - which is the one
+        // thing about these models this port cannot reuse. Left on, the weapon jumps somewhere odd
+        // the moment the player starts running, which is exactly what it looked like.
+        boolean sprintClip = running && ConfigurableModule.CONFIG.meleeRunAnimation && weapon.run() != null;
+        GeoClip stance = sprintClip ? weapon.run() : weapon.idle();
         if (stance != null && base.clip != stance) {
             base.play(stance, true);
         }

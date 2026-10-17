@@ -110,6 +110,63 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## Two weapons were drawn with their biggest piece missing
+
+The arms in these packs are the bones `lefthand_pos` and `righthand_pos`. They were matched by
+looking for "hand" anywhere in the name — which also caught Desmoulins' Edge's `hand` (156 cubes: its
+grip) and the Executor's `handle` (84 cubes). Both were hidden *and* left out of the fit, so those
+two were drawn with their largest part missing and sized as though it were not there. The match is a
+suffix now, which is what it should always have been.
+
+**The glow had no mask on one weapon.** It is masked by the pack's specular map, and "Free Dark
+Star" is the one weapon here that ships no `_s` file; the fallback was the base texture, which lights
+the whole weapon evenly instead of its metal. It skips the pass instead.
+
+**The trail drew a band beside the weapon.** It followed the pivot of the furthest bone, and a pivot
+can sit anywhere — on some weapons that was a point out in space next to the model, so the ribbon ran
+parallel to the blade and never touched it. It follows the same mesh vertex the alignment uses now,
+and clears the moment a swing ends instead of hanging in the air.
+
+**The weapon jumped when you ran.** The packs' `run` clips move the weapon a long way off the idle
+pose, for the same reason the arms are wrong: they are posed around an anchor this port cannot
+reuse. `Sprint Animation` is off by default.
+
+**Spam-clicking dropped every click but the first.** A new swing would not start until the old one
+finished, and these clips run one and a half to two seconds — so the weapon kept swinging on its own
+and the clicks went nowhere. A swing can be cut into once it is past its own halfway point, which is
+where the pack's own sound cues sit.
+
+## Hands
+
+With the pack's arms off the weapon floated with nothing holding it, which looks worse than either.
+These are the arms Minecraft already has: the player's own model, their own skin, their own
+slim-or-wide arm, drawn at a fixed place in the view and rising with the swing. They are posed to
+reach the weapon rather than the other way round, so switching them on cannot move the viewmodel —
+and they have their own reach, spread, pitch and offsets, because unlike the weapon's placement
+there is nothing in any file to fit them against.
+
+## Skies that move
+
+A theme painted the sky one flat tint, which is most of why every theme ended up feeling like the
+same theme: the biggest surface in the game was a single colour that only changed hue.
+
+There are twenty-one moving skies now — aurora curtains, nebula clouds, bands, plasma, a breathing
+void rift, a perspective grid, a honeycomb, scanlines, a vortex, an eclipse, falling code, heat off a
+horizon, light shafts through water, lava cells, late sun, ripples, speed lines, a lattice, silk,
+a storm front and circuit traces — plus scattered stars for the ones that suit them.
+
+They are drawn as a forty-by-twenty-four grid of quads at the far plane, each corner coloured by a
+function of where it is and what time it is. That is the only way to get a moving pattern across the
+sky on this version: there is no shader to write a noise function into, and gl4es would not run one
+if there were. Under a thousand quads costs nothing beside a single chunk, and because the colour is
+evaluated per corner and interpolated across each quad it comes out smooth rather than blocky. Each
+theme picks the sky that goes with its ambience — code rain gets a sky of falling code, embers get a
+glowing horizon — and every pattern was rendered offline and checked before it shipped.
+
+**Thirteen more ambience styles** (53 in all): fireworks, cathedral motes, slipstream, falling
+hexagons, watching eyes, clockwork, ice, coins, arrow rain, a vigil of crosses, prisms and tumbling
+infinities. **Six more hit effects** (16 in all): spiral, halo, gyro, shrapnel, nova and ascend.
+
 ## Pointing every blade the same way
 
 Fixing the scale left some weapons still plainly wrong, and the reason is that fitting a weapon only
