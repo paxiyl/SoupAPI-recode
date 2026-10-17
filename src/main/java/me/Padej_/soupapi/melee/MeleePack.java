@@ -27,16 +27,23 @@ import java.util.zip.ZipFile;
 /**
  * A weapon pack on disk: a zip, a jar or a folder holding Bedrock models, animations and textures.
  *
- * <p>Packs are read from disk at runtime rather than bundled into the mod. That is partly a licence
- * question — a pack is someone else's artwork, and this mod's repository is public — and partly a
- * better deal: any pack built to the same layout loads, not just the one this was written against,
- * and the jar stays small.
+ * <p>A pack can be built into the mod or read from disk. The one this port ships with is built in,
+ * under {@code assets/soupapi/melee_packs/}: a pack made for 1.20 is a 1.20 mod file, and putting
+ * one of those in a 1.8.9 {@code mods} folder is asking for trouble, so the player should not have
+ * to. Built-in packs carry an {@code __index.txt} listing their files, because the classpath cannot
+ * be walked for resources the way a zip can.
  *
- * <p>Discovery looks in {@code soupapi/melee/}, {@code mods/}, {@code resourcepacks/} and
- * {@code tacz/} under the game directory, so a pack that is already installed as a mod or a
- * resource pack is found where it already is, with nothing to move.
+ * <p>Disk discovery still works, for packs the mod does not ship: it looks in
+ * {@code soupapi/melee/}, {@code mods/}, {@code resourcepacks/}, {@code tacz/},
+ * {@code tacz_packs/} and {@code gunpacks/} under the game directory, plus whatever the Extra Pack
+ * Folder setting points at.
  */
 public final class MeleePack {
+
+    /** Packs bundled with the mod, by namespace, under {@link #BUILTIN_ROOT}. */
+    private static final String[] BUILTIN = {"delta_wt"};
+
+    private static final String BUILTIN_ROOT = "/assets/soupapi/melee_packs/";
 
     private static final String[] SEARCH = {
             "soupapi/melee", "mods", "resourcepacks", "tacz", "tacz_packs", "gunpacks",
@@ -47,20 +54,32 @@ public final class MeleePack {
     private static boolean scanned;
     private static String lastError;
 
+    /** Where a pack's bytes come from. */
+    private enum Kind { ARCHIVE, FOLDER, BUILTIN }
+
     public final File source;
     public final String name;
     public final String namespace;
-    private final boolean archive;
+    private final Kind kind;
+    /** For a built-in pack: the resource folder it lives in, with no trailing slash. */
+    private final String base;
+    private List<String> builtinIndex;
     private ZipFile zip;
     private final Map<String, String> lang = new HashMap<String, String>();
     private final Map<String, ResourceLocation> textures = new HashMap<String, ResourceLocation>();
     private final List<MeleeWeapon> weapons = new ArrayList<MeleeWeapon>();
 
-    private MeleePack(File source, String namespace, boolean archive) {
+    private MeleePack(File source, String namespace, Kind kind, String base) {
         this.source = source;
-        this.name = source.getName();
+        this.name = source == null ? namespace : source.getName();
         this.namespace = namespace;
-        this.archive = archive;
+        this.kind = kind;
+        this.base = base;
+    }
+
+    /** True for the pack the mod ships, which cannot be removed by moving a file. */
+    public boolean builtIn() {
+        return kind == Kind.BUILTIN;
     }
 
     // ---- discovery -------------------------------------------------------------------------
@@ -104,6 +123,19 @@ public final class MeleePack {
             return;
         }
 
+        for (String namespace : BUILTIN) {
+            try {
+                MeleePack pack = openBuiltin(namespace);
+                if (pack == null) continue;
+                pack.index();
+                if (pack.weapons.isEmpty()) continue;
+                PACKS.add(pack);
+                WEAPONS.addAll(pack.weapons);
+            } catch (Throwable t) {
+                SoupLog.warn("[SoupAPI] could not read the built-in weapon pack " + namespace, t);
+            }
+        }
+
         List<File> candidates = new ArrayList<File>();
         String configured = me.Padej_.soupapi.config.ConfigurableModule.CONFIG.meleePackPath;
         if (configured != null && !configured.trim().isEmpty()) {
@@ -134,7 +166,8 @@ public final class MeleePack {
             }
         }
         if (WEAPONS.isEmpty() && lastError == null) {
-            lastError = "no pack found in " + String.join(", ", SEARCH);
+            lastError = "no pack found - the built-in one is missing from the jar, and there is "
+                    + "none in " + String.join(", ", SEARCH);
         }
         SoupLog.info("[SoupAPI] melee packs: " + PACKS.size() + ", weapons: " + WEAPONS.size());
     }
@@ -157,7 +190,8 @@ public final class MeleePack {
             if (!meta.isFile()) return null;
             String namespace = namespaceOf(readJson(new FileInputStream(meta)));
             if (namespace == null) return null;
-            return new MeleePack(file, namespace, false);
+            if (isBuiltIn(namespace)) return null;      // already shipped; do not load it twice
+            return new MeleePack(file, namespace, Kind.FOLDER, null);
         }
         String lower = file.getName().toLowerCase(java.util.Locale.ROOT);
         if (!lower.endsWith(".zip") && !lower.endsWith(".jar")) return null;
@@ -168,18 +202,54 @@ public final class MeleePack {
             return null;
         }
         String namespace = namespaceOf(readJson(archive.getInputStream(meta)));
-        if (namespace == null) {
+        if (namespace == null || isBuiltIn(namespace)) {
             archive.close();
             return null;
         }
-        MeleePack pack = new MeleePack(file, namespace, true);
+        MeleePack pack = new MeleePack(file, namespace, Kind.ARCHIVE, null);
         pack.zip = archive;
+        return pack;
+    }
+
+    /** Opens a pack that lives inside the mod jar. */
+    private static MeleePack openBuiltin(String namespace) {
+        String base = BUILTIN_ROOT + namespace;
+        InputStream index = MeleePack.class.getResourceAsStream(base + "/__index.txt");
+        if (index == null) return null;
+
+        List<String> paths = new ArrayList<String>();
+        java.io.BufferedReader reader = null;
+        try {
+            reader = new java.io.BufferedReader(new InputStreamReader(index, "UTF-8"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (!line.isEmpty()) paths.add(line);
+            }
+        } catch (Throwable t) {
+            SoupLog.warn("[SoupAPI] could not read the index of the built-in pack " + namespace, t);
+            return null;
+        } finally {
+            close(reader);
+        }
+        if (paths.isEmpty()) return null;
+
+        MeleePack pack = new MeleePack(null, namespace, Kind.BUILTIN, base);
+        pack.builtinIndex = paths;
         return pack;
     }
 
     private static String namespaceOf(JsonObject meta) {
         if (meta == null || !meta.has("namespace")) return null;
         return meta.get("namespace").getAsString();
+    }
+
+    /** The same pack sitting on disk as well as in the jar should load once, not twice. */
+    private static boolean isBuiltIn(String namespace) {
+        for (String builtin : BUILTIN) {
+            if (builtin.equals(namespace)) return true;
+        }
+        return false;
     }
 
     /** Finds the weapons this pack declares and reads their names. */
@@ -224,7 +294,14 @@ public final class MeleePack {
     /** Paths in this pack that start with {@code prefix} and end with {@code suffix}. */
     private List<String> list(String prefix, String suffix) {
         List<String> out = new ArrayList<String>();
-        if (archive) {
+        if (kind == Kind.BUILTIN) {
+            for (String path : builtinIndex) {
+                if (path.startsWith(prefix) && path.endsWith(suffix)) out.add(path);
+            }
+            Collections.sort(out);
+            return out;
+        }
+        if (kind == Kind.ARCHIVE) {
             java.util.Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 String name = entries.nextElement().getName();
@@ -247,7 +324,10 @@ public final class MeleePack {
 
     InputStream open(String path) throws IOException {
         if (path == null) return null;
-        if (archive) {
+        if (kind == Kind.BUILTIN) {
+            return MeleePack.class.getResourceAsStream(base + "/" + path);
+        }
+        if (kind == Kind.ARCHIVE) {
             ZipEntry entry = zip.getEntry(path);
             return entry == null ? null : zip.getInputStream(entry);
         }

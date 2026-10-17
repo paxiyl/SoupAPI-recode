@@ -418,5 +418,7 @@
   "text.autoconfig.soupapi.option.ambienceColor": "Цвет",
   "text.autoconfig.soupapi.option.coloredSkyColor": "Цвет неба",
   "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Небо по теме",
-  "text.autoconfig.soupapi.option.coloredSkyAlpha": "Непрозрачность неба"
+  "text.autoconfig.soupapi.option.coloredSkyAlpha": "Непрозрачность неба",
+  "text.autoconfig.soupapi.option.meleeSounds": "Звуки анимаций",
+  "text.autoconfig.soupapi.option.meleeSoundVolume": "Громкость звуков"
 }

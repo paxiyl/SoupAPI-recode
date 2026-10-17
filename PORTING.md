@@ -116,12 +116,30 @@ The mod can now carry a melee weapon out of a TaCZ-style gun pack: the Bedrock m
 set, the hand model that comes with it, and the pack's own idle, draw, swing, inspect and sprint
 clips.
 
-**Packs are read from disk, not bundled.** A pack is someone else's artwork — the one this was
-written against is marked All Rights Reserved — and this repository is public, so nothing from it is
-committed here. It is also the better arrangement: any pack laid out the same way loads, and the jar
-stays its own size. Discovery looks for a `gunpack.meta.json` inside any zip, jar or folder in
-`soupapi/melee/`, `mods/`, `resourcepacks/`, `tacz/`, `tacz_packs/` and `gunpacks/`, plus whatever
-`Extra Pack Folder` points at, so a pack already installed as a mod is found where it already is.
+**The pack is built in.** A pack made for 1.20 *is* a 1.20 mod file — `META-INF/mods.toml`,
+`lowcodefml`, a dependency on two mods that do not exist here — so telling a 1.8.9 player to drop one
+in their `mods` folder is telling them to break their install. The DeltaForce pack is bundled
+instead, under `assets/soupapi/melee_packs/delta_wt/`, laid out exactly as it shipped, with
+`tools/bundle_melee_pack.py` to add or update one. Its sounds move into the mod's own
+`assets/soupapi/sounds/` so the game's sound engine can find them.
+
+A built-in pack carries a generated `__index.txt` listing its files, because the classpath cannot be
+walked for resources the way a zip can; that one file is the difference between the reader working
+on a folder, a zip and the jar itself.
+
+Disk discovery still works, for packs the mod does not ship: a `gunpack.meta.json` inside any zip,
+jar or folder in `soupapi/melee/`, `mods/`, `resourcepacks/`, `tacz/`, `tacz_packs/` or `gunpacks/`,
+plus whatever `Extra Pack Folder` points at. A pack whose namespace is already built in is skipped
+there, so the same pack on disk does not load twice.
+
+The bundled copy leaves out the Lua state machines (a runtime 1.8.9 does not have, and the mod
+reproduces what they do from the clip names), the pack's own mod metadata, and the duplicate slot
+icons — 95 files, 6.9 MB of models, animations and textures, plus 6.9 MB of sound.
+
+**On the licence:** the pack is marked All Rights Reserved by LesRaisins Studio, and the weapons
+replicate another game's. Bundling it was the repository owner's decision, taken after that was
+pointed out; the repository is being made private. Anyone forking this should bring their own pack
+rather than redistributing this one.
 
 ### What had to be built
 
@@ -165,6 +183,14 @@ row to carry it, click the switch on the right to drop it out of the cycle.
 map, so the parts the artist marked shiny are the parts that light up), rim light, chromatic split,
 phantom copies of the poses the swing actually held, an edge trail, sparks, a ring that leaves the
 blade, and orbiting symbols. None of them touch the animation.
+
+**The pack's own sounds play.** Each clip carries a timeline of cues naming a file —
+`delta_wt:melee/mercy/draw` — which only became playable once the sounds were bundled: 1.8.9 builds
+its sound registry when resources load, so a sound that is not in `sounds.json` by then cannot be
+played later. The bundler writes an event per file and the state machine fires the cues the playhead
+crosses, on the main track only, since a looping stance with a cue in it would retrigger several
+times a second. A hundred cues across the pack, every one resolving to an event with a file behind
+it.
 
 ## Ambience: what a theme puts in the air
 
@@ -581,10 +607,12 @@ bytecode (major version 52), contains `mcmod.info`, all 182 assets, and the shad
 The settings schema reaches all 353 config fields with none unreachable, all 43 themes apply
 cleanly, and every ambience style names a sprite that exists.
 
-For the weapon packs, a probe loads a real pack through the mod's own code and checks each weapon
-end to end: all eleven parse (5,586 cubes, 118 clips), every clip poses at twenty points along its
-length without a NaN or a runaway coordinate, every weapon has an idle, a draw and attack clips, the
-fitted placement is finite and sane, and the hand meshes and a blade bone are found.
+For the weapon packs, a probe loads the built-in pack through the mod's own code and checks each
+weapon end to end: all eleven parse (5,586 cubes, 118 clips), every clip poses at twenty points along
+its length without a NaN or a runaway coordinate, every weapon has an idle, a draw and attack clips,
+the fitted placement is finite and sane, and the hand meshes and a blade bone are found. All 100
+sound cues resolve to an event in `sounds.json`, and all 81 events have their ogg file. With the
+pack also sitting on disk it still loads once, not twice.
 
 The geometry and animation maths was also checked by eye before it was written: the same transforms
 were implemented offline in Python, the posed models rendered to PNGs with a software rasteriser,

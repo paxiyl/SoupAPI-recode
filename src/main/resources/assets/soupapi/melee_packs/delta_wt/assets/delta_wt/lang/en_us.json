@@ -1,0 +1,16 @@
+{ 
+  "item.delta_wt.mercy": "§rMercy",
+  "item.delta_wt.shadowkiller": "§4Fiery Owl",
+  "item.delta_wt.polaris": "§bDesmoulins' Edge",
+  "item.delta_wt.silencefd": "§7TAC Dagger",
+  "item.delta_wt.thieve_sea": "§9Sea Gleam",
+  "item.delta_wt.cobra_vanguard": "§eCobra Vanguard",
+  "item.delta_wt.treasure_kn": "§cCreed",
+  "item.delta_wt.quenching": "§6Dragon's Fang",
+  "item.delta_wt.annihil": "§4Dark §eStar",
+  "item.delta_wt.executor": "§4Executor",
+  "item.delta_wt.null_annihil": "§f\"Free Dark Star\"",
+  "item.delta_wt.observer": "§5Starfallen",
+  "pack.delta_wt.default_pack.name": "DeltaForce Melee Pack",
+  "pack.delta_wt.default_pack.desc": "Melees replicated from DeltaForce"
+}

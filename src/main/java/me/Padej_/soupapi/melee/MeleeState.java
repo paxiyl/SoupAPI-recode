@@ -25,6 +25,8 @@ public final class MeleeState {
     private static final class Track {
         GeoClip clip;
         float time;
+        /** The playhead before the last advance, so the cues in between can be found. */
+        float lastTime;
         boolean looping;
         GeoClip previous;
         float previousTime;
@@ -38,6 +40,7 @@ public final class MeleeState {
             fade = clip == null ? 0f : FADE;
             clip = next;
             time = 0f;
+            lastTime = -1f;      // so a cue sitting on frame zero still fires
             looping = loop;
         }
 
@@ -55,6 +58,7 @@ public final class MeleeState {
         }
 
         void advance(float delta) {
+            lastTime = time;
             if (fade > 0f) {
                 fade = Math.max(0f, fade - delta);
                 previousTime += delta;
@@ -169,6 +173,7 @@ public final class MeleeState {
 
         base.advance(delta);
         main.advance(delta);
+        fireSounds(main);
 
         pose.reset();
         apply(model, pose, base, 1f);
@@ -187,6 +192,21 @@ public final class MeleeState {
         }
         if (track.clip != null) {
             pose.sample(model, track.clip, track.time, blend);
+        }
+    }
+
+    /**
+     * Plays whatever cues the track just passed.
+     *
+     * <p>Only the main track: the stance loops, and a looping clip with a cue in it would retrigger
+     * that sound several times a second.
+     */
+    private static void fireSounds(Track track) {
+        if (track.clip == null || track.clip.sounds.isEmpty()) return;
+        for (GeoClip.SoundCue cue : track.clip.sounds) {
+            if (cue.time > track.lastTime && cue.time <= track.time) {
+                MeleeSounds.play(cue.effect);
+            }
         }
     }
 

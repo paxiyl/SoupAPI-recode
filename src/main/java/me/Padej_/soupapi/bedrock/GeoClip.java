@@ -29,17 +29,32 @@ public final class GeoClip {
     private static final float[] ZERO = {0f, 0f, 0f};
     private static final float[] ONE = {1f, 1f, 1f};
 
+    /** A sound the clip asks for, and when. */
+    public static final class SoundCue {
+        public final float time;
+        /** The pack's own reference, such as {@code delta_wt:melee/mercy/draw}. */
+        public final String effect;
+
+        SoundCue(float time, String effect) {
+            this.time = time;
+            this.effect = effect;
+        }
+    }
+
     public final String name;
     public final float length;
     public final boolean loop;
     public final List<BoneTrack> tracks;
+    public final List<SoundCue> sounds;
     private final Map<String, BoneTrack> byBone;
 
-    private GeoClip(String name, float length, boolean loop, List<BoneTrack> tracks) {
+    private GeoClip(String name, float length, boolean loop, List<BoneTrack> tracks,
+                    List<SoundCue> sounds) {
         this.name = name;
         this.length = length;
         this.loop = loop;
         this.tracks = tracks;
+        this.sounds = sounds;
         this.byBone = new HashMap<String, BoneTrack>();
         for (BoneTrack track : tracks) {
             byBone.put(track.bone, track);
@@ -74,7 +89,46 @@ public final class GeoClip {
                 && root.get("loop").getAsJsonPrimitive().isBoolean()
                 && root.get("loop").getAsBoolean();
 
-        return new GeoClip(name, length, loop, tracks);
+        return new GeoClip(name, length, loop, tracks, sounds(root));
+    }
+
+    /**
+     * The clip's sound cues.
+     *
+     * <p>Bedrock writes these as a timeline of {@code {"effect": "<namespace>:<path>"}}, which in a
+     * gun pack points straight at an ogg file. That is the whole reason the pack's sounds are worth
+     * bundling: with the files inside the mod the game's own sound engine can play them, so a swing
+     * sounds like the pack meant it to rather than like nothing at all.
+     */
+    private static List<SoundCue> sounds(JsonObject root) {
+        List<SoundCue> out = new ArrayList<SoundCue>();
+        if (!root.has("sound_effects") || !root.get("sound_effects").isJsonObject()) return out;
+        for (Map.Entry<String, JsonElement> entry : root.getAsJsonObject("sound_effects").entrySet()) {
+            float time;
+            try {
+                time = Float.parseFloat(entry.getKey());
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            JsonElement value = entry.getValue();
+            if (value.isJsonObject() && value.getAsJsonObject().has("effect")) {
+                out.add(new SoundCue(time, value.getAsJsonObject().get("effect").getAsString()));
+            } else if (value.isJsonArray()) {
+                for (JsonElement each : value.getAsJsonArray()) {
+                    if (each.isJsonObject() && each.getAsJsonObject().has("effect")) {
+                        out.add(new SoundCue(time,
+                                each.getAsJsonObject().get("effect").getAsString()));
+                    }
+                }
+            }
+        }
+        java.util.Collections.sort(out, new java.util.Comparator<SoundCue>() {
+            @Override
+            public int compare(SoundCue a, SoundCue b) {
+                return Float.compare(a.time, b.time);
+            }
+        });
+        return out;
     }
 
     private static float longest(GeoChannel... channels) {

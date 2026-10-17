@@ -418,5 +418,7 @@
   "text.autoconfig.soupapi.option.ambienceColor": "Color",
   "text.autoconfig.soupapi.option.coloredSkyColor": "Sky Color",
   "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Sky Uses Theme",
-  "text.autoconfig.soupapi.option.coloredSkyAlpha": "Sky Opacity"
+  "text.autoconfig.soupapi.option.coloredSkyAlpha": "Sky Opacity",
+  "text.autoconfig.soupapi.option.meleeSounds": "Animation Sounds",
+  "text.autoconfig.soupapi.option.meleeSoundVolume": "Sound Volume"
 }

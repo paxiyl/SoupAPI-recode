@@ -1,0 +1,29 @@
+{
+  "model": "delta_wt:melee/thieve_sea_geo",
+  "animation": "delta_wt:melee/thieve_sea",
+  "state_machine": "delta_wt:thieve_sea_state_machine",
+  "texture": "delta_wt:melee/thieve_sea_uv",
+  "slot_texture": "delta_wt:melee/slot/thieve_sea",
+  "sounds": {
+    "attack_left_hit": "delta_wt:entity.player.flash.hit",
+    "attack_right_hit": "delta_wt:entity.player.flash.hit",
+    "crit": "delta_wt:entity.player.flash.hit"
+  },
+  "transforms": {
+    "thirdperson_righthand": {
+		"rotation": [90, 0, 0],
+		"translation": [0, 0, 9]
+	},
+	"thirdperson_lefthand": {
+		"rotation": [90, 0, 0],
+		"translation": [0, 0, 8.75]
+	},
+	"ground": {
+		"translation": [0, 5.25, 0]
+	},
+	"fixed": {
+		"rotation": [90, 0, 90],
+		"translation": [-7.5, 0, 0]
+	}
+  }
+}

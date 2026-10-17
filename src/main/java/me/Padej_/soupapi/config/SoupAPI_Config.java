@@ -920,6 +920,11 @@ public class SoupAPI_Config implements ConfigData {
     public boolean meleeAnnounce = true;
     @ConfigEntry.Category("melee")
     public boolean meleeThirdPerson = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSounds = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeSoundVolume = 100;
 
     @ConfigEntry.Gui.PrefixText // Melee Placement
     @ConfigEntry.Category("melee")

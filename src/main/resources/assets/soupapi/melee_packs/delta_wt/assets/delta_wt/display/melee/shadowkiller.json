@@ -1,0 +1,38 @@
+{
+  "model": "delta_wt:melee/shadowkiller_geo",
+  "animation": "delta_wt:melee/shadowkiller",
+  "state_machine": "delta_wt:shadowkiller_state_machine",
+  "texture": "delta_wt:melee/shadowkiller_uv",
+  "slot_texture": "delta_wt:melee/slot/shadowkiller",
+  "sounds": {
+    "attack_left_hit": "delta_wt:entity.player.flash.hit",
+    "attack_right_hit": "delta_wt:entity.player.flash.hit",
+    "crit": "delta_wt:entity.player.flash.hit"
+  },
+  "transforms": {
+    "thirdperson_righthand": {
+      "translation": [0, -3, -1],
+      "rotation": [-90, 0, 180]
+    },
+    "thirdperson_lefthand": {
+      "translation": [0, -3, -1],
+      "rotation": [-90, 0, 180]
+    },
+    "ground": {
+      "rotation": [45, 0, 0],
+      "translation": [0, 6, 0]
+    },
+    "gui": {
+      "rotation": [0, 0, -45],
+      "translation": [4.5, 4, 0]
+    },
+    "head": {
+      "translation": [0, 4.75, 0]
+    },
+    "fixed": {
+      "translation": [-1, 0, 0],
+      "rotation": [0, 90, 0],
+      "scale": [2, 2, 2]
+    }
+  }
+}
