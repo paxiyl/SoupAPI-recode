@@ -85,6 +85,10 @@ public final class MeleeRenderer extends ConfigurableModule {
             mc.getTextureManager().bindTexture(texture);
             model.render(pose);
 
+            // The player's own arms, in the pack's hand markers, inside the same matrix as the
+            // weapon - so they move with the animation and cannot shift the viewmodel.
+            MeleeHands.render(weapon);
+
             if (CONFIG.meleeChroma) chroma(weapon, model, pose, texture);
             if (CONFIG.meleeGlow) glow(weapon, model, pose);
             MeleeEffects.render(weapon, partialTicks);
@@ -99,10 +103,6 @@ public final class MeleeRenderer extends ConfigurableModule {
             me.Padej_.soupapi.compat.RenderSystem.restoreDefaults();
             GlStateManager.popMatrix();
         }
-
-        // The arms are drawn outside that matrix, in the view, because they are not placed by the
-        // pack at all - only their target is. See MeleeHands.
-        MeleeHands.render(weapon, view);
         return true;
     }
 
