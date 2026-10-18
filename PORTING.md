@@ -126,6 +126,16 @@ picture the artist made of it. With X and Y negated on cube rotations only, the 
 holes, serrated spine and red inlays all land where the icon has them; Sea Gleam reads as the hammer
 it is; Mercy's curved blade and brass fittings line up. Under any other combination they do not.
 
+**The order matters too, and the first check could not see it.** Half the rotated cubes here — 2,787
+of 5,520 — turn about more than one axis, and for those the order the three rotations are composed
+in changes the result. The first comparison was drawn at 420 pixels with no anti-aliasing and on
+Dark Star, which draws both of its two hidden halves in the bind pose and so looks like a mess
+whatever the convention: it could not have told the orders apart, and reporting it as a match was
+wrong. Drawn large, on the Executor, which has five hundred multi-axis cubes and no hidden halves,
+the answer is plain: ZYX gives a clean knife with its guard notch and wrapped grip, XYZ gives
+scattered slabs, ZXY gives a blade with a ragged spine. ZYX is what the code uses. Six weapons at
+900 pixels against their icons now agree down to the inlays.
+
 Bone rotations were checked the same way, numerically: for each weapon, under each convention, the
 gap between the fist and the nearest point of the weapon. Unchanged signs win on eight of eleven
 weapons and by a wide margin on the clear ones — the hand holds the grip. So bones keep their signs
@@ -135,6 +145,19 @@ and cubes are negated, which is the one combination that satisfies both tests.
 nothing else — no bones, no pivots, no hierarchy — and every one of these animations is a list of
 rotations *per bone*. Converting would throw away the only thing the clips can be applied to. The
 cube format was never the problem; one sign in how it was read was.
+
+## Weapons and keys in the settings
+
+The weapons were reachable through a button that opened a sub-screen, which is no use to someone who
+does not already know the button is there. They have a page of their own in the sidebar now, one row
+per weapon: the switch keeps it in the cycle, and switching one on also carries it. The list cannot
+come from the config — the weapons are whatever packs are on disk, known only once those are read —
+so the page is built beside the config's own.
+
+The keys have a page too. They are in Minecraft's Controls screen as well, but reaching that from
+PojavLauncher means leaving the mod, scrolling past two hundred vanilla bindings and coming back.
+Tap a row, press a key; Escape unbinds; right-click resets. Rebinding rebuilds Minecraft's key-code
+table, without which a changed binding keeps firing on the old key and not the new one.
 
 ## Hands that move with the weapon
 

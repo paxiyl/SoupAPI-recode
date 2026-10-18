@@ -450,5 +450,10 @@
   "text.autoconfig.soupapi.option.applyPreset_BUTTON": "Применить пресет",
   "text.autoconfig.soupapi.option.meleeComboWindow": "Окно комбо",
   "text.autoconfig.soupapi.option.meleeHandsScale": "Размер рук",
-  "text.autoconfig.soupapi.option.meleeHandsYaw": "Поворот рук"
+  "text.autoconfig.soupapi.option.meleeHandsYaw": "Поворот рук",
+  "text.autoconfig.soupapi.category.weapons": "Оружие",
+  "text.autoconfig.soupapi.category.keys": "Клавиши",
+  "text.autoconfig.soupapi.option.weapons.carry": "Носимое оружие",
+  "text.autoconfig.soupapi.option.weapons.list": "Содержимое пака",
+  "text.autoconfig.soupapi.option.keys.hint": "Нажмите строку, затем клавишу  -  ПКМ для сброса"
 }

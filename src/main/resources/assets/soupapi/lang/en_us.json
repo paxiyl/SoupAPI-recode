@@ -450,5 +450,10 @@
   "text.autoconfig.soupapi.option.applyPreset_BUTTON": "Apply Preset",
   "text.autoconfig.soupapi.option.meleeComboWindow": "Combo Window",
   "text.autoconfig.soupapi.option.meleeHandsScale": "Hands Size",
-  "text.autoconfig.soupapi.option.meleeHandsYaw": "Hands Yaw"
+  "text.autoconfig.soupapi.option.meleeHandsYaw": "Hands Yaw",
+  "text.autoconfig.soupapi.category.weapons": "Weapons",
+  "text.autoconfig.soupapi.category.keys": "Keys",
+  "text.autoconfig.soupapi.option.weapons.carry": "Carried Weapon",
+  "text.autoconfig.soupapi.option.weapons.list": "Pack Contents",
+  "text.autoconfig.soupapi.option.keys.hint": "Tap a row, then press a key  -  right-click to reset"
 }

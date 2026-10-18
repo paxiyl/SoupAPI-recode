@@ -79,9 +79,109 @@ public final class ConfigSchema {
     private ConfigSchema() {
     }
 
-    /** Builds one page per config category, in declaration order. */
+    /** Builds one page per config category, plus the pages that are not config fields. */
     public static List<OptionPage> build() {
-        return buildConfigPages();
+        List<OptionPage> pages = buildConfigPages();
+        OptionPage weapons = buildWeaponsPage();
+        if (weapons != null) pages.add(weapons);
+        pages.add(buildKeysPage());
+        return pages;
+    }
+
+    /**
+     * The weapons in the installed packs, as rows.
+     *
+     * <p>A weapon list cannot come from the config: the weapons are whatever packs are on disk, so
+     * they are only known once those are read. They were reachable through a button that opened a
+     * sub-screen; this puts them in the settings proper, one row each, where they can be found by
+     * someone who does not already know the button exists.
+     */
+    private static OptionPage buildWeaponsPage() {
+        java.util.List<me.Padej_.soupapi.melee.MeleeWeapon> weapons;
+        try {
+            weapons = me.Padej_.soupapi.melee.MeleePack.weapons();
+        } catch (Throwable t) {
+            SoupLog.warn("[SoupAPI] could not list the weapon packs", t);
+            return null;
+        }
+
+        OptionPage page = new OptionPage("weapons",
+                translate(CATEGORY_PREFIX + "weapons", "Weapons"));
+        page.add(new Option.Header(translate(OPTION_PREFIX + "weapons.carry", "CARRIED WEAPON")));
+        page.add(new Option.Toggle(
+                translate(OPTION_PREFIX + "meleeEnabled", "Carry A Weapon"), null,
+                () -> SoupAPI.configHolder.get().meleeEnabled,
+                value -> {
+                    SoupAPI.configHolder.get().meleeEnabled = value;
+                    save();
+                },
+                new SoupAPI_Config().meleeEnabled));
+
+        if (weapons.isEmpty()) {
+            String reason = me.Padej_.soupapi.melee.MeleePack.lastError();
+            page.add(new Option.Header(reason == null ? "No weapons found" : reason));
+            return page;
+        }
+
+        page.add(new Option.Header(translate(OPTION_PREFIX + "weapons.list", "PACK CONTENTS")));
+        for (final me.Padej_.soupapi.melee.MeleeWeapon weapon : weapons) {
+            // On: in the cycle. Off: skipped by the keys. Clicking the name carries it.
+            page.add(new Option.Toggle(plain(weapon.displayName), weapon.pack.namespace + ":" + weapon.id,
+                    () -> !me.Padej_.soupapi.melee.MeleePack.isDisabled(weapon),
+                    value -> {
+                        me.Padej_.soupapi.melee.MeleePack.setDisabled(weapon, !value);
+                        if (value) {
+                            SoupAPI.configHolder.get().meleeWeapon = weapon.id;
+                            SoupAPI.configHolder.get().meleeEnabled = true;
+                        }
+                        save();
+                    },
+                    true));
+        }
+        page.add(new Option.Action(
+                translate(OPTION_PREFIX + "selectMelee_BUTTON", "Weapon List"), null, openLabel(),
+                actionFor("selectMelee_BUTTON")));
+        page.add(new Option.Action(
+                translate(OPTION_PREFIX + "rescanMeleePacks_BUTTON", "Look For Packs Again"), null,
+                openLabel(), actionFor("rescanMeleePacks_BUTTON")));
+        return page;
+    }
+
+    /** Minecraft colour codes in a pack's own names; the mod's font draws them as glyphs. */
+    private static String plain(String text) {
+        return text == null ? "" : text.replaceAll("\u00a7[0-9a-fk-or]", "");
+    }
+
+    /** The mod's keys, rebindable without leaving the screen. */
+    private static OptionPage buildKeysPage() {
+        OptionPage page = new OptionPage("keys", translate(CATEGORY_PREFIX + "keys", "Keys"));
+        page.add(new Option.Header(translate(OPTION_PREFIX + "keys.hint",
+                "TAP A ROW, THEN PRESS A KEY  -  RIGHT-CLICK TO RESET")));
+        key(page, me.Padej_.soupapi.screen.SoupSettingsShortcut.OPEN_SETTINGS);
+        key(page, me.Padej_.soupapi.melee.Melee.TOGGLE);
+        key(page, me.Padej_.soupapi.melee.Melee.NEXT);
+        key(page, me.Padej_.soupapi.melee.Melee.PREVIOUS);
+        key(page, me.Padej_.soupapi.melee.Melee.INSPECT);
+        return page;
+    }
+
+    private static void key(OptionPage page, final net.minecraft.client.settings.KeyBinding binding) {
+        final int fallback = binding.getKeyCodeDefault();
+        page.add(new Option.Key(translate(binding.getKeyDescription(),
+                prettify(binding.getKeyDescription())), null,
+                binding::getKeyCode,
+                value -> {
+                    binding.setKeyCode(value);
+                    // Minecraft caches a key-code lookup table; a binding changed without rebuilding
+                    // it keeps firing on the old key and not the new one.
+                    net.minecraft.client.settings.KeyBinding.resetKeyBindingArrayAndHash();
+                    try {
+                        net.minecraft.client.Minecraft.getMinecraft().gameSettings.saveOptions();
+                    } catch (Throwable ignored) {
+                        // Not being able to write options.txt is not worth losing the binding over.
+                    }
+                },
+                fallback));
     }
 
     // ---- the annotated config --------------------------------------------------------------

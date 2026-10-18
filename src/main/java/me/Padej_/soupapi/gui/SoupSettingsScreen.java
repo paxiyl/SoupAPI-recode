@@ -83,6 +83,9 @@ public class SoupSettingsScreen extends SoupScreen {
 
     private Option hovered;
 
+    /** The key row waiting for a key press, or {@code null}. */
+    private Option.Key listening;
+
     public SoupSettingsScreen() {
         super(Texts.translatable("soupapi.screen.soup_settings.title"));
     }
@@ -380,6 +383,23 @@ public class SoupSettingsScreen extends SoupScreen {
             return;
         }
 
+        if (row instanceof Option.Key) {
+            Option.Key key = (Option.Key) row;
+            int bx = controlX;
+            boolean waiting = listening == key;
+            boolean hoverControl = inside(mouseX, mouseY, bx, cy, CONTROL_W, ch);
+            Render2D.drawRound(ms, bx, cy, CONTROL_W, ch, 3,
+                    waiting ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 90)
+                            : new Color(255, 255, 255, hoverControl ? 34 : 20));
+            String value = waiting ? "Press a key..." : key.display();
+            FontRenderers.sf_bold_mini.drawString(ms,
+                    clip(value, CONTROL_W - 8, FontRenderers.sf_bold_mini),
+                    bx + CONTROL_W / 2f - Math.min(CONTROL_W - 8,
+                            FontRenderers.sf_bold_mini.getStringWidth(value)) / 2f,
+                    y + 6, waiting ? accent.getRGB() : text);
+            return;
+        }
+
         if (row instanceof Option.Choice) {
             Option.Choice choice = (Option.Choice) row;
             int bx = controlX;
@@ -642,6 +662,11 @@ public class SoupSettingsScreen extends SoupScreen {
 
     private void clickRow(Option row, int x, int y, int w, int rowHeight,
                           double mouseX, double mouseY, int button) {
+        if (row instanceof Option.Key) {
+            // Tap to listen, tap again to give up without changing it.
+            listening = listening == row ? null : (Option.Key) row;
+            return;
+        }
         int controlX = x + w - CONTROL_W - 4;
         int cy = y + 3;
         int ch = rowHeight - 7;
@@ -785,6 +810,13 @@ public class SoupSettingsScreen extends SoupScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (listening != null) {
+            // Escape unbinds, anything else binds; either way the row stops listening.
+            listening.set(keyCode == 1 ? 0 : keyCode);
+            listening = null;
+            ConfigSchema.save();
+            return true;
+        }
         // LWJGL 2 key codes: 14 backspace, 28 enter, 156 numpad enter, 1 escape (handled upstream).
         if (searchFocused) {
             if (keyCode == 14) {

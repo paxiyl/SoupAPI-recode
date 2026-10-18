@@ -414,6 +414,58 @@ public abstract class Option {
         }
     }
 
+    /**
+     * A key binding, rebindable in place.
+     *
+     * <p>The bindings also live in Minecraft's own Controls screen, but reaching that on
+     * PojavLauncher means leaving the mod, scrolling a list of two hundred vanilla keys and coming
+     * back. They are listed here too, and bound by tapping the row and pressing a key.
+     */
+    public static final class Key extends Option {
+        private final IntSupplier getter;
+        private final IntConsumer setter;
+        private final int defaultValue;
+
+        public Key(String label, String tooltip, IntSupplier getter, IntConsumer setter,
+                   int defaultValue) {
+            super(label, tooltip);
+            this.getter = getter;
+            this.setter = setter;
+            this.defaultValue = defaultValue;
+        }
+
+        public int get() {
+            return getter.getAsInt();
+        }
+
+        public void set(int keyCode) {
+            setter.accept(keyCode);
+        }
+
+        /** The key's name, or "None" when it is unbound. */
+        public String display() {
+            int code = get();
+            if (code == 0) return "None";
+            try {
+                String name = org.lwjgl.input.Keyboard.getKeyName(code);
+                if (name != null && !name.isEmpty()) return name;
+            } catch (Throwable ignored) {
+                // PojavLauncher's input stub does not name every key.
+            }
+            return "Key " + code;
+        }
+
+        @Override
+        public void reset() {
+            set(defaultValue);
+        }
+
+        @Override
+        public boolean isDefault() {
+            return get() == defaultValue;
+        }
+    }
+
     /** A button that does something — opens a sub-screen, reloads a cape. */
     public static final class Action extends Option {
         private final String buttonText;
