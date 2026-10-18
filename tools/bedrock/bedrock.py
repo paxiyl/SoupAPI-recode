@@ -233,7 +233,11 @@ def cube_quads(cube, geo):
     local = ident()
     if any(cube.rotation):
         cx, cy, cz = cube.pivot
-        local = translate(cx, cy, cz) @ rotate(*cube.rotation) @ translate(-cx, -cy, -cz)
+        # X and Y negated: a cube's rotation is the other handedness from a bone's.
+        local = (translate(cx, cy, cz)
+                 @ rotate(cube.rotation[0], cube.rotation[1], cube.rotation[2],
+                          sign=(-1, -1, 1))
+                 @ translate(-cx, -cy, -cz))
 
     for key, corners in FACE_CORNERS.items():
         face = cube.uv.get(key) if isinstance(cube.uv, dict) else None

@@ -61,7 +61,10 @@ public final class MeleeRenderer extends ConfigurableModule {
             if (CONFIG.meleeOutline) outline(weapon, model, pose);
             if (CONFIG.meleePhantom) phantoms(weapon, model, texture);
 
-            model.setHidden(MeleeWeapon.ARM_MESH, !CONFIG.meleeShowArms);
+            // The pack's own hand markers are never drawn: they are arm-shaped boxes with no arm
+            // texture on them, there so the mod it was built for knows where to put the player's
+            // real arm. MeleeHands puts the real arm there instead.
+            model.setHidden(MeleeWeapon.ARM_MESH, true);
 
             // The weapon as the pack drew it.
             GlStateManager.color(1f, 1f, 1f, 1f);
@@ -90,42 +93,43 @@ public final class MeleeRenderer extends ConfigurableModule {
         return true;
     }
 
-    /** Puts the matrix where the model should be drawn, including bob, sway and the kick. */
+    /**
+     * Puts the matrix where the model should be drawn, including bob, sway and the kick.
+     *
+     * <p>The whole placement is four lines: mirror X, scale model units to blocks, and move the
+     * pack's own view anchor onto the camera. Everything else here is something the player asked
+     * for. The sliders start at zero on purpose — out of the box the weapon sits exactly where the
+     * pack puts it, which is where its hands are.
+     */
     private static void place(MeleeWeapon weapon, float partialTicks) {
         MeleeWeapon.Fit fit = weapon.fit();
         MeleePlacement.Values placement = MeleePlacement.of(weapon);
         float size = placement.size / 100f;
-        boolean arms = CONFIG.meleeShowArms;
-        float fitScale = arms ? fit.armScale : fit.scale;
-        float fitX = arms ? fit.armOffsetX : fit.offsetX;
-        float fitY = arms ? fit.armOffsetY : fit.offsetY;
-        float fitZ = arms ? fit.armOffsetZ : fit.offsetZ;
 
         if (CONFIG.meleeBob) bob(partialTicks);
         if (CONFIG.meleeSway) sway();
 
-        // Where the weapon sits in the view.
+        // Nudges, in hundredths of a block, on top of the pack's own placement.
         GlStateManager.translate(
                 placement.offsetX / 100f,
                 placement.offsetY / 100f,
-                -placement.distance / 100f);
+                (placement.offsetZ - placement.distance) / 100f);
 
-        // Then the turns, about the weapon's own centre: first the one that points every blade the
-        // same way, then whatever the player has set on top of it.
-        if (CONFIG.meleeAutoAlign && !arms && fit.alignDegrees != 0f) {
-            GlStateManager.rotate(fit.alignDegrees, fit.alignX, fit.alignY, fit.alignZ);
-        }
+        // Turns about the eye, which is where the player is looking from, so a pitch or a yaw here
+        // swings the weapon across the view rather than tumbling it about its own middle.
         if (placement.yaw != 0) GlStateManager.rotate(placement.yaw, 0f, 1f, 0f);
         if (placement.pitch != 0) GlStateManager.rotate(placement.pitch, 1f, 0f, 0f);
         if (placement.roll != 0) GlStateManager.rotate(placement.roll, 0f, 0f, 1f);
 
         shake(weapon);
 
-        // Finally bring the weapon's centre to the origin, so every turn above pivots around it.
-        GlStateManager.translate(fitX * size, fitY * size, fitZ * size);
-
-        float scale = fitScale * size / 16f;
+        // Model units to blocks, mirrored in X: the pack holds the weapon in the left of its own
+        // space and the player holds it in the right of theirs.
+        float scale = size / 16f;
         GlStateManager.scale(-scale, scale, scale);
+
+        // And the pack's view anchor onto the camera.
+        GlStateManager.translate(-fit.eyeX, -fit.eyeY, -fit.eyeZ);
     }
 
     /**

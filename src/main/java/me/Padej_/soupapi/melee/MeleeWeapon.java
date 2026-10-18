@@ -21,47 +21,33 @@ import java.util.List;
 public final class MeleeWeapon {
 
     /**
-     * How the first-person placement was worked out, so the settings screen can say so.
+     * Where the eye sits inside the model, which is all the first-person placement needs.
      *
-     * <p>Two fits, because the answer depends on whether the pack's arms are drawn. With the weapon
-     * alone the blade sets the scale and sits where a held knife sits. With the arms the whole
-     * assembly has to be framed and pushed out, because the arms reach back past the camera and
-     * close up you are looking at the inside of a sleeve.
+     * <p>These packs carry a bone called {@code idle_view}: the point the mod they were built for
+     * puts the camera at when the weapon is simply held. Take that as the origin, keep the authored
+     * scale of a sixteenth of a block per unit, and mirror X, and the model <em>is</em> the view —
+     * weapon, grip and both hands, exactly as posed.
+     *
+     * <p>Checked across all eleven weapons in this pack: measured from {@code idle_view}, the right
+     * wrist lands between 0.5 and 1.1 blocks below the eye and between 1.1 and 1.7 in front of it
+     * every time, which is where a hand holding something belongs. The earlier build measured the
+     * weapon's bounding box instead, normalised it to 0.55 blocks and turned the blade onto a guessed
+     * direction — three guesses that disagreed with the hands and with each other, and that is what
+     * put every viewmodel in the wrong place.
      */
     public static final class Fit {
-        public final float scale;
-        public final float offsetX;
-        public final float offsetY;
-        public final float offsetZ;
+        /** The {@code idle_view} pivot, in model units: subtract it and the eye is at the origin. */
+        public final float eyeX;
+        public final float eyeY;
+        public final float eyeZ;
         /** The weapon's own size in blocks, for the picker's size column. */
         public final float span;
-        /** The same, fitted to the whole model so the arms are in frame too. */
-        public final float armScale;
-        public final float armOffsetX;
-        public final float armOffsetY;
-        public final float armOffsetZ;
-        /** The turn that points this blade the same way as every other, as an axis and an angle. */
-        public final float alignDegrees;
-        public final float alignX;
-        public final float alignY;
-        public final float alignZ;
 
-        Fit(float scale, float offsetX, float offsetY, float offsetZ, float span,
-            float armScale, float armOffsetX, float armOffsetY, float armOffsetZ,
-            float alignDegrees, float alignX, float alignY, float alignZ) {
-            this.scale = scale;
-            this.offsetX = offsetX;
-            this.offsetY = offsetY;
-            this.offsetZ = offsetZ;
+        Fit(float eyeX, float eyeY, float eyeZ, float span) {
+            this.eyeX = eyeX;
+            this.eyeY = eyeY;
+            this.eyeZ = eyeZ;
             this.span = span;
-            this.armScale = armScale;
-            this.armOffsetX = armOffsetX;
-            this.armOffsetY = armOffsetY;
-            this.armOffsetZ = armOffsetZ;
-            this.alignDegrees = alignDegrees;
-            this.alignX = alignX;
-            this.alignY = alignY;
-            this.alignZ = alignZ;
         }
     }
 
@@ -80,6 +66,7 @@ public final class MeleeWeapon {
     private GeoAnimations animations;
     private GeoPose pose;
     private Fit fit;
+    private float[] grip;
     private boolean failed;
 
     /**
@@ -170,109 +157,64 @@ public final class MeleeWeapon {
     }
 
     /**
-     * Works out where the model sits in front of the eye.
+     * Reads the eye out of the model and measures the weapon, once, at load.
      *
-     * <p>A pack's models carry their own view anchors, and those anchors disagree between weapons —
-     * in this one pack the same bone names sit sixty units apart — so taking one of them as the eye
-     * puts half the weapons out of frame. The idle pose is measured instead.
-     *
-     * <p>What is measured is the <em>weapon</em>, not the whole model. Measuring everything meant
-     * the arms decided the size, and the arms are a metre of forearm reaching back toward the
-     * camera: normalising that to a block left the blade small, the sleeves enormous, and the
-     * assembly sprawling off every edge of the screen. A knife should be about half a block of
-     * blade, however long the arms holding it are, so the blade is what sets the scale and what
-     * gets centred; the arms land wherever they fall, which is behind it, where they belong.
+     * <p>The eye is the {@code idle_view} bone; {@code camera} is the fallback, and it is the same
+     * pivot on most of these weapons. Nothing is fitted: the pack is authored at a sixteenth of a
+     * block per unit — its hand markers are vanilla 4×12×4 arm boxes, which is how that is known —
+     * so the span is only reported, never used to scale anything.
      */
     private Fit measure(GeoModel model, GeoAnimations animations, GeoPose pose) {
         GeoClip idle = animations.first("static_idle", "idle", "draw");
         pose.reset();
         if (idle != null) pose.sample(model, idle, 0f, 1f);
 
+        float[] eye = eyeOf(model);
         float[] weapon = model.bounds(pose, null, ARM_MESH);
-        float[] whole = model.bounds(pose, null);
-        if (weapon == null) weapon = whole;
-        if (weapon == null) return new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f);
-
-        // A weapon this long in blocks at Size 100: half a block of blade reads as a knife in the
-        // hand, a whole block reads as a lamppost.
-        float[] blade = place(weapon, 0.55f);
-        // With the arms in, the whole assembly is framed to about a block and pushed a third of a
-        // block further out, so the sleeves are seen from outside rather than from within.
-        float[] withArms = whole == null ? blade : place(whole, 1.0f);
-
-        float[] align = align(model, pose, weapon);
-        return new Fit(blade[0], blade[1], blade[2], blade[3], blade[4],
-                withArms[0], withArms[1], withArms[2], withArms[3] - 0.35f,
-                align[0], align[1], align[2], align[3]);
+        float span = 0f;
+        if (weapon != null) {
+            span = Math.max((weapon[3] - weapon[0]) / 16f,
+                    Math.max((weapon[4] - weapon[1]) / 16f, (weapon[5] - weapon[2]) / 16f));
+        }
+        this.grip = wristOf(model, pose, RIGHT_HAND);
+        return new Fit(eye[0], eye[1], eye[2], span);
     }
-
-    /** The direction a held blade should point, in the space the weapon is drawn in. */
-    private static final float[] BLADE_TARGET = normalise(-0.40f, 0.86f, -0.32f);
 
     /**
-     * The turn that points this weapon's blade where every other weapon's blade points.
+     * The posed wrist end of a hand marker, in model units, or {@code null} when there is no marker.
      *
-     * <p>Fitting a weapon moves it and sizes it, and for the first build that was all it did — which
-     * is why some of them came out plainly wrong while others looked fine. The packs do not agree
-     * on which way a weapon faces in its own model: measured here, seven of the eleven point their
-     * blade along -X, Dragon's Fang and Creed point up and away, Sea Gleam points <em>down</em>, and
-     * Mercy points back at the camera. Whatever the mod they were built for does about that, it is
-     * not something this port can read out of the files.
-     *
-     * <p>So the blade is found — the mesh vertex furthest from the weapon's centre, which on a knife
-     * is the tip — and the model is turned so that direction matches {@link #BLADE_TARGET}: up, a
-     * little to the left, a little away. Every weapon then sits in the hand the same way, and the
-     * animation still plays on top of it because this is one fixed turn applied around the weapon's
-     * own centre, not a change to any bone.
+     * <p>The marker is an arm box with the shoulder at the high-Y end, so the wrist — the point the
+     * hand actually closes around the weapon at — is the middle of its low-Y face.
      */
-    private static float[] align(GeoModel model, GeoPose pose, float[] box) {
-        float[] centre = {
-                (box[0] + box[3]) / 2f, (box[1] + box[4]) / 2f, (box[2] + box[5]) / 2f,
-        };
-        float[] tip = model.furthestFrom(pose, centre, ARM_MESH);
-        if (tip == null) return new float[]{0f, 0f, 1f, 0f};
+    static float[] wristOf(GeoModel model, GeoPose pose, String bone) {
+        float[] box = model.cubeBox(bone);
+        if (box == null) return null;
+        me.Padej_.soupapi.bedrock.Mat4 matrix = model.boneMatrix(bone, pose);
+        if (matrix == null) return null;
+        float[] out = new float[3];
+        matrix.transform((box[0] + box[3]) / 2f, box[1], (box[2] + box[5]) / 2f, out);
+        return out;
+    }
 
-        // The model is mirrored in X when drawn, so the direction is measured mirrored too.
-        float[] direction = normalise(-(tip[0] - centre[0]), tip[1] - centre[1], tip[2] - centre[2]);
-        if (direction == null) return new float[]{0f, 0f, 1f, 0f};
+    public static final String RIGHT_HAND = "righthand_pos";
+    public static final String LEFT_HAND = "lefthand_pos";
 
-        float dot = direction[0] * BLADE_TARGET[0] + direction[1] * BLADE_TARGET[1]
-                + direction[2] * BLADE_TARGET[2];
-        dot = Math.max(-1f, Math.min(1f, dot));
-        float[] axis = {
-                direction[1] * BLADE_TARGET[2] - direction[2] * BLADE_TARGET[1],
-                direction[2] * BLADE_TARGET[0] - direction[0] * BLADE_TARGET[2],
-                direction[0] * BLADE_TARGET[1] - direction[1] * BLADE_TARGET[0],
-        };
-        float length = (float) Math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
-        if (length < 1.0E-5f) {
-            // Already aligned, or pointing exactly the other way; turn about any perpendicular.
-            if (dot > 0f) return new float[]{0f, 0f, 1f, 0f};
-            return new float[]{180f, 0f, 0f, 1f};
+    /** Where the right hand grips, in model units, measured once from the idle pose. */
+    public float[] gripPoint() {
+        return grip;
+    }
+
+    /** The view anchor's pivot in model units, or the model's own origin when it has none. */
+    private static float[] eyeOf(GeoModel model) {
+        for (String name : EYE_BONES) {
+            me.Padej_.soupapi.bedrock.GeoBone bone = model.bone(name);
+            if (bone != null) return new float[]{bone.pivotX, bone.pivotY, bone.pivotZ};
         }
-        float degrees = (float) Math.toDegrees(Math.acos(dot));
-        return new float[]{degrees, axis[0] / length, axis[1] / length, axis[2] / length};
+        return new float[]{0f, 0f, 0f};
     }
 
-    private static float[] normalise(float x, float y, float z) {
-        float length = (float) Math.sqrt(x * x + y * y + z * z);
-        if (length < 1.0E-6f) return null;
-        return new float[]{x / length, y / length, z / length};
-    }
-
-    /** Returns {scale, offsetX, offsetY, offsetZ, span} for a box and a target size in blocks. */
-    private static float[] place(float[] box, float target) {
-        float spanX = (box[3] - box[0]) / 16f;
-        float spanY = (box[4] - box[1]) / 16f;
-        float spanZ = (box[5] - box[2]) / 16f;
-        float span = Math.max(spanX, Math.max(spanY, spanZ));
-        float scale = span > 1.0E-4f ? target / span : 1f;
-        // The model is mirrored in X when it is drawn, so its centre offset is mirrored too.
-        float centreX = -(box[0] + box[3]) / 32f * scale;
-        float centreY = (box[1] + box[4]) / 32f * scale;
-        float centreZ = (box[2] + box[5]) / 32f * scale;
-        return new float[]{scale, -centreX, -centreY, -centreZ, span};
-    }
+    /** The bones a pack uses for "where the camera is while the weapon is just held", best first. */
+    private static final String[] EYE_BONES = {"idle_view", "camera", "view"};
 
     public GeoModel model() {
         return model;
@@ -287,9 +229,7 @@ public final class MeleeWeapon {
     }
 
     public Fit fit() {
-        return fit == null
-                ? new Fit(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f)
-                : fit;
+        return fit == null ? new Fit(0f, 0f, 0f, 0f) : fit;
     }
 
     /** Frees the model's display lists and textures; the JSON stays parsed for a fast re-draw. */

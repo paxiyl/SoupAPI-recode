@@ -16,14 +16,14 @@ import org.lwjgl.opengl.GL11;
 import java.nio.FloatBuffer;
 
 /**
- * The player's own arms, hung off the pack's hand bones.
+ * The player's own arms, dropped into the pack's hand markers.
  *
- * <p>The packs ship arms of their own, but they are posed around the view anchor of the mod they
- * were built for and land in the wrong place against a blade-centred fit. What they do have is the
- * <em>bones</em> — {@code lefthand_pos} and {@code righthand_pos} — and those are animated by every
- * clip whether their mesh is drawn or not. So the mesh stays off and the player's own arm is placed
- * on the bone's matrix instead: their model, their skin, their arm width, moving exactly with the
- * animation rather than bobbing along beside it.
+ * <p>The packs carry no arm artwork. What {@code lefthand_pos} and {@code righthand_pos} hold is a
+ * single untextured box each, twelve units long and four across, shoulder at the high-Y end — a
+ * vanilla player arm, to the unit. The mod they were built for reads those as "put the player's arm
+ * here", and so does this: the marker stays hidden and the player's own limb is drawn into it, with
+ * their skin and their arm width, animated by whatever clip is playing because the pack animates
+ * those bones in every one.
  *
  * <p>Drawn inside the weapon's own matrix, so nothing here can move the viewmodel.
  */
@@ -71,9 +71,11 @@ public final class MeleeHands extends ConfigurableModule {
             GlStateManager.color(1f, 1f, 1f, 1f);
             mc.getTextureManager().bindTexture(skin);
 
-            drew |= arm(model, pose, "righthand_pos", body.bipedRightArm, body.bipedRightArmwear, true);
+            drew |= arm(model, pose, MeleeWeapon.RIGHT_HAND, body.bipedRightArm,
+                    body.bipedRightArmwear, true, thin);
             if (CONFIG.meleeLeftHand) {
-                drew |= arm(model, pose, "lefthand_pos", body.bipedLeftArm, body.bipedLeftArmwear, false);
+                drew |= arm(model, pose, MeleeWeapon.LEFT_HAND, body.bipedLeftArm,
+                        body.bipedLeftArmwear, false, thin);
             }
         } catch (Throwable t) {
             me.Padej_.soupapi.compat.SoupLog.warn(
@@ -87,19 +89,20 @@ public final class MeleeHands extends ConfigurableModule {
     }
 
     private static boolean arm(GeoModel model, GeoPose pose, String bone, ModelRenderer limb,
-                               ModelRenderer sleeve, boolean right) {
+                               ModelRenderer sleeve, boolean right, boolean thin) {
         Mat4 matrix = model.boneMatrix(bone, pose);
-        float[] pivot = model.bonePivot(bone);
-        if (matrix == null || pivot == null || limb == null) return false;
+        float[] box = model.cubeBox(bone);
+        if (matrix == null || box == null || limb == null) return false;
 
         GlStateManager.pushMatrix();
         try {
-            // Onto the bone, then to its pivot - the point the pack puts the wrist at.
+            // Onto the bone, then into the marker box it carries: an arm-shaped box, twelve units
+            // long, shoulder at the high-Y end.
             MATRIX.clear();
             MATRIX.put(matrix.m);
             MATRIX.flip();
             GL11.glMultMatrix(MATRIX);
-            GlStateManager.translate(pivot[0], pivot[1], pivot[2]);
+            GlStateManager.translate((box[0] + box[3]) / 2f, box[4], (box[2] + box[5]) / 2f);
 
             float size = CONFIG.meleeHandsScale / 100f;
             GlStateManager.scale(size, size, size);
@@ -110,10 +113,14 @@ public final class MeleeHands extends ConfigurableModule {
                     CONFIG.meleeHandsOffsetY / 10f,
                     CONFIG.meleeHandsOffsetZ / 10f);
 
-            // A limb is built in sixteenths with +Y downward, so it is drawn upside down relative
-            // to the model's own space; the arm hangs back from the wrist rather than forward.
+            // A limb is built with +Y downward from the shoulder, so it runs the other way from the
+            // marker; flipping Y points it down the box, from the shoulder toward the wrist.
             GlStateManager.scale(1f, -1f, 1f);
-            GlStateManager.translate(0f, -2f, 0f);
+            // A limb's own box starts two units above its rotation point and is centred to one
+            // side of it - outward, so the two arms mirror: a unit on a normal skin, half on a slim
+            // one. Undoing that puts the box on the marker rather than beside it.
+            float half = thin ? 0.5f : 1f;
+            GlStateManager.translate(right ? half : -half, 2f, 0f);
 
             limb.rotateAngleX = 0f;
             limb.rotateAngleY = 0f;

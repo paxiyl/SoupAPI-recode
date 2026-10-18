@@ -104,8 +104,7 @@
   "text.autoconfig.soupapi.option.weatherChangerEnabled.@PrefixText": "Weather Changer",
   "text.autoconfig.soupapi.option.weatherChangerEnabled": "Enabled",
   "text.autoconfig.soupapi.option.weatherType": "Weather",
-  "text.autoconfig.soupapi.option.coloredSkyEnabled.@PrefixText": "Colored Sky",
-  "text.autoconfig.soupapi.option.coloredSkyEnabled": "Enabled",
+  "text.autoconfig.soupapi.option.coloredSkyEnabled": "Follow The Theme Sky",
   "text.autoconfig.soupapi.option.customFogThick": "Thick",
   "text.autoconfig.soupapi.option.customFogEnabled.@PrefixText": "Fog",
   "text.autoconfig.soupapi.option.customFogEnabled": "Enabled",
@@ -417,7 +416,7 @@
   "text.autoconfig.soupapi.option.ambienceUseTheme": "Use Theme Colors",
   "text.autoconfig.soupapi.option.ambienceColor": "Color",
   "text.autoconfig.soupapi.option.coloredSkyColor": "Sky Color",
-  "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Sky Uses Theme",
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Sky Uses Theme Colors",
   "text.autoconfig.soupapi.option.coloredSkyAlpha": "Sky Opacity",
   "text.autoconfig.soupapi.option.meleeSounds": "Animation Sounds",
   "text.autoconfig.soupapi.option.meleeSoundVolume": "Sound Volume",
@@ -439,7 +438,7 @@
   "text.autoconfig.soupapi.option.meleeHandsOffsetY": "Hands Offset Y",
   "text.autoconfig.soupapi.option.meleeHandsOffsetZ": "Hands Offset Z",
   "text.autoconfig.soupapi.option.meleeHandsSwing": "Hands Swing",
-  "text.autoconfig.soupapi.option.skyStyle": "Sky Style (Plain = follow theme)",
+  "text.autoconfig.soupapi.option.skyStyle": "Sky Pattern (Plain = off, or follow the theme)",
   "text.autoconfig.soupapi.option.skySpeed": "Sky Speed",
   "text.autoconfig.soupapi.option.skyScale": "Sky Scale",
   "text.autoconfig.soupapi.option.skyColor2": "Sky Second Color",
@@ -455,5 +454,8 @@
   "text.autoconfig.soupapi.category.keys": "Keys",
   "text.autoconfig.soupapi.option.weapons.carry": "Carried Weapon",
   "text.autoconfig.soupapi.option.weapons.list": "Pack Contents",
-  "text.autoconfig.soupapi.option.keys.hint": "Tap a row, then press a key  -  right-click to reset"
+  "text.autoconfig.soupapi.option.keys.hint": "Tap a row, then press a key  -  right-click to reset",
+  "text.autoconfig.soupapi.category.colored_sky": "Animated Sky",
+  "text.autoconfig.soupapi.option.skyStyle.@PrefixText": "Animated Sky",
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Sky Colors"
 }

@@ -430,17 +430,10 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Weather weatherType = Weather.RAIN;
 
-    @ConfigEntry.Gui.PrefixText // Colored Sky
-    @ConfigEntry.Category("world")
-    public boolean coloredSkyEnabled = false;
-    @ConfigEntry.Category("colored_sky")
-    @ConfigEntry.ColorPicker
-    public int coloredSkyColor = 0x66a0ff;
-    @ConfigEntry.Category("colored_sky")
-    public boolean coloredSkyUseTheme = true;
-    @ConfigEntry.Category("colored_sky")
-    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
-    public int coloredSkyAlpha = 60;
+    // The sky lives on its own page - "Animated Sky" in the category list - rather than as a group
+    // inside World. It was a group there, with its master switch on the World page and its twenty
+    // one patterns on another, and the first person to look for it could not find it.
+    @ConfigEntry.Gui.PrefixText // Animated Sky
     @ConfigEntry.Category("colored_sky")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public me.Padej_.soupapi.utils.SkyStyle skyStyle = me.Padej_.soupapi.utils.SkyStyle.PLAIN;
@@ -451,14 +444,26 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
     public int skyScale = 100;
     @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int skyStars = 140;
+
+    @ConfigEntry.Gui.PrefixText // Sky Colors
+    @ConfigEntry.Category("colored_sky")
+    public boolean coloredSkyUseTheme = true;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int coloredSkyColor = 0x66a0ff;
+    @ConfigEntry.Category("colored_sky")
     @ConfigEntry.ColorPicker
     public int skyColor2 = 0x7a2fff;
     @ConfigEntry.Category("colored_sky")
     @ConfigEntry.ColorPicker
     public int skyDarkColor = 0x05060e;
     @ConfigEntry.Category("colored_sky")
-    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
-    public int skyStars = 140;
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int coloredSkyAlpha = 60;
+    @ConfigEntry.Category("colored_sky")
+    public boolean coloredSkyEnabled = false;
 
     @ConfigEntry.Gui.PrefixText // Custom Fog
     @ConfigEntry.Category("world")
@@ -949,9 +954,6 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public me.Padej_.soupapi.melee.MeleeTrigger meleeShowWhen =
             me.Padej_.soupapi.melee.MeleeTrigger.SWORD;
-    @ConfigEntry.Category("melee")
-    public boolean meleeShowArms = false;
-
     @ConfigEntry.Gui.PrefixText // Melee Hands
     @ConfigEntry.Category("melee")
     public boolean meleeHands = true;
@@ -985,8 +987,6 @@ public class SoupAPI_Config implements ConfigData {
 
     @ConfigEntry.Gui.PrefixText // Melee Placement
     @ConfigEntry.Category("melee")
-    public boolean meleeAutoAlign = true;
-    @ConfigEntry.Category("melee")
     public boolean meleeRunAnimation = false;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
@@ -1001,14 +1001,14 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleeSize = 100;
     @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
-    public int meleeDistance = 70;
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeDistance = 0;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
-    public int meleeOffsetX = 22;
+    public int meleeOffsetX = 0;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
-    public int meleeOffsetY = -30;
+    public int meleeOffsetY = 0;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
     public int meleeOffsetZ = 0;

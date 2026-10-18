@@ -173,9 +173,6 @@ public final class GeoModel {
                     float[] uv = cube.uv(face);
                     float[] normal = cube.normal(face);
                     cube.corners(face, corners);
-                    if (cube.rotated) {
-                        rotateCorners(cube, corners);
-                    }
                     GL11.glNormal3f(normal[0], normal[1], normal[2]);
                     emit(corners, 0, uv[0], uv[1]);
                     emit(corners, 1, uv[2], uv[1]);
@@ -192,23 +189,6 @@ public final class GeoModel {
     private static void emit(float[] corners, int corner, float u, float v) {
         GL11.glTexCoord2f(u, v);
         GL11.glVertex3f(corners[corner * 3], corners[corner * 3 + 1], corners[corner * 3 + 2]);
-    }
-
-    /** Applies a cube's own rotation about its own pivot, in place. */
-    private static void rotateCorners(GeoCube cube, float[] corners) {
-        Mat4 m = new Mat4()
-                .translate(cube.pivotX, cube.pivotY, cube.pivotZ)
-                .rotateDeg(cube.rotZ, 0f, 0f, 1f)
-                .rotateDeg(cube.rotY, 0f, 1f, 0f)
-                .rotateDeg(cube.rotX, 1f, 0f, 0f)
-                .translate(-cube.pivotX, -cube.pivotY, -cube.pivotZ);
-        float[] out = new float[3];
-        for (int i = 0; i < 4; i++) {
-            m.transform(corners[i * 3], corners[i * 3 + 1], corners[i * 3 + 2], out);
-            corners[i * 3] = out[0];
-            corners[i * 3 + 1] = out[1];
-            corners[i * 3 + 2] = out[2];
-        }
     }
 
     /** Frees the compiled lists; called when a weapon is unloaded. */
@@ -273,12 +253,11 @@ public final class GeoModel {
         if (nameExclude != null && bone.name.endsWith(nameExclude)) included = false;
         if (included) {
             float[] out = new float[3];
+            float[] corner = new float[3];
             for (GeoCube cube : bone.cubes) {
-                for (int corner = 0; corner < 8; corner++) {
-                    float x = (corner & 1) != 0 ? cube.x1 : cube.x0;
-                    float y = (corner & 4) != 0 ? cube.y1 : cube.y0;
-                    float z = (corner & 2) != 0 ? cube.z1 : cube.z0;
-                    m.transform(x, y, z, out);
+                for (int c = 0; c < 8; c++) {
+                    cube.corner(c, corner);
+                    m.transform(corner[0], corner[1], corner[2], out);
                     for (int k = 0; k < 3; k++) {
                         if (out[k] < box[k]) box[k] = out[k];
                         if (out[k] > box[k + 3]) box[k + 3] = out[k];
@@ -337,12 +316,11 @@ public final class GeoModel {
         float bestDistance = -1f;
         boolean skip = nameExclude != null && bone.name.endsWith(nameExclude);
         if (!skip) {
+            float[] corner = new float[3];
             for (GeoCube cube : bone.cubes) {
-                for (int corner = 0; corner < 8; corner++) {
-                    float x = (corner & 1) != 0 ? cube.x1 : cube.x0;
-                    float y = (corner & 4) != 0 ? cube.y1 : cube.y0;
-                    float z = (corner & 2) != 0 ? cube.z1 : cube.z0;
-                    m.transform(x, y, z, scratch);
+                for (int c = 0; c < 8; c++) {
+                    cube.corner(c, corner);
+                    m.transform(corner[0], corner[1], corner[2], scratch);
                     float dx = scratch[0] - from[0];
                     float dy = scratch[1] - from[1];
                     float dz = scratch[2] - from[2];
@@ -399,6 +377,22 @@ public final class GeoModel {
     public float[] bonePivot(String name) {
         GeoBone bone = byName.get(name);
         return bone == null ? null : new float[]{bone.pivotX, bone.pivotY, bone.pivotZ};
+    }
+
+    /**
+     * A bone's first cube as {@code {minX, minY, minZ, maxX, maxY, maxZ}}, unposed, in model units.
+     *
+     * <p>For the hand markers that box is the whole point: each is a vanilla 4×12×4 arm, shoulder at
+     * the high-Y end and wrist at the low-Y end, which is both where the player's arm goes and the
+     * proof that the pack is authored at a sixteenth of a block per unit. Reading the bone's pivot
+     * instead — which these packs leave at {@code [0, 8, 0]} on every weapon — puts the arm five
+     * units off to one side of the hand it belongs to.
+     */
+    public float[] cubeBox(String name) {
+        GeoBone bone = byName.get(name);
+        if (bone == null || bone.cubes.isEmpty()) return null;
+        GeoCube cube = bone.cubes.get(0);
+        return new float[]{cube.x0, cube.y0, cube.z0, cube.x1, cube.y1, cube.z1};
     }
 
     /** The posed position of a bone's pivot, in model units — used to hang effects off a blade. */

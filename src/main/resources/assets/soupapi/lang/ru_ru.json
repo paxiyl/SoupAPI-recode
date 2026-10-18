@@ -104,8 +104,7 @@
   "text.autoconfig.soupapi.option.weatherChangerEnabled.@PrefixText": "Смена погоды",
   "text.autoconfig.soupapi.option.weatherChangerEnabled": "Включено",
   "text.autoconfig.soupapi.option.weatherType": "Погода",
-  "text.autoconfig.soupapi.option.coloredSkyEnabled.@PrefixText": "Цветное небо",
-  "text.autoconfig.soupapi.option.coloredSkyEnabled": "Включено",
+  "text.autoconfig.soupapi.option.coloredSkyEnabled": "Следовать небу темы",
   "text.autoconfig.soupapi.option.customFogThick": "Плотность",
   "text.autoconfig.soupapi.option.customFogEnabled.@PrefixText": "Туман",
   "text.autoconfig.soupapi.option.customFogEnabled": "Включено",
@@ -417,7 +416,7 @@
   "text.autoconfig.soupapi.option.ambienceUseTheme": "Цвета темы",
   "text.autoconfig.soupapi.option.ambienceColor": "Цвет",
   "text.autoconfig.soupapi.option.coloredSkyColor": "Цвет неба",
-  "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Небо по теме",
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme": "Цвета неба из темы",
   "text.autoconfig.soupapi.option.coloredSkyAlpha": "Непрозрачность неба",
   "text.autoconfig.soupapi.option.meleeSounds": "Звуки анимаций",
   "text.autoconfig.soupapi.option.meleeSoundVolume": "Громкость звуков",
@@ -439,7 +438,7 @@
   "text.autoconfig.soupapi.option.meleeHandsOffsetY": "Смещение рук Y",
   "text.autoconfig.soupapi.option.meleeHandsOffsetZ": "Смещение рук Z",
   "text.autoconfig.soupapi.option.meleeHandsSwing": "Замах рук",
-  "text.autoconfig.soupapi.option.skyStyle": "Стиль неба (Plain = по теме)",
+  "text.autoconfig.soupapi.option.skyStyle": "Узор неба (Plain = выкл. или по теме)",
   "text.autoconfig.soupapi.option.skySpeed": "Скорость неба",
   "text.autoconfig.soupapi.option.skyScale": "Масштаб неба",
   "text.autoconfig.soupapi.option.skyColor2": "Второй цвет неба",
@@ -455,5 +454,8 @@
   "text.autoconfig.soupapi.category.keys": "Клавиши",
   "text.autoconfig.soupapi.option.weapons.carry": "Носимое оружие",
   "text.autoconfig.soupapi.option.weapons.list": "Содержимое пака",
-  "text.autoconfig.soupapi.option.keys.hint": "Нажмите строку, затем клавишу  -  ПКМ для сброса"
+  "text.autoconfig.soupapi.option.keys.hint": "Нажмите строку, затем клавишу  -  ПКМ для сброса",
+  "text.autoconfig.soupapi.category.colored_sky": "Анимированное небо",
+  "text.autoconfig.soupapi.option.skyStyle.@PrefixText": "Анимированное небо",
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Цвета неба"
 }

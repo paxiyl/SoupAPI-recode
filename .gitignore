@@ -12,3 +12,6 @@ eclipse/
 .classpath
 .project
 logs/
+
+# Python bytecode from tools/
+__pycache__/

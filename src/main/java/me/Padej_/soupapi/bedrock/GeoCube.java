@@ -43,6 +43,15 @@ public final class GeoCube {
     public final float pivotX, pivotY, pivotZ;
     public final float rotX, rotY, rotZ;
     public final boolean rotated;
+    /**
+     * The eight corners after this cube's own rotation, as x,y,z triples.
+     *
+     * <p>Built once, and the single source of truth for both drawing and measuring. Keeping two
+     * copies of this maths was a real bug: the draw path rotated the corners and the measure path
+     * did not, so every weapon was sized and centred from a box that was not the shape being drawn —
+     * and with 2,787 rotated cubes in this pack, that is most of them.
+     */
+    private final float[] corners = new float[24];
     /** Per face: u0, v0, u1, v1, already normalised; {@code null} when the face is not textured. */
     private final float[][] faceUv = new float[6][];
 
@@ -73,6 +82,8 @@ public final class GeoCube {
         this.rotY = -rotation[1];
         this.rotZ = rotation[2];
         this.rotated = rotX != 0f || rotY != 0f || rotZ != 0f;
+
+        buildCorners();
 
         JsonElement uv = raw.get("uv");
         if (uv != null && uv.isJsonObject()) {
@@ -112,6 +123,37 @@ public final class GeoCube {
         faceUv[face] = new float[]{u0 / tw, v0 / th, u1 / tw, v1 / th};
     }
 
+    /** Fills {@link #corners} from the box, applying this cube's own rotation about its pivot. */
+    private void buildCorners() {
+        for (int i = 0; i < 8; i++) {
+            corners[i * 3] = (i & 1) != 0 ? x1 : x0;
+            corners[i * 3 + 1] = (i & 4) != 0 ? y1 : y0;
+            corners[i * 3 + 2] = (i & 2) != 0 ? z1 : z0;
+        }
+        if (!rotated) return;
+
+        Mat4 m = new Mat4()
+                .translate(pivotX, pivotY, pivotZ)
+                .rotateDeg(rotZ, 0f, 0f, 1f)
+                .rotateDeg(rotY, 0f, 1f, 0f)
+                .rotateDeg(rotX, 1f, 0f, 0f)
+                .translate(-pivotX, -pivotY, -pivotZ);
+        float[] out = new float[3];
+        for (int i = 0; i < 8; i++) {
+            m.transform(corners[i * 3], corners[i * 3 + 1], corners[i * 3 + 2], out);
+            corners[i * 3] = out[0];
+            corners[i * 3 + 1] = out[1];
+            corners[i * 3 + 2] = out[2];
+        }
+    }
+
+    /** One of the eight rotated corners, written into {@code out}. */
+    public void corner(int index, float[] out) {
+        out[0] = corners[index * 3];
+        out[1] = corners[index * 3 + 1];
+        out[2] = corners[index * 3 + 2];
+    }
+
     public boolean hasFace(int face) {
         return faceUv[face] != null;
     }
@@ -124,14 +166,20 @@ public final class GeoCube {
         return FACE_NORMALS[face];
     }
 
-    /** Writes a face's four corners, in texture order, into {@code out} as x,y,z triples. */
+    /**
+     * Writes a face's four corners, in texture order, into {@code out} as x,y,z triples.
+     *
+     * <p>Read out of {@link #corners}, so the cube's own rotation is already in them. Reading the
+     * box straight off {@code x0..z1} here instead is what drew two thousand seven hundred of this
+     * pack's cubes unrotated — the scattered, broken-looking blades.
+     */
     public void corners(int face, float[] out) {
         int[] indices = FACE_CORNERS[face];
         for (int i = 0; i < 4; i++) {
-            int c = indices[i];
-            out[i * 3] = (c & 1) != 0 ? x1 : x0;
-            out[i * 3 + 1] = (c & 4) != 0 ? y1 : y0;
-            out[i * 3 + 2] = (c & 2) != 0 ? z1 : z0;
+            int c = indices[i] * 3;
+            out[i * 3] = corners[c];
+            out[i * 3 + 1] = corners[c + 1];
+            out[i * 3 + 2] = corners[c + 2];
         }
     }
 

@@ -42,15 +42,18 @@ public final class MeleeThirdPerson extends ConfigurableModule {
             GlStateManager.scale(-1f, -1f, 1f);
             body.bipedRightArm.postRender(0.0625f);
 
-            MeleeWeapon.Fit fit = weapon.fit();
-            float size = CONFIG.meleeSize / 100f * 0.55f;
+            // On the body the weapon is not seen from the eye, so the pack's view anchor is no use:
+            // what has to land in the fist is the grip, and the pack says where that is — the right
+            // hand marker, which the idle pose puts on the handle.
+            float[] grip = weapon.gripPoint();
+            float size = CONFIG.meleeSize / 100f;
             GlStateManager.translate(-0.0625f, 0.45f, 0.0625f);
             GlStateManager.rotate(-90f, 1f, 0f, 0f);
             GlStateManager.rotate(180f, 0f, 1f, 0f);
 
-            float scale = fit.scale * size / 16f;   // always the weapon-only fit here
-            GlStateManager.translate(fit.offsetX * size, fit.offsetY * size, fit.offsetZ * size);
+            float scale = size / 16f;
             GlStateManager.scale(-scale, scale, scale);
+            if (grip != null) GlStateManager.translate(-grip[0], -grip[1], -grip[2]);
 
             model.setHidden(MeleeWeapon.ARM_MESH, true);
             mc.getTextureManager().bindTexture(texture);
