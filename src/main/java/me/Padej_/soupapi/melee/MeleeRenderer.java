@@ -44,10 +44,6 @@ public final class MeleeRenderer extends ConfigurableModule {
 
         MeleeEffects.track(weapon, partialTicks);
 
-        // The player's own arms first, in the view's own frame: they hold the weapon, and nothing
-        // about them touches the weapon's placement.
-        MeleeHands.render(Melee.state().attacking() ? Melee.state().progress() : 0f);
-
         GlStateManager.pushMatrix();
         try {
             GlStateManager.disableCull();           // the X mirror flips the winding
@@ -72,6 +68,10 @@ public final class MeleeRenderer extends ConfigurableModule {
             GlStateManager.depthMask(true);
             mc.getTextureManager().bindTexture(texture);
             model.render(pose);
+
+            // The player's own arms, on the pack's hand bones, inside the same matrix as the
+            // weapon - so they move with the animation and cannot shift the viewmodel.
+            MeleeHands.render(weapon);
 
             if (CONFIG.meleeChroma) chroma(weapon, model, pose, texture);
             if (CONFIG.meleeGlow) glow(weapon, model, pose);

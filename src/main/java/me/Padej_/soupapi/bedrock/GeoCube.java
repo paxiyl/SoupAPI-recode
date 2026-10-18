@@ -63,9 +63,14 @@ public final class GeoCube {
         this.pivotY = pivot[1];
         this.pivotZ = pivot[2];
 
+        // A cube's rotation is stored in the opposite handedness from a bone's: X and Y run the
+        // other way round. Applying a bone's convention to a cube turns every rotated cube the
+        // wrong way about two of its three axes, which is why weapons came out as a scatter of
+        // slabs roughly where the weapon should be. Verified against the pack's own item icons:
+        // with X and Y negated the models match them, and with any other combination they do not.
         float[] rotation = vec3(raw.get("rotation"), 0f);
-        this.rotX = rotation[0];
-        this.rotY = rotation[1];
+        this.rotX = -rotation[0];
+        this.rotY = -rotation[1];
         this.rotZ = rotation[2];
         this.rotated = rotX != 0f || rotY != 0f || rotZ != 0f;
 

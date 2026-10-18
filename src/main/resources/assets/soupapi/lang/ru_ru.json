@@ -444,5 +444,11 @@
   "text.autoconfig.soupapi.option.skyScale": "Масштаб неба",
   "text.autoconfig.soupapi.option.skyColor2": "Второй цвет неба",
   "text.autoconfig.soupapi.option.skyDarkColor": "Ночной цвет неба",
-  "text.autoconfig.soupapi.option.skyStars": "Звёзды"
+  "text.autoconfig.soupapi.option.skyStars": "Звёзды",
+  "text.autoconfig.soupapi.option.presetStyle.@PrefixText": "Пресет",
+  "text.autoconfig.soupapi.option.presetStyle": "Пресет",
+  "text.autoconfig.soupapi.option.applyPreset_BUTTON": "Применить пресет",
+  "text.autoconfig.soupapi.option.meleeComboWindow": "Окно комбо",
+  "text.autoconfig.soupapi.option.meleeHandsScale": "Размер рук",
+  "text.autoconfig.soupapi.option.meleeHandsYaw": "Поворот рук"
 }

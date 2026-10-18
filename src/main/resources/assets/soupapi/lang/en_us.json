@@ -444,5 +444,11 @@
   "text.autoconfig.soupapi.option.skyScale": "Sky Scale",
   "text.autoconfig.soupapi.option.skyColor2": "Sky Second Color",
   "text.autoconfig.soupapi.option.skyDarkColor": "Sky Night Color",
-  "text.autoconfig.soupapi.option.skyStars": "Sky Stars"
+  "text.autoconfig.soupapi.option.skyStars": "Sky Stars",
+  "text.autoconfig.soupapi.option.presetStyle.@PrefixText": "Preset",
+  "text.autoconfig.soupapi.option.presetStyle": "Preset",
+  "text.autoconfig.soupapi.option.applyPreset_BUTTON": "Apply Preset",
+  "text.autoconfig.soupapi.option.meleeComboWindow": "Combo Window",
+  "text.autoconfig.soupapi.option.meleeHandsScale": "Hands Size",
+  "text.autoconfig.soupapi.option.meleeHandsYaw": "Hands Yaw"
 }

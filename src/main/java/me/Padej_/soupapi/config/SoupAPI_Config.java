@@ -52,6 +52,13 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("main")
     public int waterMarkY = 20;
 
+    @ConfigEntry.Gui.PrefixText // Preset
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.config.Preset presetStyle = me.Padej_.soupapi.config.Preset.NONE;
+    @ConfigEntry.Category("main")
+    public boolean applyPreset_BUTTON = false;
+
     @ConfigEntry.Gui.PrefixText // Theme
     @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
@@ -68,7 +75,7 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("main")
     public boolean themeVisuals = true;
     @ConfigEntry.Category("main")
-    public boolean themeWorld = false;
+    public boolean themeWorld = true;
     @ConfigEntry.Category("main")
     public boolean themeAmbience = true;
     @ConfigEntry.Category("main")
@@ -951,14 +958,14 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("melee")
     public boolean meleeLeftHand = true;
     @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
-    public int meleeHandsReach = 100;
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
+    public int meleeHandsScale = 100;
     @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
-    public int meleeHandsSpread = 100;
-    @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = -60, max = 60)
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
     public int meleeHandsPitch = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeHandsYaw = 0;
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
     public int meleeHandsOffsetX = 0;
@@ -968,9 +975,6 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
     public int meleeHandsOffsetZ = 0;
-    @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
-    public int meleeHandsSwing = 100;
     @ConfigEntry.Category("melee")
     public boolean resetMeleePlacement_BUTTON = false;
     @ConfigEntry.Category("melee")
@@ -984,6 +988,9 @@ public class SoupAPI_Config implements ConfigData {
     public boolean meleeAutoAlign = true;
     @ConfigEntry.Category("melee")
     public boolean meleeRunAnimation = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int meleeComboWindow = 30;
     @ConfigEntry.Category("melee")
     public String[] meleePlacements = new String[0];
     @ConfigEntry.Category("melee")

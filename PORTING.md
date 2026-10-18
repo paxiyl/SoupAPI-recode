@@ -110,6 +110,76 @@ These depend on game content or engine structure that 1.8.9 does not have:
 | `CustomPhysicParticle` / the `star` particle type | Removed: 1.8.9 has no particle registry, and nothing ever spawned it upstream |
 | Discord rich presence on Android/Pojav | No `discord-rpc` native exists for Android and the Discord app exposes no IPC socket; the module disables itself there instead of crashing (see below) |
 
+## The models: a cube's rotation is not a bone's
+
+The weapons were still wrong, and the reason was one sign.
+
+A Bedrock model stores a rotation on each bone and, separately, a rotation on each cube — and the
+two are in **opposite handedness**. A bone's X and Y read as written; a cube's do not. Applying the
+bone convention to cubes turns every rotated cube the wrong way about two of its three axes, which
+leaves a weapon as a scatter of slabs roughly where the weapon should be: the silhouette is about
+right, every piece inside it is not.
+
+It was settled against ground truth rather than guessed. The pack ships a rendered icon of each
+weapon in `textures/melee/slot/`, so the model can be drawn from the bind pose and put next to the
+picture the artist made of it. With X and Y negated on cube rotations only, the Creed's finger
+holes, serrated spine and red inlays all land where the icon has them; Sea Gleam reads as the hammer
+it is; Mercy's curved blade and brass fittings line up. Under any other combination they do not.
+
+Bone rotations were checked the same way, numerically: for each weapon, under each convention, the
+gap between the fist and the nearest point of the weapon. Unchanged signs win on eight of eleven
+weapons and by a wide margin on the clear ones — the hand holds the grip. So bones keep their signs
+and cubes are negated, which is the one combination that satisfies both tests.
+
+**On converting to OBJ:** it would not help, and would cost the animations. An OBJ is triangles and
+nothing else — no bones, no pivots, no hierarchy — and every one of these animations is a list of
+rotations *per bone*. Converting would throw away the only thing the clips can be applied to. The
+cube format was never the problem; one sign in how it was read was.
+
+## Hands that move with the weapon
+
+The arms are hung off the pack's own hand bones now. The mesh stays off — it is posed around an
+anchor this port cannot reuse — but the **bones** {@code lefthand_pos} and {@code righthand_pos} are
+animated by every clip whether their mesh is drawn or not, so the player's own arm placed on that
+matrix moves exactly with the animation instead of sitting still under a weapon that is swinging.
+Their model, their skin, their arm width. Drawn inside the weapon's own matrix, so switching them on
+cannot move the viewmodel.
+
+## Spam-clicking keeps swinging
+
+Two sources now, because neither alone is enough: the attack key's own edge, which catches a click
+while an animation is already running, and the vanilla swing flag, which catches a hit made some
+other way. A click landing mid-swing is held rather than dropped and spends itself as soon as the
+current swing is far enough through — `Combo Window`, 30% by default — so spamming or holding the
+button keeps the weapon swinging instead of playing one animation and ignoring the rest.
+
+## Why the animated skies did nothing
+
+They were gated behind Colored Sky being switched on, and Theme Sky &amp; Fog — which is what
+switches that on — was off by default. So picking a sky style changed nothing and there was no way
+to tell why. Picking a sky is enough to get a sky now, and a theme brings its world by default,
+which is most of what made every theme feel like the same theme.
+
+## Presets
+
+Every option ships off, which is right for a mod that replaces your hand and paints the sky, and a
+poor first impression: turn it on and nothing happens, then turn on six things and it looks like a
+mess. Twelve presets — PvP, PvP with the weapon, Showcase, Matrix, Winter, Inferno, Abyss,
+Vaporwave, Occult, Performance, Everything — each switching on a set chosen to work together, and
+switching the rest **off**, which is the part that matters.
+
+A preset owns the visual state and nothing else: not the friends list, the capes, the HUD layout,
+which weapon is carried, which weapons are switched off, or the saved per-weapon placements.
+
+The first version named the fields it reset, which is how it went wrong: the list missed a dozen
+style enums and every melee slider, so the same preset over two different configs gave two different
+results — the complaint exactly. It resets by a rule now, and a probe applies each preset twice,
+once over defaults and once over a deliberately messy config, and fails if the two differ.
+
+**Every toggle was audited** for a live code path: of forty-one, exactly one does nothing, and that
+is the Totem shader, which cannot work on a version with no Totem of Undying and is already marked
+unavailable in the settings with that reason.
+
 ## Two weapons were drawn with their biggest piece missing
 
 The arms in these packs are the bones `lefthand_pos` and `righthand_pos`. They were matched by

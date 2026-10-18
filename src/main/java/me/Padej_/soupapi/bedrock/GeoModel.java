@@ -369,6 +369,38 @@ public final class GeoModel {
         return best;
     }
 
+    /**
+     * The posed transform of a bone, in model units.
+     *
+     * <p>This is what lets the player's own arm be hung off the pack's hand bone: the pack animates
+     * {@code righthand_pos} whether or not its mesh is drawn, so an arm placed on that matrix moves
+     * with the animation exactly, instead of being a static prop under a moving weapon.
+     */
+    public Mat4 boneMatrix(String name, GeoPose pose) {
+        GeoBone bone = byName.get(name);
+        if (bone == null) return null;
+        List<GeoBone> chain = new ArrayList<GeoBone>();
+        for (GeoBone b = bone; b != null; b = b.parent) chain.add(0, b);
+        Mat4 m = new Mat4();
+        for (GeoBone b : chain) {
+            int i = b.index;
+            m.translate(pose.posX(i), pose.posY(i), pose.posZ(i))
+                    .translate(b.pivotX, b.pivotY, b.pivotZ)
+                    .rotateDeg(b.rotZ + pose.rotZ(i), 0f, 0f, 1f)
+                    .rotateDeg(b.rotY + pose.rotY(i), 0f, 1f, 0f)
+                    .rotateDeg(b.rotX + pose.rotX(i), 1f, 0f, 0f)
+                    .scale(pose.scaleX(i), pose.scaleY(i), pose.scaleZ(i))
+                    .translate(-b.pivotX, -b.pivotY, -b.pivotZ);
+        }
+        return m;
+    }
+
+    /** The pivot of a bone in its own model space, unposed. */
+    public float[] bonePivot(String name) {
+        GeoBone bone = byName.get(name);
+        return bone == null ? null : new float[]{bone.pivotX, bone.pivotY, bone.pivotZ};
+    }
+
     /** The posed position of a bone's pivot, in model units — used to hang effects off a blade. */
     public boolean pivotOf(String name, GeoPose pose, float[] out) {
         GeoBone bone = byName.get(name);

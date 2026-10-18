@@ -255,6 +255,15 @@ public final class ConfigSchema {
         if ("rescanMeleePacks_BUTTON".equals(fieldName)) {
             return me.Padej_.soupapi.melee.MeleePack::rescan;
         }
+        if ("applyPreset_BUTTON".equals(fieldName)) {
+            // Switches a whole set on and everything else off, so a preset is the same for
+            // everyone who picks it rather than whatever was already set plus a few more things.
+            return () -> {
+                SoupAPI_Config config = SoupAPI.configHolder.get();
+                config.presetStyle.apply(config);
+                save();
+            };
+        }
         if ("resetMeleePlacement_BUTTON".equals(fieldName)) {
             return () -> {
                 me.Padej_.soupapi.melee.MeleePlacement.reset();

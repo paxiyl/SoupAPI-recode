@@ -108,7 +108,8 @@ public final class MeleeState {
     public boolean canAttack() {
         if (main.clip == null) return true;
         if (!attacking()) return true;
-        return progress() >= 0.45f;
+        return progress() >= Math.max(0.05f,
+                ConfigurableModule.CONFIG.meleeComboWindow / 100f);
     }
 
     public boolean inspecting() {

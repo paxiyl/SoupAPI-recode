@@ -33,14 +33,14 @@ public class ColoredSky extends ConfigurableModule {
     public static void render() {
         // A theme that only recolours the HUD barely registers when a texture pack owns the sky,
         // so Theme Sky & Fog switches this on for you when a theme is picked.
-        if (!CONFIG.coloredSkyEnabled) return;
         if (mc.theWorld == null) return;
 
-        // A moving sky replaces the flat tint entirely.
-        if (AnimatedSky.style() != me.Padej_.soupapi.utils.SkyStyle.PLAIN) {
+        // A moving sky replaces the flat tint entirely, and needs no other switch to be on.
+        if (AnimatedSky.active()) {
             AnimatedSky.render();
             return;
         }
+        if (!CONFIG.coloredSkyEnabled) return;
 
         Color colour = CONFIG.coloredSkyUseTheme
                 ? Palette.getColor(0f) : new Color(CONFIG.coloredSkyColor);

@@ -30,6 +30,9 @@ public final class Melee extends ConfigurableModule {
     private static final MeleeState STATE = new MeleeState();
     private static Thread loader;
     private static boolean swinging;
+    private static boolean attackHeld;
+    /** A click that arrived mid-swing, waiting for the swing to be far enough through. */
+    private static boolean queuedAttack;
     private static long lastFrame;
     /** Seconds the current weapon has been held, for the effects that build up while idle. */
     private static float held;
@@ -196,15 +199,38 @@ public final class Melee extends ConfigurableModule {
         }
     }
 
-    /** Fires an attack animation on the rising edge of the player's swing. */
+    /**
+     * Keeps the attack animation in step with the clicks.
+     *
+     * <p>Two sources, because neither alone is enough: the attack key's own edge, which catches a
+     * click even while an animation is running, and the vanilla swing flag, which catches a hit
+     * made some other way. A click that lands mid-swing is held rather than dropped and spends
+     * itself the moment the current swing is far enough through, so holding or spamming the button
+     * keeps the weapon swinging instead of playing one animation and ignoring the rest.
+     */
     private static void swing() {
-        boolean now = mc.thePlayer.isSwingInProgress;
-        if (now && !swinging && STATE.canAttack()) {
+        boolean key = false;
+        try {
+            key = mc.gameSettings.keyBindAttack.isKeyDown() && mc.currentScreen == null;
+        } catch (Throwable ignored) {
+            // PojavLauncher's input stub does not implement every query.
+        }
+        boolean vanilla = mc.thePlayer.isSwingInProgress;
+
+        boolean clicked = (key && !attackHeld) || (vanilla && !swinging);
+        attackHeld = key;
+        swinging = vanilla;
+
+        if (clicked) queuedAttack = true;
+        // Holding the button keeps attacking, the way the vanilla swing does.
+        if (key && !STATE.attacking()) queuedAttack = true;
+
+        if (queuedAttack && STATE.canAttack()) {
+            queuedAttack = false;
             if (STATE.inspecting()) STATE.cancel();
             STATE.attack();
             MeleeEffects.onSwing();
         }
-        swinging = now;
     }
 
     /** Advances the animation by real time, so a swing reads the same at any frame rate. */

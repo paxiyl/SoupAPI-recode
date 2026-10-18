@@ -37,9 +37,17 @@ public class AnimatedSky extends ConfigurableModule {
 
     /** The style to draw: the player's choice, or the theme's. */
     public static SkyStyle style() {
-        if (!CONFIG.coloredSkyEnabled) return SkyStyle.PLAIN;
+        // Picking a sky is enough to get a sky. The first version only looked at this when Colored
+        // Sky was switched on, and Theme Sky & Fog - which switches that on - was off by default,
+        // so choosing a style did nothing at all and there was no way to tell why.
         if (CONFIG.skyStyle != SkyStyle.PLAIN) return CONFIG.skyStyle;
+        if (!CONFIG.coloredSkyEnabled) return SkyStyle.PLAIN;
         return Themes.skyStyle();
+    }
+
+    /** True when the sky pass has something to draw, whatever Colored Sky is set to. */
+    public static boolean active() {
+        return style() != SkyStyle.PLAIN;
     }
 
     public static void render() {
