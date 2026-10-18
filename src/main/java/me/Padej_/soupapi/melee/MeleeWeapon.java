@@ -186,7 +186,7 @@ public final class MeleeWeapon {
      * <p>The marker is an arm box with the shoulder at the high-Y end, so the wrist — the point the
      * hand actually closes around the weapon at — is the middle of its low-Y face.
      */
-    static float[] wristOf(GeoModel model, GeoPose pose, String bone) {
+    public static float[] wristOf(GeoModel model, GeoPose pose, String bone) {
         float[] box = model.cubeBox(bone);
         if (box == null) return null;
         me.Padej_.soupapi.bedrock.Mat4 matrix = model.boneMatrix(bone, pose);

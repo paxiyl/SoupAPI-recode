@@ -963,12 +963,6 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
     public int meleeHandsScale = 100;
     @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
-    public int meleeHandsPitch = 0;
-    @ConfigEntry.Category("melee")
-    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
-    public int meleeHandsYaw = 0;
-    @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
     public int meleeHandsOffsetX = 0;
     @ConfigEntry.Category("melee")

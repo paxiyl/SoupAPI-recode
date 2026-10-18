@@ -2,6 +2,7 @@ package me.Padej_.soupapi.melee;
 
 import me.Padej_.soupapi.bedrock.GeoModel;
 import me.Padej_.soupapi.bedrock.GeoPose;
+import me.Padej_.soupapi.bedrock.Mat4;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
@@ -12,7 +13,10 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
+import org.lwjgl.BufferUtils;
+
 import java.awt.Color;
+import java.nio.FloatBuffer;
 
 /**
  * Draws the carried weapon in place of the first-person hand.
@@ -26,6 +30,8 @@ import java.awt.Color;
  * gl4es that difference is the difference between the effects being usable and not.
  */
 public final class MeleeRenderer extends ConfigurableModule {
+
+    private static final FloatBuffer MATRIX = BufferUtils.createFloatBuffer(16);
 
     private MeleeRenderer() {
     }
@@ -44,6 +50,10 @@ public final class MeleeRenderer extends ConfigurableModule {
 
         MeleeEffects.track(weapon, partialTicks);
 
+        // One matrix, built once: pushed onto GL for the weapon, handed to MeleeHands so it can
+        // work out where in the view the grip ended up.
+        Mat4 view = placement(weapon, partialTicks);
+
         GlStateManager.pushMatrix();
         try {
             GlStateManager.disableCull();           // the X mirror flips the winding
@@ -51,7 +61,10 @@ public final class MeleeRenderer extends ConfigurableModule {
             GlStateManager.enableAlpha();
             RenderHelper.enableStandardItemLighting();
 
-            place(weapon, partialTicks);
+            MATRIX.clear();
+            MATRIX.put(view.m);
+            MATRIX.flip();
+            GL11.glMultMatrix(MATRIX);
 
             // Anything additive that should sit *behind* the weapon is drawn first, without
             // writing depth; the textured pass then covers the middle of it and only what sticks
@@ -72,10 +85,6 @@ public final class MeleeRenderer extends ConfigurableModule {
             mc.getTextureManager().bindTexture(texture);
             model.render(pose);
 
-            // The player's own arms, on the pack's hand bones, inside the same matrix as the
-            // weapon - so they move with the animation and cannot shift the viewmodel.
-            MeleeHands.render(weapon);
-
             if (CONFIG.meleeChroma) chroma(weapon, model, pose, texture);
             if (CONFIG.meleeGlow) glow(weapon, model, pose);
             MeleeEffects.render(weapon, partialTicks);
@@ -90,46 +99,57 @@ public final class MeleeRenderer extends ConfigurableModule {
             me.Padej_.soupapi.compat.RenderSystem.restoreDefaults();
             GlStateManager.popMatrix();
         }
+
+        // The arms are drawn outside that matrix, in the view, because they are not placed by the
+        // pack at all - only their target is. See MeleeHands.
+        MeleeHands.render(weapon, view);
         return true;
     }
 
     /**
-     * Puts the matrix where the model should be drawn, including bob, sway and the kick.
+     * The transform from the model's own units into view space.
      *
-     * <p>The whole placement is four lines: mirror X, scale model units to blocks, and move the
-     * pack's own view anchor onto the camera. Everything else here is something the player asked
-     * for. The sliders start at zero on purpose — out of the box the weapon sits exactly where the
-     * pack puts it, which is where its hands are.
+     * <p>Built as a matrix rather than pushed straight onto the GL stack because the arms need the
+     * same transform: {@link MeleeHands} aims each arm at a point on the weapon, and to do that it
+     * has to put a model-space point into view space itself. One matrix, used twice, so the two
+     * cannot drift apart.
+     *
+     * <p>The placement proper is three lines: mirror X, scale model units to blocks, and move the
+     * pack's own view anchor onto the camera. Everything else is something the player asked for.
+     * The sliders start at zero on purpose — out of the box the weapon sits where the pack puts it.
      */
-    private static void place(MeleeWeapon weapon, float partialTicks) {
+    public static Mat4 placement(MeleeWeapon weapon, float partialTicks) {
         MeleeWeapon.Fit fit = weapon.fit();
         MeleePlacement.Values placement = MeleePlacement.of(weapon);
         float size = placement.size / 100f;
+        Mat4 m = new Mat4();
 
-        if (CONFIG.meleeBob) bob(partialTicks);
-        if (CONFIG.meleeSway) sway();
+        if (CONFIG.meleeBob) bob(m, partialTicks);
+        if (CONFIG.meleeSway) sway(m);
 
         // Nudges, in hundredths of a block, on top of the pack's own placement.
-        GlStateManager.translate(
+        m.translate(
                 placement.offsetX / 100f,
                 placement.offsetY / 100f,
                 (placement.offsetZ - placement.distance) / 100f);
 
         // Turns about the eye, which is where the player is looking from, so a pitch or a yaw here
         // swings the weapon across the view rather than tumbling it about its own middle.
-        if (placement.yaw != 0) GlStateManager.rotate(placement.yaw, 0f, 1f, 0f);
-        if (placement.pitch != 0) GlStateManager.rotate(placement.pitch, 1f, 0f, 0f);
-        if (placement.roll != 0) GlStateManager.rotate(placement.roll, 0f, 0f, 1f);
+        m.rotateDeg(placement.yaw, 0f, 1f, 0f);
+        m.rotateDeg(placement.pitch, 1f, 0f, 0f);
+        m.rotateDeg(placement.roll, 0f, 0f, 1f);
 
-        shake(weapon);
+        shake(m, weapon);
 
-        // Model units to blocks, mirrored in X: the pack holds the weapon in the left of its own
-        // space and the player holds it in the right of theirs.
+        // Model units to blocks, mirrored in X: the pack holds the weapon on the left of its own
+        // space and the player holds it on the right of theirs. Checked by where the hand markers
+        // land - mirrored, the right hand is right of centre and the left hand left of it.
         float scale = size / 16f;
-        GlStateManager.scale(-scale, scale, scale);
+        m.scale(-scale, scale, scale);
 
         // And the pack's view anchor onto the camera.
-        GlStateManager.translate(-fit.eyeX, -fit.eyeY, -fit.eyeZ);
+        m.translate(-fit.eyeX, -fit.eyeY, -fit.eyeZ);
+        return m;
     }
 
     /**
@@ -140,7 +160,7 @@ public final class MeleeRenderer extends ConfigurableModule {
      * the shake cannot be put back into the camera from here — but rotating the weapon by the same
      * amount reads as the same kick, and it cannot make the player motion-sick on a phone.
      */
-    private static void shake(MeleeWeapon weapon) {
+    private static void shake(Mat4 m, MeleeWeapon weapon) {
         if (CONFIG.meleeCameraShake <= 0) return;
         GeoModel model = weapon.model();
         GeoPose pose = weapon.pose();
@@ -148,28 +168,28 @@ public final class MeleeRenderer extends ConfigurableModule {
         if (camera == null) return;
         float strength = CONFIG.meleeCameraShake / 100f;
         int i = camera.index();
-        GlStateManager.rotate(pose.rotZ(i) * strength, 0f, 0f, 1f);
-        GlStateManager.rotate(pose.rotY(i) * strength, 0f, 1f, 0f);
-        GlStateManager.rotate(pose.rotX(i) * strength, 1f, 0f, 0f);
-        GlStateManager.translate(
+        m.rotateDeg(pose.rotZ(i) * strength, 0f, 0f, 1f);
+        m.rotateDeg(pose.rotY(i) * strength, 0f, 1f, 0f);
+        m.rotateDeg(pose.rotX(i) * strength, 1f, 0f, 0f);
+        m.translate(
                 pose.posX(i) * strength / 64f,
                 pose.posY(i) * strength / 64f,
                 pose.posZ(i) * strength / 64f);
     }
 
-    private static void bob(float partialTicks) {
-        if (mc.thePlayer == null) return;
+    private static void bob(Mat4 m, float partialTicks) {
+        if (mc == null || mc.thePlayer == null) return;
         float distance = mc.thePlayer.distanceWalkedModified
                 - mc.thePlayer.prevDistanceWalkedModified;
         float walked = -(mc.thePlayer.distanceWalkedModified + distance * partialTicks);
         float amount = (mc.thePlayer.prevCameraYaw
                 + (mc.thePlayer.cameraYaw - mc.thePlayer.prevCameraYaw) * partialTicks);
         float strength = CONFIG.meleeBobStrength / 100f;
-        GlStateManager.translate(
+        m.translate(
                 MathUtility.sin(walked * (float) Math.PI) * amount * 0.5f * strength,
                 -Math.abs(MathUtility.cos(walked * (float) Math.PI) * amount) * strength,
                 0f);
-        GlStateManager.rotate(MathUtility.sin(walked * (float) Math.PI) * amount * 3f * strength,
+        m.rotateDeg(MathUtility.sin(walked * (float) Math.PI) * amount * 3f * strength,
                 0f, 0f, 1f);
     }
 
@@ -177,16 +197,16 @@ public final class MeleeRenderer extends ConfigurableModule {
     private static float swayPitch;
 
     /** Lags the weapon behind the view, the way a heavy thing in a hand would. */
-    private static void sway() {
-        if (mc.thePlayer == null) return;
+    private static void sway(Mat4 m) {
+        if (mc == null || mc.thePlayer == null) return;
         float yawDelta = MathUtility.wrapDegrees(mc.thePlayer.rotationYaw - mc.thePlayer.prevRotationYaw);
         float pitchDelta = mc.thePlayer.rotationPitch - mc.thePlayer.prevRotationPitch;
         float strength = CONFIG.meleeSwayStrength / 100f;
         swayYaw += (Math.max(-12f, Math.min(12f, yawDelta)) - swayYaw) * 0.25f;
         swayPitch += (Math.max(-12f, Math.min(12f, pitchDelta)) - swayPitch) * 0.25f;
-        GlStateManager.translate(swayYaw * 0.004f * strength, swayPitch * 0.004f * strength, 0f);
-        GlStateManager.rotate(-swayYaw * 0.35f * strength, 0f, 1f, 0f);
-        GlStateManager.rotate(-swayPitch * 0.35f * strength, 1f, 0f, 0f);
+        m.translate(swayYaw * 0.004f * strength, swayPitch * 0.004f * strength, 0f);
+        m.rotateDeg(-swayYaw * 0.35f * strength, 0f, 1f, 0f);
+        m.rotateDeg(-swayPitch * 0.35f * strength, 1f, 0f, 0f);
     }
 
     // ---- the extra passes ------------------------------------------------------------------

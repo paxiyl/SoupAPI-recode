@@ -8,13 +8,16 @@ anchor below was checked across all eleven weapons at once.
 
 They are kept because the next pack that renders wrong is quicker to diagnose here than in game.
 
+    python3 -I firstperson.py <unpacked-pack-root> out.png [clip] [time]
     python3 -I fp.py <unpacked-pack-root> out.png [clip] [time]
     python3 -I render.py <unpacked-pack-root> <weapon> <clip> <time> out.png [yaw pitch]
 
-`fp.py` draws every weapon in a pack as a first-person contact sheet, placed the way the mod places
-it. `render.py` draws one weapon from a chosen angle. `bedrock.py` is the parser and the pose
-evaluator, and it is the file to keep in step with the Java: a convention that differs between the
-two means one of them is drawing a shape the other never sees.
+`firstperson.py` draws every weapon in a pack the way the mod draws it: the weapon on the pack's own
+anchor, the arms aimed from Minecraft's shoulder (`armaim.py` holds that shoulder and the arm box).
+`fp.py` is the same view with the pack's raw hand markers drawn instead of arms, which is what shows
+you where the pack thinks the hands are. `render.py` draws one weapon from a chosen angle.
+`bedrock.py` is the parser and the pose evaluator, and it is the file to keep in step with the Java:
+a convention that differs between the two means one of them is drawing a shape the other never sees.
 
 The pack root is the unpacked pack — the folder holding `assets/` and `gunpack.meta.json`. Nothing
 here reads the mod or the game; it only needs `numpy` and `pillow`.
@@ -30,3 +33,8 @@ here reads the mod or the game; it only needs `numpy` and `pillow`.
   this pack puts its right wrist 0.5 to 1.1 blocks below the eye and 1.1 to 1.7 in front of it.
   `camera` is a shake anchor, not a position: its pivot differs by sixty units between weapons in
   the same pack, and the animations only ever move it by a degree or two.
+- The hand markers are **not** arms you can draw a player's arm into. The pack's shoulder sits 0.58
+  of a block higher than Minecraft's, at eye level, with the arm reaching down. Pinning the marker
+  onto vanilla's arm drops the weapon off the bottom of the screen; drawing an arm in the marker
+  where it lies grows one out of the middle of the view. Only the marker's wrist end is used, as the
+  point the arm is aimed at.
