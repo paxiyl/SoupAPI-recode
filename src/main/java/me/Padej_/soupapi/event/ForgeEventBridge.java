@@ -343,6 +343,11 @@ public final class ForgeEventBridge {
     @SubscribeEvent
     public void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
         AspectRatio.applyToProjection();
+        // The carried weapon's swing bakes its recoil into a "camera" bone; apply it to the real
+        // camera here, the way the pack's own renderer does, so it reads as a kick.
+        if (me.Padej_.soupapi.config.ConfigurableModule.CONFIG.meleeEnabled) {
+            guard("Melee.cameraShake", () -> me.Padej_.soupapi.melee.MeleeRenderer.applyCameraShake(event));
+        }
     }
 
     // ---- overlays --------------------------------------------------------------------------

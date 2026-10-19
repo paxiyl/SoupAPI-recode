@@ -33,7 +33,17 @@ public class AnimatedSky extends ConfigurableModule {
 
     private static final int COLUMNS = 40;
     private static final int ROWS = 24;
-    private static final float FAR = 0.9998f;
+    /**
+     * The depth to draw the sky grid at, in the ortho set up below.
+     *
+     * <p>With {@code glOrtho(0,1,1,0,-1,1)} a vertex z maps to window depth {@code (-z + 1) / 2}, so
+     * a <em>negative</em> z sits at the far plane (depth ≈ 1) and a positive one at the near plane.
+     * This was {@code +0.9998}, which put the whole grid at the near plane; paired with
+     * {@code GL_GEQUAL} the test then passed almost nowhere and the sky never drew. It belongs at the
+     * far plane with {@code GL_LEQUAL}, the standard skybox test: it paints the pixels the world left
+     * at the cleared far depth — the sky, sun and clouds — and is rejected over nearer terrain.
+     */
+    private static final float FAR = -0.9998f;
 
     /** The style to draw: the player's choice, or the theme's. */
     public static SkyStyle style() {
@@ -77,7 +87,7 @@ public class AnimatedSky extends ConfigurableModule {
             RenderSystem.defaultBlendFunc();
             RenderSystem.depthMask(false);
             RenderSystem.enableDepthTest();
-            GlStateManager.depthFunc(GL11.GL_GEQUAL);
+            GlStateManager.depthFunc(GL11.GL_LEQUAL);
             RenderSystem.setShader(ShaderKey.POSITION_COLOR);
 
             BufferBuilder buffer = Tessellator.getInstance()

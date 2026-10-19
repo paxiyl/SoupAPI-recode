@@ -28,14 +28,17 @@ public final class GeoBone {
         this.parentName = raw.has("parent") && !raw.get("parent").isJsonNull()
                 ? raw.get("parent").getAsString() : null;
 
+        // Bedrock → Java space, the same mapping the pack's own renderer uses: pivot X is mirrored,
+        // and the rest rotation negates X and Y. The cubes are mirrored the same way in GeoCube, so
+        // the whole model is drawn with no runtime X flip.
         float[] pivot = GeoCube.vec3(raw.get("pivot"), 0f);
-        this.pivotX = pivot[0];
+        this.pivotX = -pivot[0];
         this.pivotY = pivot[1];
         this.pivotZ = pivot[2];
 
         float[] rotation = GeoCube.vec3(raw.get("rotation"), 0f);
-        this.rotX = rotation[0];
-        this.rotY = rotation[1];
+        this.rotX = -rotation[0];
+        this.rotY = -rotation[1];
         this.rotZ = rotation[2];
 
         if (raw.has("cubes") && raw.get("cubes").isJsonArray()) {

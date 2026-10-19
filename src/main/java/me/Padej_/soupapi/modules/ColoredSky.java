@@ -27,8 +27,12 @@ import java.awt.Color;
  */
 public class ColoredSky extends ConfigurableModule {
 
-    /** Depth the quad sits at, just inside the far plane so float comparison is safe. */
-    private static final float FAR = 0.9998f;
+    /**
+     * Depth the quad sits at. In the ortho below, window depth is {@code (-z + 1) / 2}, so a
+     * negative z lands at the far plane (≈ 1). It was {@code +0.9998}, i.e. the near plane, which
+     * with {@code GL_GEQUAL} rejected the quad over the whole sky — the tint never showed.
+     */
+    private static final float FAR = -0.9998f;
 
     public static void render() {
         // A theme that only recolours the HUD barely registers when a texture pack owns the sky,
@@ -58,7 +62,7 @@ public class ColoredSky extends ConfigurableModule {
             RenderSystem.defaultBlendFunc();
             RenderSystem.depthMask(false);
             RenderSystem.enableDepthTest();
-            GlStateManager.depthFunc(GL11.GL_GEQUAL);
+            GlStateManager.depthFunc(GL11.GL_LEQUAL);
             RenderSystem.setShader(ShaderKey.POSITION_COLOR);
 
             BufferBuilder buffer = Tessellator.getInstance()

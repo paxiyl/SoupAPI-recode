@@ -1,14 +1,12 @@
 package me.Padej_.soupapi.melee;
 
 import me.Padej_.soupapi.bedrock.GeoModel;
-import me.Padej_.soupapi.bedrock.GeoPose;
 import me.Padej_.soupapi.bedrock.Mat4;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.model.ModelPlayer;
-import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.entity.player.EnumPlayerModelParts;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -16,139 +14,110 @@ import org.lwjgl.opengl.GL11;
 import java.nio.FloatBuffer;
 
 /**
- * The player's own arms, dropped into the pack's hand markers.
+ * The player's own arms, drawn to fill the pack's hand-marker boxes.
  *
- * <p>The packs carry no arm artwork. What {@code lefthand_pos} and {@code righthand_pos} hold is a
- * single untextured box each, twelve units long and four across, shoulder at the high-Y end — a
- * vanilla player arm, to the unit. The mod they were built for reads those as "put the player's arm
- * here", and so does this: the marker stays hidden and the player's own limb is drawn into it, with
- * their skin and their arm width, animated by whatever clip is playing because the pack animates
- * those bones in every one.
- *
- * <p>These markers sit a long way from where 1.8.9 puts a first-person arm — the pack's shoulder is
- * up at eye level, 0.58 of a block above vanilla's, with the arm reaching down to a grip near the
- * waist rather than up from below. That reads as wrong on paper, and a version of this file aimed a
- * thin arm from vanilla's shoulder at the pack's wrist instead. It was wrong: measured off the
- * source mod's own footage, the arms really are these markers, drawn full size, filling the lower
- * corners of the view. Nine of them land within about a tenth of the screen of where the footage
- * puts them. The pack is right and vanilla's arm is not the reference here.
- *
- * <p>Drawn inside the weapon's own matrix, so nothing here can move the viewmodel.
+ * <p>The markers {@code righthand_pos} / {@code lefthand_pos} are vanilla 4×12×4 arm boxes placed
+ * (and animated) by the pack exactly where the player's hand goes. The pack's own renderer draws a
+ * vanilla player arm into each box with the standard 64×64 skin layout, and this does the same:
+ * one arm box per marker, in the marker's posed space ({@code view · global(marker)}), so the arm
+ * tracks the swing and sits in the hand. Ported straight from that renderer.
  */
 public final class MeleeHands extends ConfigurableModule {
 
     private static final FloatBuffer MATRIX = BufferUtils.createFloatBuffer(16);
-    private static ModelPlayer wide;
-    private static ModelPlayer slim;
 
     private MeleeHands() {
     }
 
-    private static ModelPlayer model(boolean thin) {
-        if (thin) {
-            if (slim == null) slim = new ModelPlayer(0f, true);
-            return slim;
-        }
-        if (wide == null) wide = new ModelPlayer(0f, false);
-        return wide;
-    }
-
-    /**
-     * Draws both arms. Call inside the weapon's matrix, where one unit is one model pixel.
-     *
-     * @return true when something was drawn
-     */
-    public static boolean render(MeleeWeapon weapon) {
+    /** Draws both arms, given the weapon's model-units-to-eye view matrix. */
+    public static boolean render(MeleeWeapon weapon, Mat4 view) {
         if (!CONFIG.meleeHands) return false;
+        if (view == null) return false;
         if (!(mc.thePlayer instanceof AbstractClientPlayer)) return false;
         AbstractClientPlayer player = (AbstractClientPlayer) mc.thePlayer;
+        if (player.isInvisible()) return false;
         GeoModel model = weapon.model();
-        GeoPose pose = weapon.pose();
-        if (model == null || pose == null) return false;
-
+        if (model == null) return false;
         ResourceLocation skin = player.getLocationSkin();
         if (skin == null) return false;
-        boolean thin = "slim".equals(player.getSkinType());
-        ModelPlayer body = model(thin);
+        boolean slim = "slim".equals(player.getSkinType());
 
         boolean drew = false;
         try {
-            RenderHelper.enableStandardItemLighting();
-            GlStateManager.enableDepth();
+            GlStateManager.enableCull();
             GlStateManager.disableBlend();
             GlStateManager.color(1f, 1f, 1f, 1f);
             mc.getTextureManager().bindTexture(skin);
-
-            drew |= arm(model, pose, MeleeWeapon.RIGHT_HAND, body.bipedRightArm,
-                    body.bipedRightArmwear, true, thin);
+            drew |= arm(model, view, MeleeWeapon.RIGHT_HAND, true, slim, player);
             if (CONFIG.meleeLeftHand) {
-                drew |= arm(model, pose, MeleeWeapon.LEFT_HAND, body.bipedLeftArm,
-                        body.bipedLeftArmwear, false, thin);
+                drew |= arm(model, view, MeleeWeapon.LEFT_HAND, false, slim, player);
             }
         } catch (Throwable t) {
             me.Padej_.soupapi.compat.SoupLog.warn(
                     "[SoupAPI] drawing the first-person arms failed; they are now off", t);
             CONFIG.meleeHands = false;
         } finally {
-            RenderHelper.disableStandardItemLighting();
             GlStateManager.color(1f, 1f, 1f, 1f);
         }
         return drew;
     }
 
-    private static boolean arm(GeoModel model, GeoPose pose, String bone, ModelRenderer limb,
-                               ModelRenderer sleeve, boolean right, boolean thin) {
-        Mat4 matrix = model.boneMatrix(bone, pose);
+    private static boolean arm(GeoModel model, Mat4 view, String bone, boolean right, boolean slim,
+                               AbstractClientPlayer player) {
         float[] box = model.cubeBox(bone);
-        if (matrix == null || box == null || limb == null) return false;
+        int idx = model.indexOf(bone);
+        if (box == null || idx < 0 || model.hiddenWithAncestors(idx)) return false;
 
+        Mat4 m = view.copy().multiply(model.global(idx));
         GlStateManager.pushMatrix();
         try {
-            // Onto the bone, then into the marker box it carries: an arm-shaped box, twelve units
-            // long, shoulder at the high-Y end.
-            MATRIX.clear();
-            MATRIX.put(matrix.m);
-            MATRIX.flip();
-            GL11.glMultMatrix(MATRIX);
-            GlStateManager.translate((box[0] + box[3]) / 2f, box[4], (box[2] + box[5]) / 2f);
-
-            float size = CONFIG.meleeHandsScale / 100f;
-            GlStateManager.scale(size, size, size);
-            GlStateManager.rotate(CONFIG.meleeHandsPitch, 1f, 0f, 0f);
-            GlStateManager.rotate((right ? 1f : -1f) * CONFIG.meleeHandsYaw, 0f, 1f, 0f);
-            GlStateManager.translate(
-                    (right ? 1f : -1f) * CONFIG.meleeHandsOffsetX / 10f,
-                    CONFIG.meleeHandsOffsetY / 10f,
-                    CONFIG.meleeHandsOffsetZ / 10f);
-
-            // A limb is built with +Y downward from the shoulder, so it runs the other way from the
-            // marker; flipping Y points it down the box, from the shoulder toward the wrist.
-            GlStateManager.scale(1f, -1f, 1f);
-            // A limb's own box starts two units above its rotation point and is centred to one
-            // side of it - outward, so the two arms mirror: a unit on a normal skin, half on a slim
-            // one. Undoing that puts the box on the marker rather than beside it.
-            float half = thin ? 0.5f : 1f;
-            GlStateManager.translate(right ? half : -half, 2f, 0f);
-
-            limb.rotateAngleX = 0f;
-            limb.rotateAngleY = 0f;
-            limb.rotateAngleZ = 0f;
-            limb.rotationPointX = 0f;
-            limb.rotationPointY = 0f;
-            limb.rotationPointZ = 0f;
-            limb.render(1f);
-            if (sleeve != null) {
-                sleeve.rotateAngleX = 0f;
-                sleeve.rotateAngleY = 0f;
-                sleeve.rotateAngleZ = 0f;
-                sleeve.rotationPointX = 0f;
-                sleeve.rotationPointY = 0f;
-                sleeve.rotationPointZ = 0f;
-                sleeve.render(1f);
+            m.store(MATRIX);
+            GlStateManager.multMatrix(MATRIX);
+            int u = right ? 40 : 32, v = right ? 16 : 48;
+            int dx = slim ? 3 : 4;
+            float scale = CONFIG.meleeHandsScale / 100f;
+            if (scale != 1f) GlStateManager.scale(scale, scale, scale);
+            box(box, 0f, u, v, dx);
+            if (player.isWearing(right ? EnumPlayerModelParts.RIGHT_SLEEVE : EnumPlayerModelParts.LEFT_SLEEVE)) {
+                box(box, 0.25f, right ? 40 : 48, right ? 32 : 48, dx);
             }
         } finally {
             GlStateManager.popMatrix();
         }
         return true;
+    }
+
+    private static void box(float[] b, float inf, int u, int v, int dx) {
+        float x0 = b[0] - inf, y0 = b[1] - inf, z0 = b[2] - inf;
+        float x1 = b[3] + inf, y1 = b[4] + inf, z1 = b[5] + inf;
+        int dy = 12, dz = 4;
+        float[] V7 = {x0, y0, z0}, V0 = {x1, y0, z0}, V1 = {x1, y1, z0}, V2 = {x0, y1, z0};
+        float[] V3 = {x0, y0, z1}, V4 = {x1, y0, z1}, V5 = {x1, y1, z1}, V6 = {x0, y1, z1};
+        GL11.glBegin(GL11.GL_QUADS);
+        quad(V4, V0, V1, V5, u + dz + dx, v + dz, u + dz + dx + dz, v + dz + dy);
+        quad(V7, V3, V6, V2, u, v + dz, u + dz, v + dz + dy);
+        quad(V4, V3, V7, V0, u + dz, v, u + dz + dx, v + dz);
+        quad(V1, V2, V6, V5, u + dz + dx, v + dz, u + dz + dx + dx, v);
+        quad(V0, V7, V2, V1, u + dz, v + dz, u + dz + dx, v + dz + dy);
+        quad(V3, V4, V5, V6, u + dz + dx + dz, v + dz, u + dz + dx + dz + dx, v + dz + dy);
+        GL11.glEnd();
+    }
+
+    /** Vanilla TexturedQuad UV assignment: v0->(u2,v1), v1->(u1,v1), v2->(u1,v2), v3->(u2,v2). */
+    private static void quad(float[] a, float[] b, float[] c, float[] d,
+                             float u1, float v1, float u2, float v2) {
+        float ex = c[0] - a[0], ey = c[1] - a[1], ez = c[2] - a[2];
+        float fx = d[0] - b[0], fy = d[1] - b[1], fz = d[2] - b[2];
+        float nx = ey * fz - ez * fy, ny = ez * fx - ex * fz, nz = ex * fy - ey * fx;
+        float l = MathHelper.sqrt_float(nx * nx + ny * ny + nz * nz);
+        if (l > 0f) {
+            nx /= l; ny /= l; nz /= l;
+        }
+        float s = 1f / 64f;
+        GL11.glNormal3f(nx, ny, nz);
+        GL11.glTexCoord2f(u2 * s, v1 * s); GL11.glVertex3f(a[0], a[1], a[2]);
+        GL11.glTexCoord2f(u1 * s, v1 * s); GL11.glVertex3f(b[0], b[1], b[2]);
+        GL11.glTexCoord2f(u1 * s, v2 * s); GL11.glVertex3f(c[0], c[1], c[2]);
+        GL11.glTexCoord2f(u2 * s, v2 * s); GL11.glVertex3f(d[0], d[1], d[2]);
     }
 }

@@ -4,191 +4,140 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * One box of a Bedrock model.
+ * One box of a Bedrock model, baked into Blockbench/GeckoLib "Java" space.
  *
- * <p>Coordinates are the model's own, in sixteenths of a block, and {@code origin} is absolute
- * rather than relative to the owning bone — which is why a bone can be animated by rotating around
- * its pivot while its cubes keep the coordinates they were authored with.
- *
- * <p>The per-face UV form is the only one these packs use ({@code uv} as an object of six faces,
- * each with its own {@code uv} and {@code uv_size}); the older "box UV" form, a single corner the
- * faces are unwrapped from, is handled too so other packs load.
+ * <p>This is the convention the pack's own 1.8.9 renderer (DeltaForce Melee) uses, and matching it
+ * exactly is what finally put the weapons where the pack draws them. The mapping, applied once at
+ * load:
+ * <ul>
+ *   <li>cube origin X is mirrored: {@code x = -(origin.x + size.x)} .. {@code -origin.x};</li>
+ *   <li>a cube's own rotation negates X and Y and turns about the pivot {@code (-pivot.x, pivot.y,
+ *       pivot.z)}, in Z·Y·X order.</li>
+ * </ul>
+ * Bone pivots and rotations are mirrored the same way in {@link GeoBone}, and the model is then
+ * drawn with no further X flip. Each face is baked to a quad of four vertices, {@code (x,y,z,u,v,
+ * nx,ny,nz)} with the UV already divided by the texture size and a normal from the quad's diagonals.
  */
 public final class GeoCube {
 
-    /** The six faces, in the order {@link #FACE_CORNERS} indexes them. */
-    public static final String[] FACES = {"north", "south", "west", "east", "up", "down"};
+    /** Each quad is four vertices of eight floats: x, y, z, u, v, nx, ny, nz. */
+    public final List<float[]> quads = new ArrayList<float[]>();
 
-    /**
-     * Each face's four corners in texture order — top-left, top-right, bottom-right, bottom-left
-     * as seen from outside the box — given as indices into the eight box corners.
-     *
-     * <p>Corner i has x = (i &amp; 1) ? x1 : x0, y = (i &amp; 4) ? y1 : y0, z = (i &amp; 2) ? z1 : z0.
-     */
-    private static final int[][] FACE_CORNERS = {
-            {5, 4, 0, 1},   // north  (-Z): up is +Y, texture-left is +X
-            {6, 7, 3, 2},   // south  (+Z)
-            {7, 4, 0, 3},   // west   (-X)
-            {5, 6, 2, 1},   // east   (+X)
-            {4, 5, 6, 7},   // up     (+Y): texture-up is -Z
-            {3, 2, 1, 0},   // down   (-Y): texture-up is +Z
-    };
-
-    private static final float[][] FACE_NORMALS = {
-            {0f, 0f, -1f}, {0f, 0f, 1f}, {-1f, 0f, 0f}, {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, -1f, 0f},
-    };
-
-    public final float x0, y0, z0, x1, y1, z1;
-    public final float pivotX, pivotY, pivotZ;
-    public final float rotX, rotY, rotZ;
-    public final boolean rotated;
-    /**
-     * The eight corners after this cube's own rotation, as x,y,z triples.
-     *
-     * <p>Built once, and the single source of truth for both drawing and measuring. Keeping two
-     * copies of this maths was a real bug: the draw path rotated the corners and the measure path
-     * did not, so every weapon was sized and centred from a box that was not the shape being drawn —
-     * and with 2,787 rotated cubes in this pack, that is most of them.
-     */
-    private final float[] corners = new float[24];
-    /** Per face: u0, v0, u1, v1, already normalised; {@code null} when the face is not textured. */
-    private final float[][] faceUv = new float[6][];
+    private final float texWidth;
+    private final float texHeight;
 
     GeoCube(JsonObject raw, float texWidth, float texHeight) {
-        float[] origin = vec3(raw.get("origin"), 0f);
-        float[] size = vec3(raw.get("size"), 0f);
-        float inflate = raw.has("inflate") ? raw.get("inflate").getAsFloat() : 0f;
+        this.texWidth = texWidth;
+        this.texHeight = texHeight;
 
-        this.x0 = origin[0] - inflate;
-        this.y0 = origin[1] - inflate;
-        this.z0 = origin[2] - inflate;
-        this.x1 = origin[0] + size[0] + inflate;
-        this.y1 = origin[1] + size[1] + inflate;
-        this.z1 = origin[2] + size[2] + inflate;
+        float[] o = vec3(raw.get("origin"), 0f);
+        float[] s = vec3(raw.get("size"), 0f);
+        float inf = raw.has("inflate") ? raw.get("inflate").getAsFloat() : 0f;
 
-        float[] pivot = vec3(raw.get("pivot"), 0f);
-        this.pivotX = pivot[0];
-        this.pivotY = pivot[1];
-        this.pivotZ = pivot[2];
+        // Mirror X across the origin, exactly like the reference renderer.
+        float x0 = -(o[0] + s[0]) - inf, y0 = o[1] - inf, z0 = o[2] - inf;
+        float x1 = -(o[0] + s[0]) + s[0] + inf, y1 = o[1] + s[1] + inf, z1 = o[2] + s[2] + inf;
+        float[] P1 = {x0, y0, z0}, P2 = {x0, y0, z1}, P3 = {x0, y1, z0}, P4 = {x0, y1, z1};
+        float[] P5 = {x1, y0, z0}, P6 = {x1, y0, z1}, P7 = {x1, y1, z0}, P8 = {x1, y1, z1};
 
-        // A cube's rotation is stored in the opposite handedness from a bone's: X and Y run the
-        // other way round. Applying a bone's convention to a cube turns every rotated cube the
-        // wrong way about two of its three axes, which is why weapons came out as a scatter of
-        // slabs roughly where the weapon should be. Verified against the pack's own item icons:
-        // with X and Y negated the models match them, and with any other combination they do not.
-        float[] rotation = vec3(raw.get("rotation"), 0f);
-        this.rotX = -rotation[0];
-        this.rotY = -rotation[1];
-        this.rotZ = rotation[2];
-        this.rotated = rotX != 0f || rotY != 0f || rotZ != 0f;
-
-        buildCorners();
-
-        JsonElement uv = raw.get("uv");
-        if (uv != null && uv.isJsonObject()) {
-            JsonObject faces = uv.getAsJsonObject();
-            for (int i = 0; i < FACES.length; i++) {
-                JsonElement face = faces.get(FACES[i]);
-                if (face == null || !face.isJsonObject()) continue;
-                JsonObject f = face.getAsJsonObject();
-                float[] at = vec2(f.get("uv"));
-                float[] span = vec2(f.get("uv_size"));
-                faceUv[i] = new float[]{
-                        at[0] / texWidth, at[1] / texHeight,
-                        (at[0] + span[0]) / texWidth, (at[1] + span[1]) / texHeight,
-                };
-            }
-        } else if (uv != null && uv.isJsonArray()) {
-            boxUv(vec2(uv), size, texWidth, texHeight);
+        Mat4 m = null;
+        if (raw.has("rotation")) {
+            float[] cp = vec3(raw.get("pivot"), 0f);
+            float[] cr = vec3(raw.get("rotation"), 0f);
+            m = new Mat4();
+            m.translate(-cp[0], cp[1], cp[2]);
+            m.rotateZYX(-cr[0], -cr[1], cr[2]);
+            m.translate(cp[0], -cp[1], -cp[2]);
         }
+
+        JsonElement uvEl = raw.get("uv");
+        if (uvEl != null && uvEl.isJsonObject()) {
+            JsonObject f = uvEl.getAsJsonObject();
+            face(f, "west", new float[][]{P4, P3, P1, P2}, m);
+            face(f, "east", new float[][]{P7, P8, P6, P5}, m);
+            face(f, "north", new float[][]{P3, P7, P5, P1}, m);
+            face(f, "south", new float[][]{P8, P4, P2, P6}, m);
+            face(f, "up", new float[][]{P4, P8, P7, P3}, m);
+            face(f, "down", new float[][]{P1, P5, P6, P2}, m);
+        } else if (uvEl != null && uvEl.isJsonArray()) {
+            boxUv(vec2(uvEl), s, new float[][]{P1, P2, P3, P4, P5, P6, P7, P8}, m);
+        }
+    }
+
+    private void face(JsonObject faces, String name, float[][] verts, Mat4 m) {
+        if (!faces.has(name) || !faces.get(name).isJsonObject()) return;
+        JsonObject f = faces.getAsJsonObject(name);
+        if (!f.has("uv")) return;
+        float[] at = vec2(f.get("uv"));
+        float[] span = vec2(f.get("uv_size"));
+        int rot = f.has("uv_rotation") ? ((f.get("uv_rotation").getAsInt() / 90) % 4 + 4) % 4 : 0;
+        emit(verts, at[0], at[1], at[0] + span[0], at[1] + span[1], rot, m);
     }
 
     /** The classic single-corner unwrap, for models that predate per-face UVs. */
-    private void boxUv(float[] at, float[] size, float texWidth, float texHeight) {
-        float u = at[0];
-        float v = at[1];
-        float dx = size[0];
-        float dy = size[1];
-        float dz = size[2];
-        put(0, u + dz, v + dz, u + dz + dx, v + dz + dy, texWidth, texHeight);           // north
-        put(1, u + dz + dx + dz, v + dz, u + dz + dx + dz + dx, v + dz + dy, texWidth, texHeight);
-        put(2, u, v + dz, u + dz, v + dz + dy, texWidth, texHeight);                     // west
-        put(3, u + dz + dx, v + dz, u + dz + dx + dz, v + dz + dy, texWidth, texHeight); // east
-        put(4, u + dz, v, u + dz + dx, v + dz, texWidth, texHeight);                     // up
-        put(5, u + dz + dx, v + dz, u + dz + dx + dx, v, texWidth, texHeight);           // down
+    private void boxUv(float[] at, float[] s, float[][] p, Mat4 m) {
+        float u = at[0], v = at[1];
+        float dx = (float) Math.floor(s[0]), dy = (float) Math.floor(s[1]), dz = (float) Math.floor(s[2]);
+        float[] P1 = p[0], P2 = p[1], P3 = p[2], P4 = p[3], P5 = p[4], P6 = p[5], P7 = p[6], P8 = p[7];
+        emit(new float[][]{P4, P3, P1, P2}, u + dz + dx, v + dz, u + dz + dx + dz, v + dz + dy, 0, m);
+        emit(new float[][]{P7, P8, P6, P5}, u, v + dz, u + dz, v + dz + dy, 0, m);
+        emit(new float[][]{P3, P7, P5, P1}, u + dz, v + dz, u + dz + dx, v + dz + dy, 0, m);
+        emit(new float[][]{P8, P4, P2, P6}, u + dz + dx + dz, v + dz, u + dz + dx + dz + dx, v + dz + dy, 0, m);
+        emit(new float[][]{P4, P8, P7, P3}, u + dz, v, u + dz + dx, v + dz, 0, m);
+        emit(new float[][]{P1, P5, P6, P2}, u + dz + dx, v + dz, u + dz + dx + dx, v, 0, m);
     }
 
-    private void put(int face, float u0, float v0, float u1, float v1, float tw, float th) {
-        faceUv[face] = new float[]{u0 / tw, v0 / th, u1 / tw, v1 / th};
-    }
-
-    /** Fills {@link #corners} from the box, applying this cube's own rotation about its pivot. */
-    private void buildCorners() {
-        for (int i = 0; i < 8; i++) {
-            corners[i * 3] = (i & 1) != 0 ? x1 : x0;
-            corners[i * 3 + 1] = (i & 4) != 0 ? y1 : y0;
-            corners[i * 3 + 2] = (i & 2) != 0 ? z1 : z0;
+    private void emit(float[][] verts, float u1, float v1, float u2, float v2, int rot, Mat4 m) {
+        float[][] uvs = {{u2, v1}, {u1, v1}, {u1, v2}, {u2, v2}};
+        if (rot != 0) {
+            float[][] r = new float[4][];
+            for (int i = 0; i < 4; i++) r[(i + rot) % 4] = uvs[i];
+            uvs = r;
         }
-        if (!rotated) return;
-
-        Mat4 m = new Mat4()
-                .translate(pivotX, pivotY, pivotZ)
-                .rotateDeg(rotZ, 0f, 0f, 1f)
-                .rotateDeg(rotY, 0f, 1f, 0f)
-                .rotateDeg(rotX, 1f, 0f, 0f)
-                .translate(-pivotX, -pivotY, -pivotZ);
+        float[][] p = new float[4][3];
         float[] out = new float[3];
-        for (int i = 0; i < 8; i++) {
-            m.transform(corners[i * 3], corners[i * 3 + 1], corners[i * 3 + 2], out);
-            corners[i * 3] = out[0];
-            corners[i * 3 + 1] = out[1];
-            corners[i * 3 + 2] = out[2];
-        }
-    }
-
-    /** One of the eight rotated corners, written into {@code out}. */
-    public void corner(int index, float[] out) {
-        out[0] = corners[index * 3];
-        out[1] = corners[index * 3 + 1];
-        out[2] = corners[index * 3 + 2];
-    }
-
-    public boolean hasFace(int face) {
-        return faceUv[face] != null;
-    }
-
-    public float[] uv(int face) {
-        return faceUv[face];
-    }
-
-    public float[] normal(int face) {
-        return FACE_NORMALS[face];
-    }
-
-    /**
-     * Writes a face's four corners, in texture order, into {@code out} as x,y,z triples.
-     *
-     * <p>Read out of {@link #corners}, so the cube's own rotation is already in them. Reading the
-     * box straight off {@code x0..z1} here instead is what drew two thousand seven hundred of this
-     * pack's cubes unrotated — the scattered, broken-looking blades.
-     */
-    public void corners(int face, float[] out) {
-        int[] indices = FACE_CORNERS[face];
         for (int i = 0; i < 4; i++) {
-            int c = indices[i] * 3;
-            out[i * 3] = corners[c];
-            out[i * 3 + 1] = corners[c + 1];
-            out[i * 3 + 2] = corners[c + 2];
+            if (m != null) {
+                m.transform(verts[i][0], verts[i][1], verts[i][2], out);
+                p[i][0] = out[0]; p[i][1] = out[1]; p[i][2] = out[2];
+            } else {
+                p[i][0] = verts[i][0]; p[i][1] = verts[i][1]; p[i][2] = verts[i][2];
+            }
         }
+        // normal from the two diagonals (robust for any quad, rotated or not)
+        float ax = p[2][0] - p[0][0], ay = p[2][1] - p[0][1], az = p[2][2] - p[0][2];
+        float bx = p[3][0] - p[1][0], by = p[3][1] - p[1][1], bz = p[3][2] - p[1][2];
+        float nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+        float len = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+        if (len < 1.0E-7f) return; // degenerate
+        nx /= len; ny /= len; nz /= len;
+        float[] q = new float[32];
+        for (int i = 0; i < 4; i++) {
+            int b = i * 8;
+            q[b] = p[i][0]; q[b + 1] = p[i][1]; q[b + 2] = p[i][2];
+            q[b + 3] = uvs[i][0] / texWidth; q[b + 4] = uvs[i][1] / texHeight;
+            q[b + 5] = nx; q[b + 6] = ny; q[b + 7] = nz;
+        }
+        quads.add(q);
     }
 
     static float[] vec3(JsonElement element, float fallback) {
         float[] out = {fallback, fallback, fallback};
-        if (element == null || !element.isJsonArray()) return out;
-        JsonArray array = element.getAsJsonArray();
-        for (int i = 0; i < 3 && i < array.size(); i++) {
-            out[i] = array.get(i).getAsFloat();
+        if (element == null || element.isJsonNull()) return out;
+        if (element.isJsonArray()) {
+            JsonArray array = element.getAsJsonArray();
+            if (array.size() == 1) {
+                float v = array.get(0).getAsFloat();
+                return new float[]{v, v, v};
+            }
+            for (int i = 0; i < 3 && i < array.size(); i++) out[i] = array.get(i).getAsFloat();
+        } else if (element.isJsonPrimitive()) {
+            float v = element.getAsFloat();
+            return new float[]{v, v, v};
         }
         return out;
     }
@@ -197,9 +146,7 @@ public final class GeoCube {
         float[] out = {0f, 0f};
         if (element == null || !element.isJsonArray()) return out;
         JsonArray array = element.getAsJsonArray();
-        for (int i = 0; i < 2 && i < array.size(); i++) {
-            out[i] = array.get(i).getAsFloat();
-        }
+        for (int i = 0; i < 2 && i < array.size(); i++) out[i] = array.get(i).getAsFloat();
         return out;
     }
 }

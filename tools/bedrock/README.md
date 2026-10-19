@@ -38,3 +38,11 @@ here reads the mod or the game; it only needs `numpy` and `pillow`.
   onto vanilla's arm drops the weapon off the bottom of the screen; drawing an arm in the marker
   where it lies grows one out of the middle of the view. Only the marker's wrist end is used, as the
   point the arm is aimed at.
+
+## reference_render.py — the authoritative convention
+
+`reference_render.py` reproduces the pack's own 1.8.9 renderer exactly and matches the shipped
+Java (`me.Padej_.soupapi.bedrock`) to four decimals on every weapon's posed bounds. It was
+validated against the author's in-game footage. Use it, not the older `bedrock.py`/`fp.py`, to
+check first-person placement: those predate the Bedrock→Java convention fix (X-mirror at load,
+view = scale(1/16)·inverse(global(idle_view)·T(pivot))) and are kept only for icon checks.

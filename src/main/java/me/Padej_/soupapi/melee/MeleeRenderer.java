@@ -1,5 +1,6 @@
 package me.Padej_.soupapi.melee;
 
+import me.Padej_.soupapi.bedrock.GeoBone;
 import me.Padej_.soupapi.bedrock.GeoModel;
 import me.Padej_.soupapi.bedrock.GeoPose;
 import me.Padej_.soupapi.bedrock.Mat4;
@@ -7,31 +8,32 @@ import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import org.lwjgl.opengl.GL11;
-
-import org.lwjgl.BufferUtils;
+import org.lwjgl.util.glu.Project;
 
 import java.awt.Color;
-import java.nio.FloatBuffer;
 
 /**
  * Draws the carried weapon in place of the first-person hand.
  *
- * <p>The model is placed by the fit worked out when it loaded — its idle pose normalised to a
- * block, then sized and pushed out in front of the eye — rather than by the view anchors in the
- * pack, which disagree between weapons. Everything after that is offsets the player can turn.
- *
- * <p>The extra passes all reuse the same compiled bones, so a glow, an outline and four phantom
- * copies cost six {@code glCallList} runs per bone rather than six rebuilds of the geometry. On
- * gl4es that difference is the difference between the effects being usable and not.
+ * <p>Placed the way the pack's own 1.8.9 renderer places it: a dedicated perspective pass with the
+ * depth buffer cleared, and the model positioned by one matrix — {@code scale(1/16) ·
+ * inverse(global(idle_view) · T(pivot))} — so the pack's {@code idle_view} bone sits at the eye.
+ * The player's placement sliders (size, distance, offsets, yaw/pitch/roll) are turns and shifts
+ * about the eye on top of that, all zero by default, so out of the box the weapon sits exactly
+ * where the pack intends. The camera shake baked into the swings is applied to the real camera in
+ * {@link #applyCameraShake}, not to the weapon.
  */
 public final class MeleeRenderer extends ConfigurableModule {
 
-    private static final FloatBuffer MATRIX = BufferUtils.createFloatBuffer(16);
+    private static final float VIEWMODEL_FOV = 70f;
 
     private MeleeRenderer() {
     }
@@ -48,296 +50,172 @@ public final class MeleeRenderer extends ConfigurableModule {
         ResourceLocation texture = weapon.texture();
         if (texture == null) return false;
 
-        MeleeEffects.track(weapon, partialTicks);
+        Minecraft mc = client();
+        EntityPlayerSP player = mc.thePlayer;
+        if (player == null || mc.theWorld == null) return false;
 
-        // One matrix, built once: pushed onto GL for the weapon, handed to MeleeHands so it can
-        // work out where in the view the grip ended up.
-        Mat4 view = placement(weapon, partialTicks);
-
+        GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
         GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        Project.gluPerspective(VIEWMODEL_FOV,
+                (float) mc.displayWidth / (float) mc.displayHeight, 0.02F, 64F);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+
         try {
-            GlStateManager.disableCull();           // the X mirror flips the winding
+            GlStateManager.disableCull();           // packs mix winding; let both sides draw
             GlStateManager.enableDepth();
-            GlStateManager.enableAlpha();
-            RenderHelper.enableStandardItemLighting();
-
-            MATRIX.clear();
-            MATRIX.put(view.m);
-            MATRIX.flip();
-            GL11.glMultMatrix(MATRIX);
-
-            // Anything additive that should sit *behind* the weapon is drawn first, without
-            // writing depth; the textured pass then covers the middle of it and only what sticks
-            // out past the silhouette survives. Drawing these afterwards instead - which is what
-            // the first version did - paints a flat sheet of accent colour over the artwork and
-            // buries the weapon in its own glow.
-            if (CONFIG.meleeOutline) outline(weapon, model, pose);
-            if (CONFIG.meleePhantom) phantoms(weapon, model, texture);
-
-            // The pack's own hand markers are never drawn: they are arm-shaped boxes with no arm
-            // texture on them, there so the mod it was built for knows where to put the player's
-            // real arm. MeleeHands puts the real arm there instead.
-            model.setHidden(MeleeWeapon.ARM_MESH, true);
-
-            // The weapon as the pack drew it.
-            GlStateManager.color(1f, 1f, 1f, 1f);
             GlStateManager.depthMask(true);
+            GlStateManager.enableAlpha();
+            GlStateManager.enableRescaleNormal();
+            RenderHelper.enableStandardItemLighting();
+            lightmapForEye(mc, player);
+
+            if (CONFIG.meleeBob) viewBobbing(mc, player, partialTicks);
+            if (CONFIG.meleeSway) sway(player, partialTicks);
+            userPlacement(weapon);
+
+            model.computeGlobals(pose);
+            Mat4 view = model.viewFromBone("idle_view");
+            hide(model, true);
+
+            GlStateManager.color(1f, 1f, 1f, 1f);
             mc.getTextureManager().bindTexture(texture);
-            model.render(pose);
+            model.drawPosed(view);
 
-            // The player's own arms, in the pack's hand markers, inside the same matrix as the
-            // weapon - so they move with the animation and cannot shift the viewmodel.
-            MeleeHands.render(weapon);
+            MeleeHands.render(weapon, view);
 
-            if (CONFIG.meleeChroma) chroma(weapon, model, pose, texture);
-            if (CONFIG.meleeGlow) glow(weapon, model, pose);
-            MeleeEffects.render(weapon, partialTicks);
+            if (CONFIG.meleeGlow) glow(weapon, model, view);
         } catch (Throwable t) {
             me.Padej_.soupapi.compat.SoupLog.error(
                     "[SoupAPI] drawing the melee weapon failed; it is now off", t);
             CONFIG.meleeEnabled = false;
         } finally {
             RenderHelper.disableStandardItemLighting();
+            GlStateManager.disableRescaleNormal();
             GlStateManager.enableCull();
             GlStateManager.color(1f, 1f, 1f, 1f);
             me.Padej_.soupapi.compat.RenderSystem.restoreDefaults();
+            GlStateManager.matrixMode(GL11.GL_PROJECTION);
+            GlStateManager.popMatrix();
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
             GlStateManager.popMatrix();
         }
         return true;
     }
 
-    /**
-     * The transform from the model's own units into view space.
-     *
-     * <p>Built as a matrix rather than pushed straight onto the GL stack because the arms need the
-     * same transform: {@link MeleeHands} aims each arm at a point on the weapon, and to do that it
-     * has to put a model-space point into view space itself. One matrix, used twice, so the two
-     * cannot drift apart.
-     *
-     * <p>The placement proper is three lines: mirror X, scale model units to blocks, and move the
-     * pack's own view anchor onto the camera. Everything else is something the player asked for.
-     * The sliders start at zero on purpose — out of the box the weapon sits where the pack puts it.
-     */
-    public static Mat4 placement(MeleeWeapon weapon, float partialTicks) {
-        MeleeWeapon.Fit fit = weapon.fit();
-        MeleePlacement.Values placement = MeleePlacement.of(weapon);
-        float size = placement.size / 100f;
-        Mat4 m = new Mat4();
-
-        if (CONFIG.meleeBob) bob(m, partialTicks);
-        if (CONFIG.meleeSway) sway(m);
-
-        // Nudges, in hundredths of a block, on top of the pack's own placement.
-        m.translate(
-                placement.offsetX / 100f,
-                placement.offsetY / 100f,
-                (placement.offsetZ - placement.distance) / 100f);
-
-        // Turns about the eye, which is where the player is looking from, so a pitch or a yaw here
-        // swings the weapon across the view rather than tumbling it about its own middle.
-        m.rotateDeg(placement.yaw, 0f, 1f, 0f);
-        m.rotateDeg(placement.pitch, 1f, 0f, 0f);
-        m.rotateDeg(placement.roll, 0f, 0f, 1f);
-
-        shake(m, weapon);
-
-        // Model units to blocks, mirrored in X: the pack holds the weapon on the left of its own
-        // space and the player holds it on the right of theirs. Checked by where the hand markers
-        // land - mirrored, the right hand is right of centre and the left hand left of it.
-        float scale = size / 16f;
-        m.scale(-scale, scale, scale);
-
-        // And the pack's view anchor onto the camera.
-        m.translate(-fit.eyeX, -fit.eyeY, -fit.eyeZ);
-        return m;
+    /** Hides the hand-marker placeholders, and one of Dark Star's two forms, before drawing. */
+    private static void hide(GeoModel model, boolean hidePlaceholders) {
+        model.setHidden(MeleeWeapon.ARM_MESH, hidePlaceholders);
+        // The two Dark Star forms share a model; show one. (Harmless on weapons without them.)
+        model.setHidden("devil", true);
     }
 
+    /** The player's own fine-tuning: all zero by default, so the base pose is the pack's. */
+    private static void userPlacement(MeleeWeapon weapon) {
+        MeleePlacement.Values p = MeleePlacement.of(weapon);
+        GlStateManager.translate(p.offsetX / 100f, p.offsetY / 100f, (p.offsetZ - p.distance) / 100f);
+        if (p.yaw != 0) GlStateManager.rotate(p.yaw, 0f, 1f, 0f);
+        if (p.pitch != 0) GlStateManager.rotate(p.pitch, 1f, 0f, 0f);
+        if (p.roll != 0) GlStateManager.rotate(p.roll, 0f, 0f, 1f);
+        if (p.size != 100) {
+            float s = p.size / 100f;
+            GlStateManager.scale(s, s, s);
+        }
+    }
+
+    private static void lightmapForEye(Minecraft mc, EntityPlayerSP player) {
+        int light = mc.theWorld.getCombinedLight(
+                new BlockPos(player.posX, player.posY + player.getEyeHeight(), player.posZ), 0);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,
+                (float) (light & 65535), (float) (light >> 16));
+        mc.entityRenderer.enableLightmap();
+    }
+
+    // ---- camera shake ----------------------------------------------------------------------
+
     /**
-     * The pack's own camera track, applied to the weapon rather than the camera.
-     *
-     * <p>Every attack animation moves a bone called {@code camera}: on the mod it was built for
-     * that drives a screen shake. A first-person hand hook runs after the view matrix is set, so
-     * the shake cannot be put back into the camera from here — but rotating the weapon by the same
-     * amount reads as the same kick, and it cannot make the player motion-sick on a phone.
+     * The pack bakes the swing's recoil into a bone called {@code camera}; applied to the real
+     * camera it reads as the kick it was meant to be. Called from the camera-setup hook.
      */
-    private static void shake(Mat4 m, MeleeWeapon weapon) {
+    public static void applyCameraShake(EntityViewRenderEvent.CameraSetup event) {
         if (CONFIG.meleeCameraShake <= 0) return;
+        MeleeWeapon weapon = Melee.active();
+        if (weapon == null) return;
         GeoModel model = weapon.model();
         GeoPose pose = weapon.pose();
-        me.Padej_.soupapi.bedrock.GeoBone camera = model.bone("camera");
+        if (model == null || pose == null) return;
+        GeoBone camera = model.bone("camera");
         if (camera == null) return;
-        float strength = CONFIG.meleeCameraShake / 100f;
         int i = camera.index();
-        m.rotateDeg(pose.rotZ(i) * strength, 0f, 0f, 1f);
-        m.rotateDeg(pose.rotY(i) * strength, 0f, 1f, 0f);
-        m.rotateDeg(pose.rotX(i) * strength, 1f, 0f, 0f);
-        m.translate(
-                pose.posX(i) * strength / 64f,
-                pose.posY(i) * strength / 64f,
-                pose.posZ(i) * strength / 64f);
+        float s = CONFIG.meleeCameraShake / 100f;
+        event.pitch -= pose.rotX(i) * s;
+        event.yaw -= pose.rotY(i) * s;
+        event.roll -= pose.rotZ(i) * s;
     }
 
-    private static void bob(Mat4 m, float partialTicks) {
-        if (mc == null || mc.thePlayer == null) return;
-        float distance = mc.thePlayer.distanceWalkedModified
-                - mc.thePlayer.prevDistanceWalkedModified;
-        float walked = -(mc.thePlayer.distanceWalkedModified + distance * partialTicks);
-        float amount = (mc.thePlayer.prevCameraYaw
-                + (mc.thePlayer.cameraYaw - mc.thePlayer.prevCameraYaw) * partialTicks);
+    // ---- vanilla camera helpers (copied, so the viewmodel moves exactly like a hand) --------
+
+    private static void viewBobbing(Minecraft mc, EntityPlayerSP player, float pt) {
+        if (!mc.gameSettings.viewBobbing) return;
+        float distance = player.distanceWalkedModified - player.prevDistanceWalkedModified;
+        float walked = -(player.distanceWalkedModified + distance * pt);
+        float amount = player.prevCameraYaw + (player.cameraYaw - player.prevCameraYaw) * pt;
+        float pitch = player.prevCameraPitch + (player.cameraPitch - player.prevCameraPitch) * pt;
         float strength = CONFIG.meleeBobStrength / 100f;
-        m.translate(
+        GlStateManager.translate(
                 MathUtility.sin(walked * (float) Math.PI) * amount * 0.5f * strength,
-                -Math.abs(MathUtility.cos(walked * (float) Math.PI) * amount) * strength,
-                0f);
-        m.rotateDeg(MathUtility.sin(walked * (float) Math.PI) * amount * 3f * strength,
-                0f, 0f, 1f);
+                -Math.abs(MathUtility.cos(walked * (float) Math.PI) * amount) * strength, 0f);
+        GlStateManager.rotate(MathUtility.sin(walked * (float) Math.PI) * amount * 3f * strength, 0f, 0f, 1f);
+        GlStateManager.rotate(Math.abs(MathUtility.cos(walked * (float) Math.PI - 0.2f) * amount) * 5f * strength, 1f, 0f, 0f);
+        GlStateManager.rotate(pitch, 1f, 0f, 0f);
     }
 
-    private static float swayYaw;
-    private static float swayPitch;
-
-    /** Lags the weapon behind the view, the way a heavy thing in a hand would. */
-    private static void sway(Mat4 m) {
-        if (mc == null || mc.thePlayer == null) return;
-        float yawDelta = MathUtility.wrapDegrees(mc.thePlayer.rotationYaw - mc.thePlayer.prevRotationYaw);
-        float pitchDelta = mc.thePlayer.rotationPitch - mc.thePlayer.prevRotationPitch;
+    private static void sway(EntityPlayerSP player, float pt) {
+        float armPitch = player.prevRenderArmPitch + (player.renderArmPitch - player.prevRenderArmPitch) * pt;
+        float armYaw = player.prevRenderArmYaw + (player.renderArmYaw - player.prevRenderArmYaw) * pt;
         float strength = CONFIG.meleeSwayStrength / 100f;
-        swayYaw += (Math.max(-12f, Math.min(12f, yawDelta)) - swayYaw) * 0.25f;
-        swayPitch += (Math.max(-12f, Math.min(12f, pitchDelta)) - swayPitch) * 0.25f;
-        m.translate(swayYaw * 0.004f * strength, swayPitch * 0.004f * strength, 0f);
-        m.rotateDeg(-swayYaw * 0.35f * strength, 0f, 1f, 0f);
-        m.rotateDeg(-swayPitch * 0.35f * strength, 1f, 0f, 0f);
+        GlStateManager.rotate((player.rotationPitch - armPitch) * 0.1f * strength, 1f, 0f, 0f);
+        GlStateManager.rotate((player.rotationYaw - armYaw) * 0.1f * strength, 0f, 1f, 0f);
     }
 
-    // ---- the extra passes ------------------------------------------------------------------
+    // ---- glow ------------------------------------------------------------------------------
 
     /**
-     * An additive pass masked by the pack's specular map.
-     *
-     * <p>A gun pack marks its metal and its emissive detail in the {@code _s} texture, which makes
-     * it exactly the mask this wants: the parts the artist called shiny are the parts that light
-     * up, and the shape of the glow follows the artwork instead of flooding the whole model.
+     * An additive pass masked by the pack's specular map: the parts the artist marked shiny light
+     * up, the shape following the artwork. Skipped when a weapon ships no {@code _s} map, so a
+     * weapon without one is not lit flat all over.
      */
-    private static void glow(MeleeWeapon weapon, GeoModel model, GeoPose pose) {
-        // Without the pack's specular map there is no mask, and glowing through the base texture
-        // lights the whole weapon evenly - which is what "Free Dark Star" looked like, since it is
-        // the one weapon here that ships no _s file.
+    private static void glow(MeleeWeapon weapon, GeoModel model, Mat4 view) {
         ResourceLocation mask = weapon.glowMask();
         if (mask == null) return;
         Color colour = glowColour();
         float pulse = 1f;
         if (CONFIG.meleeGlowPulse > 0) {
             float speed = CONFIG.meleeGlowPulse / 100f;
-            pulse = 0.65f + 0.35f * MathUtility.sin(
-                    (System.currentTimeMillis() % 100000L) / 1000f * speed * 3.2f);
+            pulse = 0.65f + 0.35f * MathUtility.sin((System.currentTimeMillis() % 100000L) / 1000f * speed * 3.2f);
         }
         float alpha = CONFIG.meleeGlowStrength / 100f * pulse;
 
         GlStateManager.depthMask(false);
-        GlStateManager.enableDepth();
-        GlStateManager.depthFunc(GL11.GL_LEQUAL);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GlStateManager.disableLighting();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-        GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
-                colour.getBlue() / 255f, alpha);
-        mc.getTextureManager().bindTexture(mask);
-        model.render(pose);
+        GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f, colour.getBlue() / 255f, alpha);
+        client().getTextureManager().bindTexture(mask);
+        model.drawPosed(view);
         GlStateManager.enableLighting();
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
+        GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
-    /**
-     * A rim of colour around the silhouette.
-     *
-     * <p>The model again, slightly larger and additive, drawn before the textured pass and writing
-     * no depth: the real model then covers the middle and only the sliver that pokes out past the
-     * silhouette is left. A shader would do this with a fresnel term; 1.8.9 has no shader to put one
-     * in, and gl4es would not run it. The first version tried the inverted-hull trick instead and
-     * culled front faces — which, with the model mirrored in X, culls the wrong half and paints the
-     * whole weapon flat.
-     */
-    private static void outline(MeleeWeapon weapon, GeoModel model, GeoPose pose) {
-        Color colour = glowColour();
-        float width = 1f + CONFIG.meleeOutlineWidth / 1000f;
-
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(width, width, width);
-        GlStateManager.depthMask(false);
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        GlStateManager.disableLighting();
-        GlStateManager.disableTexture2D();
-        GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
-                colour.getBlue() / 255f, CONFIG.meleeOutlineStrength / 100f);
-        model.render(pose);
-        GlStateManager.enableTexture2D();
-        GlStateManager.enableLighting();
-        GlStateManager.depthMask(true);
-        GlStateManager.disableBlend();
-        GlStateManager.popMatrix();
-    }
-
-    /**
-     * Copies of the weapon a few frames behind the swing.
-     *
-     * <p>Each one is the pose the weapon actually held, kept by {@link MeleeEffects}, so the smear
-     * follows the animation exactly rather than approximating it with a rotation.
-     */
-    private static void phantoms(MeleeWeapon weapon, GeoModel model, ResourceLocation texture) {
-        int count = Math.max(1, CONFIG.meleePhantomCount);
-        Color colour = glowColour();
-
-        GlStateManager.depthMask(false);
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        GlStateManager.disableLighting();
-        mc.getTextureManager().bindTexture(texture);
-        for (int i = 0; i < count; i++) {
-            GeoPose ghost = MeleeEffects.pastPose(i);
-            if (ghost == null) continue;
-            float fade = (1f - (i + 1f) / (count + 1f)) * CONFIG.meleePhantomStrength / 100f;
-            if (fade <= 0.01f) continue;
-            GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f,
-                    colour.getBlue() / 255f, fade);
-            model.render(ghost);
-        }
-        GlStateManager.enableLighting();
-        GlStateManager.depthMask(true);
-        GlStateManager.disableBlend();
-    }
-
-    /** Three offset additive copies in red, green and blue: a cheap chromatic split. */
-    private static void chroma(MeleeWeapon weapon, GeoModel model, GeoPose pose,
-                               ResourceLocation texture) {
-        float spread = CONFIG.meleeChromaSpread / 2000f;
-        float alpha = CONFIG.meleeChromaStrength / 100f;
-        float[][] channels = {{1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f}};
-
-        GlStateManager.depthMask(false);
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-        GlStateManager.disableLighting();
-        mc.getTextureManager().bindTexture(texture);
-        for (int i = 0; i < 3; i++) {
-            GlStateManager.pushMatrix();
-            GlStateManager.translate((i - 1) * spread * 16f, 0f, 0f);
-            GlStateManager.color(channels[i][0], channels[i][1], channels[i][2], alpha);
-            model.render(pose);
-            GlStateManager.popMatrix();
-        }
-        GlStateManager.enableLighting();
-        GlStateManager.depthMask(true);
-        GlStateManager.disableBlend();
-    }
-
-    /** The colour the effects use: the theme's palette, or the weapon's own fixed colour. */
+    /** The colour the glow uses: the theme's palette, or the weapon's own fixed colour. */
     static Color glowColour() {
-        if (CONFIG.meleeGlowUseTheme) {
-            return Palette.getColor(0);
-        }
+        if (CONFIG.meleeGlowUseTheme) return Palette.getColor(0);
         return new Color(CONFIG.meleeGlowColor);
     }
 

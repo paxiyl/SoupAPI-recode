@@ -51,8 +51,10 @@ public final class MeleeThirdPerson extends ConfigurableModule {
             GlStateManager.rotate(-90f, 1f, 0f, 0f);
             GlStateManager.rotate(180f, 0f, 1f, 0f);
 
+            // The geometry is now mirrored in X at load (the pack's own convention), so the final
+            // flip that the old non-mirrored model needed is dropped; the net X here stays the same.
             float scale = size / 16f;
-            GlStateManager.scale(-scale, scale, scale);
+            GlStateManager.scale(scale, scale, scale);
             if (grip != null) GlStateManager.translate(-grip[0], -grip[1], -grip[2]);
 
             model.setHidden(MeleeWeapon.ARM_MESH, true);
