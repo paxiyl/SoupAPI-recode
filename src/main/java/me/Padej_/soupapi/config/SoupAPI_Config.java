@@ -1043,6 +1043,13 @@ public class SoupAPI_Config implements ConfigData {
     public boolean meleeGlow = true;
     @ConfigEntry.Category("melee")
     public boolean meleeGlowUseTheme = true;
+    // Tints the whole weapon toward the theme's colour — demonic red, angelic gold, matrix green —
+    // so the blade itself changes with the theme, not only its glow.
+    @ConfigEntry.Category("melee")
+    public boolean meleeRecolor = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int meleeRecolorStrength = 45;
     @ConfigEntry.Category("melee")
     @ConfigEntry.ColorPicker
     public int meleeGlowColor = 0x5cf0ff;

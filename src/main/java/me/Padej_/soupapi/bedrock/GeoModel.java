@@ -224,6 +224,18 @@ public final class GeoModel {
         return hiddenWithAncestors(bones.get(index));
     }
 
+    /**
+     * True when a bone's <em>parent chain</em> is hidden — not the bone itself.
+     *
+     * <p>The hand markers are hidden so their placeholder cubes never draw, but the player's arm is
+     * still drawn into them; it must be suppressed only when an actual ancestor is hidden (a put-away
+     * variant), never because the marker itself is.
+     */
+    public boolean ancestorHidden(int index) {
+        GeoBone parent = bones.get(index).parent;
+        return parent != null && hiddenWithAncestors(parent);
+    }
+
     private void compile() {
         compiled = true;
         for (GeoBone bone : bones) {

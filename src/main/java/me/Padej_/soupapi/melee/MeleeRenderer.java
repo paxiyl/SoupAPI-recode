@@ -81,9 +81,14 @@ public final class MeleeRenderer extends ConfigurableModule {
             Mat4 view = model.viewFromBone("idle_view");
             hide(model, true);
 
-            GlStateManager.color(1f, 1f, 1f, 1f);
+            // Recolour the whole weapon toward the theme's colour (demonic red, angelic gold,
+            // matrix green…) by modulating the texture, so the blade changes with the theme, not
+            // just its glow. White at strength 0, so it is a no-op when turned off.
+            float[] tint = weaponTint();
+            GlStateManager.color(tint[0], tint[1], tint[2], 1f);
             mc.getTextureManager().bindTexture(texture);
             model.drawPosed(view);
+            GlStateManager.color(1f, 1f, 1f, 1f);
 
             MeleeHands.render(weapon, view);
 
@@ -106,11 +111,15 @@ public final class MeleeRenderer extends ConfigurableModule {
         return true;
     }
 
-    /** Hides the hand-marker placeholders, and one of Dark Star's two forms, before drawing. */
+    /**
+     * Hides the hand-marker placeholders before drawing.
+     *
+     * <p>Variant weapons (Dark Star's angel/devil) are <em>not</em> hidden here: their
+     * {@code static_idle} already scales the inactive form to zero, so the pose picks the form on
+     * its own. Hiding "devil" by hand is what made the first weapon vanish — it was the visible one.
+     */
     private static void hide(GeoModel model, boolean hidePlaceholders) {
         model.setHidden(MeleeWeapon.ARM_MESH, hidePlaceholders);
-        // The two Dark Star forms share a model; show one. (Harmless on weapons without them.)
-        model.setHidden("devil", true);
     }
 
     /** The player's own fine-tuning: all zero by default, so the base pose is the pack's. */
@@ -217,6 +226,21 @@ public final class MeleeRenderer extends ConfigurableModule {
     static Color glowColour() {
         if (CONFIG.meleeGlowUseTheme) return Palette.getColor(0);
         return new Color(CONFIG.meleeGlowColor);
+    }
+
+    /** The modulate colour for the base pass: white, leaned toward the theme by the recolour slider. */
+    private static float[] weaponTint() {
+        if (!CONFIG.meleeRecolor || CONFIG.meleeRecolorStrength <= 0) {
+            return new float[]{1f, 1f, 1f};
+        }
+        Color c = glowColour();
+        float k = CONFIG.meleeRecolorStrength / 100f;
+        // Lean toward the hue but keep it bright, so detail and shading survive the tint.
+        return new float[]{
+                1f - k * (1f - c.getRed() / 255f),
+                1f - k * (1f - c.getGreen() / 255f),
+                1f - k * (1f - c.getBlue() / 255f),
+        };
     }
 
     static Minecraft client() {

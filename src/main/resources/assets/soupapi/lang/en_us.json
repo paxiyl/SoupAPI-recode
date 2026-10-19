@@ -457,5 +457,7 @@
   "text.autoconfig.soupapi.option.keys.hint": "Tap a row, then press a key  -  right-click to reset",
   "text.autoconfig.soupapi.category.colored_sky": "Animated Sky",
   "text.autoconfig.soupapi.option.skyStyle.@PrefixText": "Animated Sky",
-  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Sky Colors"
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Sky Colors",
+  "text.autoconfig.soupapi.option.meleeRecolor": "Recolor By Theme",
+  "text.autoconfig.soupapi.option.meleeRecolorStrength": "Recolor Strength"
 }

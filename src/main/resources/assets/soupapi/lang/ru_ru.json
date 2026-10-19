@@ -457,5 +457,7 @@
   "text.autoconfig.soupapi.option.keys.hint": "Нажмите строку, затем клавишу  -  ПКМ для сброса",
   "text.autoconfig.soupapi.category.colored_sky": "Анимированное небо",
   "text.autoconfig.soupapi.option.skyStyle.@PrefixText": "Анимированное небо",
-  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Цвета неба"
+  "text.autoconfig.soupapi.option.coloredSkyUseTheme.@PrefixText": "Цвета неба",
+  "text.autoconfig.soupapi.option.meleeRecolor": "Перекраска по теме",
+  "text.autoconfig.soupapi.option.meleeRecolorStrength": "Сила перекраски"
 }

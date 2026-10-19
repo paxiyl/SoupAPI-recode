@@ -44,7 +44,9 @@ public final class MeleeHands extends ConfigurableModule {
 
         boolean drew = false;
         try {
-            GlStateManager.enableCull();
+            // The weapon pass runs with culling off (packs mix winding); keep it off for the arm
+            // box too, so a back-wound face can never make the arm vanish.
+            GlStateManager.disableCull();
             GlStateManager.disableBlend();
             GlStateManager.color(1f, 1f, 1f, 1f);
             mc.getTextureManager().bindTexture(skin);
@@ -66,7 +68,7 @@ public final class MeleeHands extends ConfigurableModule {
                                AbstractClientPlayer player) {
         float[] box = model.cubeBox(bone);
         int idx = model.indexOf(bone);
-        if (box == null || idx < 0 || model.hiddenWithAncestors(idx)) return false;
+        if (box == null || idx < 0 || model.ancestorHidden(idx)) return false;
 
         Mat4 m = view.copy().multiply(model.global(idx));
         GlStateManager.pushMatrix();
