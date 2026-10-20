@@ -1,6 +1,5 @@
 package me.Padej_.soupapi.screen;
 
-import me.Padej_.soupapi.gui.SoupSettingsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
@@ -59,7 +58,9 @@ public final class SoupSettingsShortcut {
             down = false;
         }
 
-        if ((pressed || (down && !held)) && !(current instanceof SoupSettingsScreen)) {
+        // Any of the mod's own screens counts as already open: re-creating the Atlas screen on top
+        // of itself would throw away the window position, the open page and a field being typed in.
+        if ((pressed || (down && !held)) && !(current instanceof me.Padej_.soupapi.compat.SoupScreen)) {
             mc.displayGuiScreen(me.Padej_.soupapi.gui.atlas.AtlasScreen.create());
         }
         held = down;

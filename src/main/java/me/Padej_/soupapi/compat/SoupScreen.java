@@ -37,6 +37,9 @@ public abstract class SoupScreen extends GuiScreen {
     /** 1.8.9's {@link GuiScreen} has no title, so the port keeps one here. */
     private final IChatComponent title;
 
+    /** Set by {@link #swallowNextChar()} while a key press is being handled. */
+    private boolean swallowChar;
+
     protected SoupScreen(IChatComponent title) {
         this.title = title;
     }
@@ -101,7 +104,23 @@ public abstract class SoupScreen extends GuiScreen {
     @Override
     public void initGui() {
         super.initGui();
+        // 1.8.9 only repeats held keys when a screen asks for it, and these screens all have text
+        // fields in them; without this, backspace and typing are one character per press.
+        try {
+            org.lwjgl.input.Keyboard.enableRepeatEvents(true);
+        } catch (Throwable ignored) {
+            // Pojav's input stub may not implement it.
+        }
         init();
+    }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        try {
+            org.lwjgl.input.Keyboard.enableRepeatEvents(false);
+        } catch (Throwable ignored) {
+        }
     }
 
     @Override
@@ -148,17 +167,33 @@ public abstract class SoupScreen extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == 1 && shouldCloseOnEsc()) {
+        // Key first, then the character, matching 1.21.4's ordering. The two are separate GLFW
+        // callbacks there, so a screen that consumes the key press still receives the character -
+        // which is how every text field in the newer API works. Delivering only one of the two
+        // (as this did) leaves a screen whose keyPressed consumes keys while it has a field open
+        // unable to receive any text at all.
+        boolean consumed = keyPressed(keyCode, keyCode, modifiers());
+        boolean swallow = swallowChar;
+        swallowChar = false;
+        if (!consumed && keyCode == 1 && shouldCloseOnEsc()) {
+            // Escape is offered to the screen first: a screen with a dropdown, a field or a key
+            // capture open cancels that instead of closing.
             close();
             return;
         }
-        // Key first, then the character, matching 1.21.4's ordering.
-        if (keyPressed(keyCode, keyCode, modifiers())) {
-            return;
-        }
-        if (typedChar != 0) {
+        if (!swallow && typedChar >= 32 && typedChar != 127) {
             charTyped(typedChar, modifiers());
         }
+    }
+
+    /**
+     * Drops the character that belongs to the key press being handled.
+     *
+     * <p>For the one case where a screen genuinely needs the whole event: a key-capture row, where
+     * the key has just been bound and its character must not also land in a text field.
+     */
+    protected final void swallowNextChar() {
+        swallowChar = true;
     }
 
     @Override

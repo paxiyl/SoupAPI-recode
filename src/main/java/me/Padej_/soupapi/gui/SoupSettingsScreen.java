@@ -811,13 +811,19 @@ public class SoupSettingsScreen extends SoupScreen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (listening != null) {
-            // Escape unbinds, anything else binds; either way the row stops listening.
+            // Escape unbinds, anything else binds; either way the row stops listening, and the
+            // character of that key press is dropped so it does not also reach a text field.
             listening.set(keyCode == 1 ? 0 : keyCode);
             listening = null;
             ConfigSchema.save();
+            swallowNextChar();
             return true;
         }
-        // LWJGL 2 key codes: 14 backspace, 28 enter, 156 numpad enter, 1 escape (handled upstream).
+        // LWJGL 2 key codes: 1 escape, 14 backspace, 28 enter, 156 numpad enter.
+        //
+        // Only keys this screen really handled are reported as handled. The character of a press
+        // arrives as a separate event, and that is what types into the search box or a value
+        // field, so claiming every key here left both of them unable to receive any text.
         if (searchFocused) {
             if (keyCode == 14) {
                 if (!searchQuery.isEmpty()) {
@@ -830,7 +836,16 @@ public class SoupSettingsScreen extends SoupScreen {
                 searchFocused = false;
                 return true;
             }
-            return true;
+            if (keyCode == 1) {
+                // Escape leaves the search box rather than the screen, and clears it.
+                searchFocused = false;
+                if (!searchQuery.isEmpty()) {
+                    searchQuery = "";
+                    contentScroll = 0;
+                }
+                return true;
+            }
+            return false;
         }
         if (editing != null) {
             if (keyCode == 14) {
@@ -843,9 +858,13 @@ public class SoupSettingsScreen extends SoupScreen {
                 stopEditing(true);
                 return true;
             }
-            return true;
+            if (keyCode == 1) {
+                stopEditing(false);
+                return true;
+            }
+            return false;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return false;
     }
 
     @Override

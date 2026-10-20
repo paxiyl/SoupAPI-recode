@@ -70,6 +70,7 @@ public final class AtlasScreen extends SoupScreen {
 
     // Window
     private int winX = Integer.MIN_VALUE, winY, winW = 600, winH = 340;
+    private int minW = MIN_W, minH = MIN_H;
     private boolean dragging, resizing;
     private int dragDX, dragDY;
 
@@ -146,6 +147,13 @@ public final class AtlasScreen extends SoupScreen {
     // ---- state -----------------------------------------------------------------------------------
 
     private void restore() {
+        // The side-car file holds the remembered page and window rectangle. Nothing else has
+        // necessarily read it yet - the classic screen loads it in init(), and this screen may well
+        // be the first thing opened - and reading it unloaded would silently lose the layout.
+        try {
+            ConfigManager.loadConfig();
+        } catch (Throwable ignored) {
+        }
         try {
             String g = ConfigManager.getMetadata("atlasGroup");
             String p = ConfigManager.getMetadata("atlasPage");
@@ -217,6 +225,9 @@ public final class AtlasScreen extends SoupScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float partial) {
+        // The fonts are built lazily, from the render and tick hooks. Those only run in game, so a
+        // screen that can be opened before them has to ask for itself.
+        FontRenderers.ensureLoaded();
         Palette.Element previous = Palette.scope(Palette.Element.GUI);
         try {
             draw(context, mouseX, mouseY);
@@ -277,8 +288,13 @@ public final class AtlasScreen extends SoupScreen {
     }
 
     private void layout(int sw, int sh) {
-        winW = Math.max(MIN_W, Math.min(winW, sw - 8));
-        winH = Math.max(MIN_H, Math.min(winH, sh - 8));
+        // The preferred minimum, but never wider than the screen: at GUI scale 3 or 4 - which is
+        // what a phone ends up on - the scaled width can be under 400, and a window pinned to 420
+        // hangs off the side with its detail pane unreachable.
+        minW = Math.min(MIN_W, Math.max(200, sw - 8));
+        minH = Math.min(MIN_H, Math.max(140, sh - 8));
+        winW = Math.max(minW, Math.min(winW, sw - 8));
+        winH = Math.max(minH, Math.min(winH, sh - 8));
         if (winX == Integer.MIN_VALUE) {
             winX = (sw - winW) / 2;
             winY = (sh - winH) / 2;
@@ -288,11 +304,18 @@ public final class AtlasScreen extends SoupScreen {
     }
 
     private int sidebarWidth() {
-        return Math.max(88, Math.min(120, winW / 6));
+        return Math.max(64, Math.min(120, winW / 6));
     }
 
+    /**
+     * The detail pane's width: a little over half of what the sidebar leaves, but never so much
+     * that the page list in between is squeezed to nothing on a narrow window.
+     */
     private int detailWidth() {
-        return Math.max(220, (int) ((winW - sidebarWidth()) * 0.56f));
+        int rest = winW - sidebarWidth();
+        int detail = Math.round(rest * 0.56f);
+        detail = Math.max(detail, Math.min(220, Math.round(rest * 0.5f)));
+        return Math.min(detail, rest - Math.min(110, Math.round(rest * 0.35f)));
     }
 
     private void paintPalette() {
@@ -409,7 +432,10 @@ public final class AtlasScreen extends SoupScreen {
         listMax = Math.max(0, rows.size() * ROW - (bottom - top));
         listScroll = Math.max(0, Math.min(listScroll, listMax));
         float shown = spring("listScroll", listScroll, 260f, 28f).value;
-        context.enableScissor(x, (int) top - 2, x + width, (int) bottom);
+        // Registered before the rows: hitAt() walks the list backwards, so whatever is added last
+        // wins, and a pane-sized rectangle added after the rows would swallow every click in it.
+        hit("listArea", null, x, top, x + width, bottom);
+        scissor(context, x, top - 2, x + width, bottom);
         int sel = -1;
         for (int i = 0; i < rows.size(); i++) if (rows.get(i)[0] == page) sel = i;
         if (sel >= 0) {
@@ -432,15 +458,14 @@ public final class AtlasScreen extends SoupScreen {
             String count = String.valueOf(rows.get(i)[1]);
             float sx = x + width - 16 - 22;
             FontRenderers.sf_bold_12.drawString(ms, count, sx - 6 - FontRenderers.sf_bold_12.getStringWidth(count), ry + 7, faint);
-            if (my >= top && my <= bottom) hit("page", p, x + 8, Math.max(ry, top), x + width - 8, Math.min(ry + ROW - 2, bottom));
+            hit("page", p, x + 8, Math.max(ry, top), x + width - 8, Math.min(ry + ROW - 2, bottom));
             if (master != null) {
                 drawSwitch(ms, "pg:" + p.id(), sx, ry + ROW / 2f - 1, 22f, 12f, master.get());
-                if (my >= top && my <= bottom) hit("toggle", master, sx - 4, ry + 2, sx + 26, ry + ROW - 4);
+                hit("toggle", master, sx - 4, Math.max(ry + 2, top), sx + 26, Math.min(ry + ROW - 4, bottom));
             }
         }
         context.disableScissor();
         scrollbar(ms, x + width - 5, top, bottom, shown, listMax);
-        hit("listArea", null, x, top, x + width, bottom);
     }
 
     /** A switch whose knob travels on a spring and stretches with its speed. */
@@ -474,7 +499,8 @@ public final class AtlasScreen extends SoupScreen {
         detailMax = Math.max(0, total - (bottom - top) + 6);
         detailScroll = Math.max(0, Math.min(detailScroll, detailMax));
         float shown = spring("detailScroll", detailScroll, 260f, 28f).value;
-        context.enableScissor(x, (int) top - 2, x + width, (int) bottom);
+        hit("detailArea", null, x, top, x + width, bottom);
+        scissor(context, x, top - 2, x + width, bottom);
         float ry = top - shown;
         for (Option o : rows) {
             float rh = rowHeight(o);
@@ -483,7 +509,6 @@ public final class AtlasScreen extends SoupScreen {
         }
         context.disableScissor();
         scrollbar(ms, x + width - 5, top, bottom, shown, detailMax);
-        hit("detailArea", null, x, top, x + width, bottom);
     }
 
     private float rowHeight(Option o) {
@@ -495,14 +520,15 @@ public final class AtlasScreen extends SoupScreen {
 
     private void row(MatrixStack ms, FontRenderer font, Option o, float x, float y, float w, float h,
                      double mx, double my, float top, float bottom) {
-        boolean visible = my >= top && my <= bottom;
         if (!o.interactive()) {
             String label = o.label().toUpperCase(Locale.ROOT);
             FontRenderers.sf_bold_12.drawString(ms, label, x + 4, y + 8, faint);
             Glass.rect(ms, x + 8 + FontRenderers.sf_bold_12.getStringWidth(label), y + 11, x + w, y + 11.5f, 0f, Glass.alpha(ink, 0.08f));
             return;
         }
-        boolean hov = visible && inside(mx, my, x, y, x + w, y + h);
+        // The hover highlight and the footer hint still follow the cursor, and only while it is
+        // inside the pane rather than over the header or footer above and below it.
+        boolean hov = my >= top && my <= bottom && inside(mx, my, x, y, x + w, y + h);
         float lit = ease(o, hov, 10f);
         if (lit > 0.01f) Glass.rect(ms, x, y + 1, x + w, y + h - 1, 7f, Glass.alpha(ink, 0.05f * lit));
         boolean unavailable = o.unavailableReason() != null;
@@ -512,7 +538,11 @@ public final class AtlasScreen extends SoupScreen {
         if (hov) {
             hint = unavailable ? o.unavailableReason() : (o.tooltip() != null ? o.tooltip() : o.label());
         }
-        if (visible) hit("row", o, x, Math.max(y, top), x + w, Math.min(y + h, bottom));
+        // Hit rectangles come from where the row was drawn, clipped to the pane. They used to be
+        // registered only while the cursor was inside the pane, which tied them to where the mouse
+        // was on the previous frame: a click that arrived in the same frame as the move into the
+        // pane found no rectangle and did nothing.
+        hit("row", o, x, Math.max(y, top), x + w, Math.min(y + h, bottom));
         float right = x + w - 4;
         if (o instanceof Option.Toggle) {
             drawSwitch(ms, "opt:" + System.identityHashCode(o), right - 22, y + h / 2f, 22f, 12f, ((Option.Toggle) o).get());
@@ -529,7 +559,7 @@ public final class AtlasScreen extends SoupScreen {
                 float kx = sx + (sx2 - sx) * shownF;
                 float grab = ease("grab" + System.identityHashCode(o), slider == o, 14f);
                 Glass.dot(ms, kx, sy, 4f + grab * 1.5f, 0xFFFFFFFF);
-                if (visible) hit("slider", o, sx - 3, y + 15, sx2 + 3, y + h);
+                hit("slider", o, sx - 3, Math.max(y + 15, top), sx2 + 3, Math.min(y + h, bottom));
             }
         } else if (o instanceof Option.Choice) {
             String value = ((Option.Choice) o).display();
@@ -543,8 +573,10 @@ public final class AtlasScreen extends SoupScreen {
             Glass.rect(ms, right - 30, y + 4, right, y + 18, 5f, argb);
             Glass.rim(ms, right - 30, y + 4, right, y + 18, 5f, 0.8f, Glass.alpha(ink, 0.4f), Glass.alpha(ink, 0.15f));
             String hex = editing == o ? "#" + editBuffer + (caret() ? "_" : "") : "#" + col.hex();
-            FontRenderers.sf_bold_12.drawString(ms, hex, right - 36 - FontRenderers.sf_bold_12.getStringWidth(hex), y + 8, dim);
-            if (visible) hit("hex", o, right - 90, y + 2, right - 33, y + 20);
+            float hexW = FontRenderers.sf_bold_12.getStringWidth(hex);
+            FontRenderers.sf_bold_12.drawString(ms, hex, right - 36 - hexW, y + 8, dim);
+            // Only the text itself, so the rest of the row still opens the channel editor.
+            hit("hex", o, right - 40 - hexW, Math.max(y + 2, top), right - 33, Math.min(y + 20, bottom));
             if (o == colourOpen) {
                 String[] names = {"R", "G", "B"};
                 int[] shifts = {16, 8, 0};
@@ -559,7 +591,7 @@ public final class AtlasScreen extends SoupScreen {
                     Glass.dot(ms, sx + (sx2 - sx) * f, sy, 3.5f, 0xFFFFFFFF);
                     String v = String.valueOf(col.component(shifts[k]));
                     FontRenderers.sf_bold_12.drawString(ms, v, right - FontRenderers.sf_bold_12.getStringWidth(v), sy - 3, dim);
-                    if (visible) hit("channel", new Object[]{o, shifts[k], sx, sx2}, sx - 3, sy - 6, sx2 + 3, sy + 6);
+                    hit("channel", new Object[]{o, shifts[k], sx, sx2}, sx - 3, Math.max(sy - 6, top), sx2 + 3, Math.min(sy + 6, bottom));
                 }
             }
         } else if (o instanceof Option.Text) {
@@ -584,14 +616,22 @@ public final class AtlasScreen extends SoupScreen {
         }
     }
 
-    private void dropdownOverlay(DrawContext context, MatrixStack ms, double mx, double my) {
-        FontRenderer font = FontRenderers.sf_bold_mini;
+    /** The open dropdown's values, less the ones its filter rules out. */
+    private List<Enum<?>> dropValues() {
         List<Enum<?>> values = new ArrayList<Enum<?>>();
+        if (dropdown == null) return values;
+        String needle = dropFilter.toLowerCase(Locale.ROOT);
         for (Enum<?> e : dropdown.values()) {
-            if (dropFilter.isEmpty() || Option.Choice.prettify(e).toLowerCase(Locale.ROOT).contains(dropFilter.toLowerCase(Locale.ROOT))) {
+            if (needle.isEmpty() || Option.Choice.prettify(e).toLowerCase(Locale.ROOT).contains(needle)) {
                 values.add(e);
             }
         }
+        return values;
+    }
+
+    private void dropdownOverlay(DrawContext context, MatrixStack ms, double mx, double my) {
+        FontRenderer font = FontRenderers.sf_bold_mini;
+        List<Enum<?>> values = dropValues();
         int visible = Math.min(10, Math.max(1, values.size()));
         float h = visible * 16 + (dropdown.values().length > 8 ? 22 : 6);
         float x = dropX, y = dropY, x2 = x + dropW;
@@ -608,7 +648,7 @@ public final class AtlasScreen extends SoupScreen {
         }
         float maxScroll = Math.max(0, values.size() * 16 - visible * 16);
         dropScroll = Math.max(0, Math.min(dropScroll, maxScroll));
-        context.enableScissor((int) x, (int) listTop, (int) x2, (int) (listTop + visible * 16));
+        scissor(context, x, listTop, x2, listTop + visible * 16);
         Enum<?> current = dropdown.get();
         for (int i = 0; i < values.size(); i++) {
             float ry = listTop + i * 16 - dropScroll;
@@ -621,6 +661,23 @@ public final class AtlasScreen extends SoupScreen {
             hit("choose", e, x + 3, Math.max(ry, listTop), x2 - 3, Math.min(ry + 15, listTop + visible * 16));
         }
         context.disableScissor();
+    }
+
+    /**
+     * A scissor box given in the window's own coordinates.
+     *
+     * <p>The window is drawn through a scale about its centre while it pops open, and the scissor
+     * box is in screen pixels, so the same transform has to be applied by hand - otherwise the
+     * panes clip against the wrong rectangle for the first few frames and the rows appear cut off.
+     */
+    private void scissor(DrawContext context, float x, float y, float x2, float y2) {
+        float scale = Math.max(0.01f, open.value);
+        float px = winX + winW / 2f, py = winY + winH / 2f;
+        context.enableScissor(
+                (int) Math.floor(px + (x - px) * scale),
+                (int) Math.floor(py + (y - py) * scale),
+                (int) Math.ceil(px + (x2 - px) * scale),
+                (int) Math.ceil(py + (y2 - py) * scale));
     }
 
     private void scrollbar(MatrixStack ms, float x, float top, float bottom, float shown, float max) {
@@ -680,10 +737,21 @@ public final class AtlasScreen extends SoupScreen {
         searchFocused = h != null && "search".equals(h.kind);
         if (h == null) return true;
         String kind = h.kind;
-        if (button == 1 && "row".equals(kind)) {
-            ((Option) h.payload).reset();
-            ConfigSchema.save();
-            return true;
+        if (button == 1) {
+            // "Right-click resets", as the header says - including on a switch, a slider track, a
+            // hex field or one of a colour's channels, which are all hit before the row is.
+            Option target = null;
+            if (h.payload instanceof Option) {
+                target = (Option) h.payload;
+            } else if ("channel".equals(kind)) {
+                target = (Option) ((Object[]) h.payload)[0];
+            }
+            if (target != null) {
+                stopEditing(false);
+                target.reset();
+                ConfigSchema.save();
+                return true;
+            }
         }
         if ("close".equals(kind)) {
             close();
@@ -693,8 +761,8 @@ public final class AtlasScreen extends SoupScreen {
             mc.displayGuiScreen(new me.Padej_.soupapi.gui.SoupSettingsScreen());
         } else if ("move".equals(kind)) {
             dragging = true;
-            dragDX = (int) (mouseX - winX);
-            dragDY = (int) (mouseY - winY);
+            dragDX = (int) (mx - winX);
+            dragDY = (int) (my - winY);
         } else if ("grip".equals(kind)) {
             resizing = true;
         } else if ("group".equals(kind)) {
@@ -777,13 +845,13 @@ public final class AtlasScreen extends SoupScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
-        double mx = toLayoutX(mouseX);
+        double mx = toLayoutX(mouseX), my = toLayoutY(mouseY);
         if (dragging) {
-            winX = (int) (mouseX - dragDX);
-            winY = (int) (mouseY - dragDY);
+            winX = (int) (mx - dragDX);
+            winY = (int) (my - dragDY);
         } else if (resizing) {
-            winW = (int) Math.max(MIN_W, mouseX - winX);
-            winH = (int) Math.max(MIN_H, mouseY - winY);
+            winW = (int) Math.max(minW, mx - winX);
+            winH = (int) Math.max(minH, my - winY);
         } else if (slider != null) {
             dragSlider(mx);
         } else if (sliderHit != null && "channel".equals(sliderHit.kind)) {
@@ -823,27 +891,67 @@ public final class AtlasScreen extends SoupScreen {
         return true;
     }
 
+    /**
+     * Keys.
+     *
+     * <p>Returns true only for keys this screen really handled. Everything else has to fall
+     * through, because the character that belongs to the press arrives separately and is what
+     * types into the search box, a value field or a dropdown's filter - a blanket "handled" here
+     * is what left every field in the screen unable to receive a single character.
+     */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // LWJGL 2 key codes: 1 escape, 14 backspace, 28 enter, 156 numpad enter.
         if (listening != null) {
+            // Escape unbinds, anything else binds; the character of that key press is dropped so
+            // it does not also land in the search box.
             listening.set(keyCode == 1 ? 0 : keyCode);
             listening = null;
             ConfigSchema.save();
+            swallowNextChar();
             return true;
         }
         if (dropdown != null) {
-            if (keyCode == 1) dropdown = null;
-            else if (keyCode == 14 && !dropFilter.isEmpty()) dropFilter = dropFilter.substring(0, dropFilter.length() - 1);
-            return true;
+            if (keyCode == 1) {
+                dropdown = null;
+                dropFilter = "";
+                return true;
+            }
+            if (keyCode == 14) {
+                if (!dropFilter.isEmpty()) dropFilter = dropFilter.substring(0, dropFilter.length() - 1);
+                return true;
+            }
+            if (keyCode == 28 || keyCode == 156) {
+                // Enter takes the first value the filter leaves, so a dropdown can be used from
+                // the keyboard alone.
+                List<Enum<?>> filtered = dropValues();
+                if (!filtered.isEmpty()) {
+                    dropdown.set(filtered.get(0));
+                    ConfigSchema.save();
+                }
+                dropdown = null;
+                dropFilter = "";
+                return true;
+            }
+            return false;
         }
         if (editing != null) {
-            if (keyCode == 14 && !editBuffer.isEmpty()) editBuffer = editBuffer.substring(0, editBuffer.length() - 1);
-            else if (keyCode == 28 || keyCode == 156) stopEditing(true);
-            else if (keyCode == 1) stopEditing(false);
-            return true;
+            if (keyCode == 14) {
+                if (!editBuffer.isEmpty()) editBuffer = editBuffer.substring(0, editBuffer.length() - 1);
+                return true;
+            }
+            if (keyCode == 28 || keyCode == 156) {
+                stopEditing(true);
+                return true;
+            }
+            if (keyCode == 1) {
+                stopEditing(false);
+                return true;
+            }
+            return false;
         }
-        if (keyCode == 14 && !search.isEmpty()) {
-            search = search.substring(0, search.length() - 1);
+        if (keyCode == 14) {
+            if (!search.isEmpty()) search = search.substring(0, search.length() - 1);
             return true;
         }
         if (keyCode == 1 && !search.isEmpty()) {
@@ -851,7 +959,7 @@ public final class AtlasScreen extends SoupScreen {
             searchFocused = false;
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return false;
     }
 
     @Override
@@ -863,7 +971,8 @@ public final class AtlasScreen extends SoupScreen {
             return true;
         }
         if (editing instanceof Option.Colour) {
-            if (Character.digit(chr, 16) >= 0 && editBuffer.length() < 6) editBuffer += Character.toUpperCase(chr);
+            int digits = ((Option.Colour) editing).allowAlpha() ? 8 : 6;
+            if (Character.digit(chr, 16) >= 0 && editBuffer.length() < digits) editBuffer += Character.toUpperCase(chr);
             return true;
         }
         if (editing instanceof Option.Num) {
@@ -902,7 +1011,11 @@ public final class AtlasScreen extends SoupScreen {
         if (o == null || !commit) return;
         try {
             if (o instanceof Option.Colour && !buffer.isEmpty()) {
-                ((Option.Colour) o).set((int) (Long.parseLong(buffer, 16) & 0xFFFFFF));
+                Option.Colour col = (Option.Colour) o;
+                long parsed = Long.parseLong(buffer, 16);
+                // Masking off the alpha byte of a colour that has one makes it fully transparent,
+                // which reads as the setting having been turned off.
+                col.set(col.allowAlpha() ? (int) parsed : (int) (parsed & 0xFFFFFF));
             } else if (o instanceof Option.Num && !buffer.isEmpty() && !buffer.equals("-")) {
                 ((Option.Num) o).set(Double.parseDouble(buffer));
             } else if (o instanceof Option.Text) {
