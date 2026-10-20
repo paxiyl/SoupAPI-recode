@@ -76,18 +76,11 @@ public class WatermarkRenderer {
         stack.scale(scale, scale, scale);
         stack.translate(-(x + 3.5f + 20), -(y + 3.5f + 20), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // Same reason as the target HUD's head: no framebuffer clear to round a corner.
         Render2D.drawRound(stack, x + 3.5f, y + 3.5f, 40, 40, r, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(stack.peek().getPositionMatrix(), 1, 1, 1, 1, x + 3.5f, y + 3.5f, x + 3.5f + 40, y + 3.5f + 40, r, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        Render2D.renderTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(1f, 1f, 1f, 1f);
+        Render2D.renderRoundedTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64, r, headTint);
+        Render2D.renderRoundedTexture(stack, texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64, r, headTint);
         RenderSystem.disableBlend();
         stack.pop();
     }

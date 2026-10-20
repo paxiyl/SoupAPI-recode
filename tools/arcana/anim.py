@@ -44,5 +44,21 @@ class Clip:
         return out
 
 
+def arc(clip, keys, bones=('swing', 'weapon')):
+    """Lays a list of `(t, rot_a, rot_b, pos_a)` keys onto two bones and the first bone's position.
+
+    Written out this way because every attack in the pack has the same five beats: rest, the wind-up
+    away from the cut, the cut itself, a short overshoot past it, and the drift back. Giving the
+    shoulder a position as well as a rotation is what lets the arcs be large - a pivot behind the
+    camera throws the blade out of frame on rotation alone, and a few units of travel the other way
+    brings it back without flattening the swing.
+    """
+    for key in keys:
+        t, a, b = key[0], key[1], key[2]
+        pos = key[3] if len(key) > 3 else (0, 0, 0)
+        clip.pose(t, {bones[0]: {'rot': a, 'pos': pos}, bones[1]: {'rot': b}})
+    return clip
+
+
 def bundle(clips):
     return {'format_version': '1.8.0', 'animations': {c.name: c.to_json() for c in clips}}

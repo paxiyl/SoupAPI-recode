@@ -6,7 +6,7 @@ same rig as the other weapons (`swing` about the shoulder, `weapon` at the wrist
 """
 import math
 
-from anim import Clip
+from anim import Clip, arc
 
 N = 12
 RIBS = 9
@@ -24,12 +24,24 @@ def spine(c, t, per, wave=0.0, phase=0.0, ribs=0.0, feathers=0.0, smooth=True):
 
 def build(rig):
     out = []
-    idle = Clip('static_idle', 4.0, loop=True)
-    for i in range(9):
-        t = i * 0.5
-        ph = math.tau * i / 8
-        idle.pose(t, {'swing': {'rot': (math.sin(ph) * 1.2, math.cos(ph) * 0.6, 0), 'pos': (0, math.sin(ph) * 0.25, 0)}})
-        spine(idle, t, 0, wave=1.6, phase=ph, feathers=0)
+    # The hold. The claw is a thing that is alive, so its idle is not the blade's: the arm breathes
+    # slowly while the crescent flexes against that breath on a shorter cycle, and every so often the
+    # whole spine tightens as if it were about to close. The feathers run their own wave, slower
+    # still, so nothing in it lines up.
+    idle = Clip('static_idle', 6.0, loop=True)
+    steps = 16
+    for i in range(steps + 1):
+        t = 6.0 * i / steps
+        ph = math.tau * i / steps
+        breath = math.sin(ph)
+        flex = math.sin(ph * 2.0 + 0.9)
+        # The tightening: a short squeeze a third of the way through the loop.
+        grip = max(0.0, math.sin(ph * 1.0 - 1.2)) ** 6
+        idle.pose(t, {'swing': {'rot': (breath * 2.0 + grip * 2.5, math.cos(ph * 0.5) * 1.0, flex * 0.8),
+                                'pos': (0, breath * 0.5, math.cos(ph) * 0.25)},
+                      'weapon': {'rot': (0, flex * 2.2, breath * 1.6)}})
+        spine(idle, t, -grip * 7.0, wave=2.4, phase=ph * 1.5,
+              ribs=grip * 6.0, feathers=math.sin(ph * 0.75) * 3.0)
     out.append(idle)
 
     draw = Clip('draw', 1.3)
@@ -70,8 +82,7 @@ def build(rig):
 
     def attack(name, keys, hit, snd):
         c = Clip(name, keys[-1][0])
-        for t, sw, wp in keys:
-            c.pose(t, {'swing': {'rot': sw}, 'weapon': {'rot': wp}})
+        arc(c, keys)
         spine(c, 0, 0)
         spine(c, hit - 0.12, 7, ribs=-15, feathers=-8)
         spine(c, hit, -11, ribs=10, feathers=6)
@@ -83,16 +94,59 @@ def build(rig):
         c.sound(max(0.0, hit - 0.12), SND + snd)
         out.append(c)
 
-    attack('melee_1', [(0, (0, 0, 0), (0, 0, 0)), (0.15, (-6, 8, -16), (0, -15, -20)),
-                       (0.3, (4, -8, 28), (5, 10, 22)), (0.48, (5, -6, 30), (4, 8, 20)), (0.8, (0, 0, 0), (0, 0, 0))],
-           0.3, 'swing_1')
-    attack('melee_2', [(0, (0, 0, 0), (0, 0, 0)), (0.15, (6, -8, 30), (0, 20, 25)),
-                       (0.3, (-6, 6, -14), (-5, -15, -18)), (0.48, (-4, 4, -10), (-3, -10, -12)), (0.8, (0, 0, 0), (0, 0, 0))],
-           0.3, 'swing_2')
-    # An overhead rake: raised, then dragged down through the centre.
-    attack('melee_3', [(0, (0, 0, 0), (0, 0, 0)), (0.18, (-14, -4, 10), (-20, 0, 8)),
-                       (0.34, (10, -3, 8), (25, 0, 6)), (0.52, (8, -2, 6), (20, 0, 4)), (0.85, (0, 0, 0), (0, 0, 0))],
-           0.34, 'swing_3')
+    # A claw swings from the wrist more than the shoulder, so these lead with the weapon bone and
+    # keep a snap at the end of each - the hand whipping through after the arm has stopped.
+    attack('melee_1', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.11, (-12, 13, -30), (0, -26, -38), (2.5, 1.5, 2.5)),
+                       (0.25, (8, -13, 48), (9, 20, 40), (-2.0, -2.0, -3.5)),
+                       (0.32, (9, -15, 54), (10, 16, 34), (-2.2, -2.4, -3.0)),
+                       (0.5, (3, -4, 15), (2, 5, 10), (-0.5, -0.5, -0.5)),
+                       (0.82, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.25, 'swing_1')
+    attack('melee_2', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.11, (13, -13, 52), (0, 32, 42), (-2.2, -2.5, 2.5)),
+                       (0.25, (-10, 9, -26), (-8, -26, -34), (1.8, 2.5, -3.5)),
+                       (0.32, (-11, 10, -30), (-9, -21, -28), (2.0, 2.8, -3.0)),
+                       (0.5, (-3, 3, -8), (-3, -7, -9), (0.4, 0.6, -0.5)),
+                       (0.82, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.25, 'swing_2')
+    # An overhead rake: raised high, then dragged down through the centre and across.
+    attack('melee_3', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.14, (-24, -7, 14), (-34, 0, 12), (0, 3.5, 3.0)),
+                       (0.3, (18, -6, 10), (42, 0, 8), (0, -3.5, -4.0)),
+                       (0.38, (20, -5, 8), (38, 0, 6), (0, -3.8, -3.4)),
+                       (0.58, (6, -2, 4), (12, 0, 2), (0, -0.8, -0.6)),
+                       (0.9, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.3, 'swing_3')
+
+    # Summon. The claw is not drawn from anywhere: it assembles. The spine arrives furled and far
+    # too wide, the ribs sweep in behind it, the whole thing clenches once - hard enough to kick the
+    # camera - and settles open in the hand. The arm stays low until the last beat so that what the
+    # eye follows is the weapon putting itself together, not the hand coming up.
+    summon = Clip('summon', 2.4)
+    low_rot, low_pos = (34, 12, -14), (0, -7, 3)
+    summon.pose(0, {'swing': {'rot': low_rot, 'pos': low_pos}, 'weapon': {'rot': (0, 60, -30)}})
+    summon.key('weapon', 'scale', 0, (0.001, 0.001, 0.001), smooth=False)
+    summon.key('weapon', 'scale', 0.35, (0.001, 0.001, 0.001), smooth=False)
+    # Out of nothing at the wrist, overshooting its own size before it settles.
+    summon.key('weapon', 'scale', 0.75, (1.35, 1.25, 1.35))
+    summon.key('weapon', 'scale', 1.15, (0.92, 0.95, 0.92))
+    summon.key('weapon', 'scale', 1.5, (1, 1, 1))
+    spine(summon, 0.35, 26, ribs=-40, feathers=-26, smooth=False)
+    spine(summon, 0.75, 14, wave=7, phase=0.5, ribs=-30, feathers=-18)
+    # The clench.
+    spine(summon, 1.15, -16, ribs=14, feathers=10, smooth=False)
+    spine(summon, 1.5, 6, wave=3, phase=2.0, ribs=-12, feathers=-6)
+    spine(summon, 2.4, 0)
+    summon.pose(0.75, {'swing': {'rot': (28, 9, -10), 'pos': (0, -5, 2)}, 'weapon': {'rot': (0, 24, -12)}})
+    summon.pose(1.15, {'swing': {'rot': (22, 6, -6), 'pos': (0, -3.5, 1)}, 'weapon': {'rot': (0, 8, -4)}})
+    summon.pose(1.75, {'swing': {'rot': (-7, -4, 5), 'pos': (0, 0.6, 0)}, 'weapon': {'rot': (0, -6, 3)}})
+    summon.pose(2.05, {'swing': {'rot': (3, 2, -2), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 3, -1)}})
+    summon.pose(2.4, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    summon.pose(1.11, {'camera': {'rot': (0, 0, 0)}})
+    summon.pose(1.17, {'camera': {'rot': (3.2, 1.2, -0.9)}})
+    summon.pose(1.4, {'camera': {'rot': (0, 0, 0)}})
+    summon.sound(0.3, SND + 'open')
+    summon.sound(1.15, SND + 'snap')
+    summon.sound(1.7, SND + 'draw')
+    out.append(summon)
 
     fl = Clip('flourish', 1.7)
     fl.pose(0, {'swing': {'rot': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})

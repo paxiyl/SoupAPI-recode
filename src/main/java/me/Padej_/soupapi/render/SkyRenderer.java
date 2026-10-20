@@ -72,9 +72,64 @@ public final class SkyRenderer extends IRenderHandler {
     /** Fixed scatter for the style geometry (rifts, shards, figures, glyph columns). */
     private static final float[] RAND = new float[512];
 
+    /**
+     * The shattered-glass web: rays out from the impact and rings around it, which is how glass
+     * actually breaks - radial cracks first, then circumferential ones between them. The nodes
+     * are the crossings, stored as an angular radius from the impact and an angle around it; each
+     * cell between four of them is a pane.
+     */
+    private static final int WEB_RAYS = 18, WEB_RINGS = 9;
+    private static final float[] WEB_RADIUS = new float[WEB_RAYS * (WEB_RINGS + 1)];
+    private static final float[] WEB_ANGLE = new float[WEB_RAYS * (WEB_RINGS + 1)];
+    /** Per-pane shade and the phase of its sheen, so no two panes catch the light together. */
+    private static final float[] PANE_SHADE = new float[WEB_RAYS * WEB_RINGS];
+    private static final float[] PANE_PHASE = new float[WEB_RAYS * WEB_RINGS];
+    /** How heavy each radial crack is: a few run the whole way, most are hairlines. */
+    private static final float[] RAY_WEIGHT = new float[WEB_RAYS];
+    /** Which stretches of the rings are actually broken. Glass does not crack in full circles. */
+    private static final boolean[] RING_SEGMENT = new boolean[WEB_RAYS * (WEB_RINGS + 1)];
+    private static final float[] SCRATCH_A = new float[3], SCRATCH_B = new float[3];
+    private static final float[] SCRATCH_C = new float[3], SCRATCH_D = new float[3];
+
     private static final FloatBuffer FOG = BufferUtils.createFloatBuffer(16);
 
+    /** Where the pane is struck: high and a little to one side, so the web is not centred. */
+    private static final float[] IMPACT = {-0.34f, 0.86f, -0.38f};
+    private static final float[] IMPACT_U = new float[3], IMPACT_V = new float[3];
+
     static {
+        float il = (float) Math.sqrt(IMPACT[0] * IMPACT[0] + IMPACT[1] * IMPACT[1] + IMPACT[2] * IMPACT[2]);
+        IMPACT[0] /= il;
+        IMPACT[1] /= il;
+        IMPACT[2] /= il;
+        SmokeFx.basis(IMPACT[0], IMPACT[1], IMPACT[2], IMPACT_U, IMPACT_V);
+        Random web = new Random(0x5A77E2DL);
+        for (int ray = 0; ray < WEB_RAYS; ray++) {
+            // Each ray leaves the impact at its own angle and wanders as it goes out, so the
+            // panes are irregular rather than a dartboard.
+            float base = (float) (ray / (double) WEB_RAYS * Math.PI * 2) + (web.nextFloat() - 0.5f) * 0.22f;
+            float wander = 0f;
+            for (int ring = 0; ring <= WEB_RINGS; ring++) {
+                float f = ring / (float) WEB_RINGS;
+                // Rings crowd near the impact and spread out towards the horizon, and each node
+                // sits well off the nominal radius so a ring reads as a jagged line of breaks
+                // rather than a circle.
+                float radius = (float) (Math.pow(f, 1.4) * 2.6 + 0.05);
+                radius *= 0.62f + web.nextFloat() * 0.74f;
+                wander += (web.nextFloat() - 0.5f) * 0.16f;
+                int k = ray * (WEB_RINGS + 1) + ring;
+                WEB_RADIUS[k] = radius;
+                WEB_ANGLE[k] = base + wander * f;
+                // Three segments in ten are missing, which is what keeps the rings from closing.
+                RING_SEGMENT[k] = web.nextFloat() > 0.3f;
+            }
+            // Two rays in nine are the heavy cracks that carry the break outward.
+            RAY_WEIGHT[ray] = web.nextFloat() < 0.22f ? 1f : 0.3f + web.nextFloat() * 0.3f;
+        }
+        for (int i = 0; i < PANE_SHADE.length; i++) {
+            PANE_SHADE[i] = 0.35f + web.nextFloat() * 0.65f;
+            PANE_PHASE[i] = web.nextFloat() * 6.283f;
+        }
         for (int j = 0; j <= EL; j++) {
             float el = EL_MIN + (EL_MAX - EL_MIN) * j / EL;
             for (int i = 0; i <= AZ; i++) {
@@ -684,7 +739,9 @@ public final class SkyRenderer extends IRenderHandler {
                 constellations(tessellator, buffer, I);
                 break;
             case SHATTERED_GLASS:
-                glassShards(mc, tessellator, buffer, I, 70, false);
+                // Fragments first: the web and the point of impact belong in front of them.
+                glassShards(mc, tessellator, buffer, I, 22, false);
+                shatteredWeb(mc, tessellator, buffer, I);
                 break;
             case STORM_FRONT:
                 lightning(tessellator, buffer, I);
@@ -816,6 +873,168 @@ public final class SkyRenderer extends IRenderHandler {
         }
         tessellator.draw();
         GlStateManager.disableTexture2D();
+    }
+
+    /**
+     * The sky as a struck pane of glass.
+     *
+     * <p>The style used to be a gradient with a little noise in it and some floating fragments,
+     * which was not a shattered anything. This draws the break itself: panes of tinted glass, and
+     * the cracks between them as light caught along an edge. The web is geometry rather than a
+     * texture because the dome's own vertices are far too coarse for a crack - {@value #AZ} by
+     * {@value #EL} across the whole sky - and because 1.8.9 has no shader to put one in.
+     *
+     * <p>Three passes, each over the same {@value #WEB_RAYS} by {@value #WEB_RINGS} web: the panes,
+     * then every crack as a soft glow, then the same cracks again as a thin bright core, so the
+     * seams read as light coming through rather than as drawn lines. The whole web turns slowly
+     * about the point of impact, panes catch the light one after another, and a pulse runs outward
+     * along the cracks from the impact every few seconds.
+     */
+    private void shatteredWeb(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        float spin = t * 0.012f;
+        float pulse = (t * 0.33f) % 1f;
+
+        // ---- panes ----
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int ray = 0; ray < WEB_RAYS; ray++) {
+            int next = (ray + 1) % WEB_RAYS;
+            for (int ring = 0; ring < WEB_RINGS; ring++) {
+                int pane = ray * WEB_RINGS + ring;
+                float sheen = 0.5f + 0.5f * MathHelper.sin(t * 0.55f + PANE_PHASE[pane]);
+                // Panes thin out towards the edge of the web so it does not end at a hard rim.
+                float out = 1f - ring / (float) WEB_RINGS;
+                float a = (0.16f + 0.4f * sheen * PANE_SHADE[pane]) * (0.3f + 0.7f * out) * I;
+                float[] col = ((ray * 7 + ring * 3) % 5) < 2 ? alt : main;
+                float lift = 0.35f + 0.65f * PANE_SHADE[pane];
+                webNode(SCRATCH_A, ray, ring, spin);
+                webNode(SCRATCH_B, next, ring, spin);
+                webNode(SCRATCH_C, next, ring + 1, spin);
+                webNode(SCRATCH_D, ray, ring + 1, spin);
+                paneVertex(buffer, SCRATCH_A, col, a * lift);
+                paneVertex(buffer, SCRATCH_B, col, a * lift);
+                paneVertex(buffer, SCRATCH_C, col, a * 0.75f * lift);
+                paneVertex(buffer, SCRATCH_D, col, a * 0.75f * lift);
+            }
+        }
+        tessellator.draw();
+
+        // ---- the cracks, twice: a wide glow, then a thin core ----
+        for (int pass = 0; pass < 2; pass++) {
+            boolean core = pass == 1;
+            float width = core ? 0.004f : 0.022f;
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+            for (int ray = 0; ray < WEB_RAYS; ray++) {
+                int next = (ray + 1) % WEB_RAYS;
+                float weight = RAY_WEIGHT[ray];
+                for (int ring = 0; ring <= WEB_RINGS; ring++) {
+                    float f = ring / (float) WEB_RINGS;
+                    // The pulse is a band of brightness travelling out from the impact.
+                    float wave = 1f + 1.9f * gauss(f - pulse, 0.1f);
+                    // A crack is widest where it was struck and closes to a hairline at its end.
+                    float taper = (0.25f + 0.75f * (1f - f)) * (0.45f + 0.55f * weight);
+                    float fade = (1f - smooth(0.7f, 1f, f)) * wave * I * (0.4f + 0.6f * weight);
+                    if (ring < WEB_RINGS) {
+                        webNode(SCRATCH_A, ray, ring, spin);
+                        webNode(SCRATCH_B, ray, ring + 1, spin);
+                        crack(buffer, SCRATCH_A, SCRATCH_B, width * taper, core, fade);
+                    }
+                    if (ring > 0 && RING_SEGMENT[ray * (WEB_RINGS + 1) + ring]) {
+                        webNode(SCRATCH_A, ray, ring, spin);
+                        webNode(SCRATCH_B, next, ring, spin);
+                        crack(buffer, SCRATCH_A, SCRATCH_B, width * taper * 0.7f, core, fade * 0.8f);
+                    }
+                }
+            }
+            tessellator.draw();
+        }
+
+        // ---- the point it was struck ----
+        GlStateManager.enableTexture2D();
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float beat = 0.8f + 0.2f * MathHelper.sin(t * 1.7f);
+        // Drawn nearer than the web so the crush of cracks at the centre cannot sit on top of it.
+        billboard(buffer, IMPACT[0], IMPACT[1], IMPACT[2], R * 0.9f, 4.2f * beat, 0f, 0f, 0f, 1f, 1f,
+                0.85f + main[0] * 0.15f, 0.9f + main[1] * 0.1f, 1f, 0.55f * I);
+        billboard(buffer, IMPACT[0], IMPACT[1], IMPACT[2], R * 0.89f, 1.8f * beat, 45f, 0f, 0f, 1f, 1f,
+                1f, 1f, 1f, 0.9f * I);
+        billboardStretched(buffer, IMPACT[0], IMPACT[1], IMPACT[2], R * 0.89f, 7.5f * beat, 0.5f,
+                t * 3f, 0f, 0f, 1f, 1f, 1f, 1f, 1f, 0.35f * I);
+        billboardStretched(buffer, IMPACT[0], IMPACT[1], IMPACT[2], R * 0.89f, 0.5f, 7.5f * beat,
+                t * 3f, 0f, 0f, 1f, 1f, 1f, 1f, 1f, 0.35f * I);
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+    }
+
+    /** A node of the web as a direction, turned by {@code spin} about the impact. */
+    private static void webNode(float[] out, int ray, int ring, float spin) {
+        int k = ray * (WEB_RINGS + 1) + ring;
+        float r = WEB_RADIUS[k], a = WEB_ANGLE[k] + spin;
+        float sr = MathHelper.sin(r), cr = MathHelper.cos(r);
+        float ca = MathHelper.cos(a), sa = MathHelper.sin(a);
+        out[0] = IMPACT[0] * cr + (IMPACT_U[0] * ca + IMPACT_V[0] * sa) * sr;
+        out[1] = IMPACT[1] * cr + (IMPACT_U[1] * ca + IMPACT_V[1] * sa) * sr;
+        out[2] = IMPACT[2] * cr + (IMPACT_U[2] * ca + IMPACT_V[2] * sa) * sr;
+    }
+
+    private void paneVertex(WorldRenderer buffer, float[] dir, float[] col, float a) {
+        buffer.pos(dir[0] * R * 0.97f, dir[1] * R * 0.97f, dir[2] * R * 0.97f)
+                .color(col[0], col[1], col[2], clamp(a)).endVertex();
+    }
+
+    /**
+     * One crack, as a ribbon laid on the dome.
+     *
+     * <p>Drawn as three quads - the lit core and a fade either side of it - so the light along the
+     * edge falls off instead of ending at a line.
+     */
+    private void crack(WorldRenderer buffer, float[] a, float[] b, float width, boolean core, float alpha) {
+        if (alpha <= 0.004f) return;
+        // Perpendicular to the crack, in the dome's surface.
+        float mx = a[0] + b[0], my = a[1] + b[1], mz = a[2] + b[2];
+        float dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
+        float px = my * dz - mz * dy, py = mz * dx - mx * dz, pz = mx * dy - my * dx;
+        float len = (float) Math.sqrt(px * px + py * py + pz * pz);
+        if (len < 1.0E-5f) return;
+        px /= len;
+        py /= len;
+        pz /= len;
+        float[] col = core ? null : main;
+        float r = core ? 1f : 0.55f + main[0] * 0.45f;
+        float g = core ? 1f : 0.6f + main[1] * 0.4f;
+        float bl = core ? 1f : 0.75f + main[2] * 0.25f;
+        if (col != null) {
+            r = 0.6f + col[0] * 0.4f;
+            g = 0.65f + col[1] * 0.35f;
+            bl = 0.85f + col[2] * 0.15f;
+        }
+        float inner = core ? width : width * 0.35f;
+        float outer = width;
+        float ca = clamp(alpha * (core ? 0.85f : 0.3f));
+        if (core) {
+            ribbonQuad(buffer, a, b, px, py, pz, -inner, inner, r, g, bl, ca, ca);
+        } else {
+            ribbonQuad(buffer, a, b, px, py, pz, -outer, -inner, r, g, bl, 0f, ca);
+            ribbonQuad(buffer, a, b, px, py, pz, -inner, inner, r, g, bl, ca, ca);
+            ribbonQuad(buffer, a, b, px, py, pz, inner, outer, r, g, bl, ca, 0f);
+        }
+    }
+
+    private void ribbonQuad(WorldRenderer buffer, float[] a, float[] b, float px, float py, float pz,
+                            float from, float to, float r, float g, float bl, float a0, float a1) {
+        vertexOffset(buffer, a, px, py, pz, from, r, g, bl, a0);
+        vertexOffset(buffer, b, px, py, pz, from, r, g, bl, a0);
+        vertexOffset(buffer, b, px, py, pz, to, r, g, bl, a1);
+        vertexOffset(buffer, a, px, py, pz, to, r, g, bl, a1);
+    }
+
+    private void vertexOffset(WorldRenderer buffer, float[] dir, float px, float py, float pz,
+                              float amount, float r, float g, float b, float a) {
+        float x = dir[0] + px * amount, y = dir[1] + py * amount, z = dir[2] + pz * amount;
+        float len = (float) Math.sqrt(x * x + y * y + z * z);
+        float d = R * 0.955f / len;
+        buffer.pos(x * d, y * d, z * d).color(r, g, b, clamp(a)).endVertex();
     }
 
     private void glassShards(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I, int count, boolean drift) {

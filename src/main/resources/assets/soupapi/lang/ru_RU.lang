@@ -453,6 +453,10 @@ text.autoconfig.soupapi.option.skyStyle=Узор неба (Plain = выкл. и�
 text.autoconfig.soupapi.option.skyStyle.@PrefixText=Анимированное небо
 text.autoconfig.soupapi.option.smokeAccentColor=Цвет акцента
 text.autoconfig.soupapi.option.smokeAccentUseTheme=Акцент по теме
+text.autoconfig.soupapi.option.smokeVolumetric=Объёмный дым
+text.autoconfig.soupapi.option.smokeVolumetric.@Tooltip=Каждый клуб рисуется несколькими слоями, поэтому имеет глубину с любой стороны, а не выглядит плоской картинкой.
+text.autoconfig.soupapi.option.smokeGroundShards=Оседает осколками
+text.autoconfig.soupapi.option.smokeGroundShards.@Tooltip=Дым, добравшийся до земли, ложится на неё осколками стекла, а не врезается в поверхность.
 text.autoconfig.soupapi.option.smokeColor=Цвет дыма
 text.autoconfig.soupapi.option.smokeDensity=Плотность
 text.autoconfig.soupapi.option.smokeEnabled=Многослойный дым

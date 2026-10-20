@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
@@ -133,6 +134,23 @@ public final class SmokeFx extends ConfigurableModule {
         boolean facing;
         float nx, ny = 1f, nz;
         float seed;
+        /** Height of the surface under the puff, and whether one was found. */
+        double groundY;
+        boolean overGround;
+
+        /**
+         * How much of this puff has settled onto the ground: 0 standing in the air, 1 lying flat.
+         *
+         * <p>Smoke drawn as a plate facing the camera cuts into the floor at a line, which is what
+         * reads as a picture pasted into the world rather than smoke in it. Near the ground the
+         * plate is turned to lie on the surface instead, so it spreads over it.
+         */
+        float settle(float pt) {
+            if (!overGround || kind != Kind.SMOKE) return 0f;
+            double at = py + (y - py) * pt;
+            float above = (float) (at - groundY) - size(pt) * 0.25f;
+            return 1f - smooth(Math.min(1f, Math.max(0f, above / 1.1f)));
+        }
 
         public P kind(Kind k) { this.kind = k; return this; }
         public P at(double x, double y, double z) { this.x = this.px = x; this.y = this.py = y; this.z = this.pz = z; return this; }
@@ -318,10 +336,15 @@ public final class SmokeFx extends ConfigurableModule {
         for (int i = POOL.size() - 1; i >= write; i--) POOL.remove(i);
     }
 
+    /** Reused for the block lookups under the smoke, so the pool still allocates nothing. */
+    private static final net.minecraft.util.BlockPos.MutableBlockPos GROUND_POS =
+            new net.minecraft.util.BlockPos.MutableBlockPos();
+
     private static void step(P p, float speed, float turbulence, float t) {
         p.px = p.x;
         p.py = p.y;
         p.pz = p.z;
+        if (p.kind == Kind.SMOKE) findGround(p);
 
         if (p.turbulence > 0f && turbulence > 0f && p.kind != Kind.DECAL) {
             // A curl-like field: rotating sines in three planes give swirling, divergence-light flow
@@ -596,9 +619,34 @@ public final class SmokeFx extends ConfigurableModule {
                     P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
                     float a = p.opacity(pt) * p.alpha * opacity;
                     if (a <= 0.004f) continue;
-                    smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, p.r, p.g, p.b, a);
+                    // Fully settled smoke is left to the fragment pass, unless that is switched
+                    // off - in which case it still draws here, lying flat.
+                    float settled = p.settle(pt);
+                    if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
+                    smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, p.r, p.g, p.b,
+                            a * (1f - settled * 0.55f), settled);
                 }
                 tessellator.draw();
+
+                // Pass 1b: what has settled, as flat fragments lying on the surface.
+                if (CONFIG.smokeGroundShards) {
+                    GlStateManager.disableTexture2D();
+                    buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+                    boolean anyShard = false;
+                    for (int i = 0; i < sortedCount; i++) {
+                        P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
+                        float settled = p.settle(pt);
+                        if (settled <= 0.02f) continue;
+                        float a = p.opacity(pt) * p.alpha * opacity * settled;
+                        if (a <= 0.004f) continue;
+                        float[] ac = accent(p);
+                        groundShard(buffer, p, pt, cx, cy, cz, ac, a);
+                        anyShard = true;
+                    }
+                    if (anyShard) tessellator.draw();
+                    else buffer.finishDrawing();
+                    GlStateManager.enableTexture2D();
+                }
 
                 // Pass 2: the rim light, additive, in the accent colour.
                 if (edges) {
@@ -609,8 +657,11 @@ public final class SmokeFx extends ConfigurableModule {
                         P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
                         float a = p.opacity(pt) * p.edge * glow * opacity * 0.6f;
                         if (a <= 0.004f) continue;
+                        float settled = p.settle(pt);
+                        if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
                         float[] ac = accent(p);
-                        smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, ac[0], ac[1], ac[2], Math.min(1f, a));
+                        smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, ac[0], ac[1], ac[2],
+                                Math.min(1f, a) * (1f - settled), settled);
                     }
                     tessellator.draw();
                 }
@@ -667,6 +718,33 @@ public final class SmokeFx extends ConfigurableModule {
         }
     }
 
+    /**
+     * The surface under a puff, if there is one within a couple of blocks.
+     *
+     * <p>Looked up on the tick rather than the frame, and only for smoke, so this costs one block
+     * read per puff per tick. A puff that finds nothing keeps standing up to the camera.
+     */
+    private static void findGround(P p) {
+        net.minecraft.client.multiplayer.WorldClient world = mc.theWorld;
+        if (world == null) {
+            p.overGround = false;
+            return;
+        }
+        int x = net.minecraft.util.MathHelper.floor_double(p.x);
+        int z = net.minecraft.util.MathHelper.floor_double(p.z);
+        int top = net.minecraft.util.MathHelper.floor_double(p.y);
+        for (int y = top; y >= top - 2 && y > 0; y--) {
+            GROUND_POS.set(x, y, z);
+            net.minecraft.block.state.IBlockState state = world.getBlockState(GROUND_POS);
+            if (state.getBlock().getMaterial().isSolid()) {
+                p.groundY = y + 1.0;
+                p.overGround = true;
+                return;
+            }
+        }
+        p.overGround = false;
+    }
+
     /** Fills {@link #sortKeys} with the alpha-blended particles, farthest first; returns how many. */
     private static int sortSmoke(double cx, double cy, double cz) {
         int n = 0;
@@ -701,16 +779,29 @@ public final class SmokeFx extends ConfigurableModule {
 
     private static final float[] SCRATCH_ACCENT = new float[3];
 
+    /**
+     * One puff.
+     *
+     * <p>A single plate facing the camera is what makes smoke read as a picture: it has no
+     * thickness, so walking around it changes nothing, and every puff in the cloud is exactly
+     * parallel to every other. Two things are done about that here. The puff is drawn as a few
+     * slices spread along its own axis, which do move against each other as the camera goes round
+     * and overlap into something with depth; and each slice is shaded across its face from a fixed
+     * light, so it has a lit side and a side in shadow instead of one flat tone.
+     *
+     * <p>{@code settled} turns the slices down flat onto the ground - see {@link P#settle}.
+     */
     private static void smokeQuad(WorldRenderer buffer, P p, float pt, double cx, double cy, double cz,
                                   float[] right, float[] up, float[] look,
-                                  float r, float g, float b, float a) {
+                                  float r, float g, float b, float a, float settled) {
         double x = p.px + (p.x - p.px) * pt - cx;
         double y = p.py + (p.y - p.py) * pt - cy;
         double z = p.pz + (p.z - p.pz) * pt - cz;
         float half = p.size(pt) * 0.5f;
         float u0, v0, u1, v1;
         float[] ax = SCRATCH_A, ay = SCRATCH_B;
-        if (p.kind == Kind.WISP) {
+        boolean wisp = p.kind == Kind.WISP;
+        if (wisp) {
             // Wisps lie along their own motion, projected onto the view plane.
             int w = p.variant & 1;
             u0 = w * 0.25f; u1 = u0 + 0.25f; v0 = 0.5f; v1 = 0.75f;
@@ -722,7 +813,129 @@ public final class SmokeFx extends ConfigurableModule {
             u0 = v * 0.25f; u1 = u0 + 0.25f; v0 = 0f; v1 = 0.5f;
             rotated(right, up, p.rot + (float) Math.sin(p.seed + p.age * 0.02f) * 6f, half, half, ax, ay);
         }
-        quad(buffer, x, y, z, ax, ay, u0, v0, u1, v1, r, g, b, a);
+        if (settled > 0.002f) flatten(ax, ay, settled, half);
+
+        int slices = wisp ? 1 : volumeSlices();
+        if (slices <= 1) {
+            shadedQuad(buffer, x, y, z, ax, ay, u0, v0, u1, v1, r, g, b, a, p);
+            return;
+        }
+        // The slices are spread along an axis of the puff's own, not the camera's, so the shape
+        // they make together is the same from every side.
+        float sx = MathHelper.cos(p.seed * 1.7f), sz = MathHelper.sin(p.seed * 1.7f);
+        float sy = MathHelper.cos(p.seed * 2.9f) * 0.6f;
+        float spread = half * 0.5f;
+        float each = a / (float) Math.sqrt(slices);
+        for (int i = 0; i < slices; i++) {
+            float f = slices == 1 ? 0f : (i / (float) (slices - 1) - 0.5f) * 2f;
+            float scale = 1f - Math.abs(f) * 0.22f;
+            SCRATCH_C[0] = ax[0] * scale; SCRATCH_C[1] = ax[1] * scale; SCRATCH_C[2] = ax[2] * scale;
+            SCRATCH_D[0] = ay[0] * scale; SCRATCH_D[1] = ay[1] * scale; SCRATCH_D[2] = ay[2] * scale;
+            shadedQuad(buffer, x + sx * spread * f, y + sy * spread * f, z + sz * spread * f,
+                    SCRATCH_C, SCRATCH_D, u0, v0, u1, v1, r, g, b, each * (1f - Math.abs(f) * 0.25f), p);
+        }
+    }
+
+    /** How many slices a puff is drawn as; one on the lowest setting, so nothing is slower. */
+    private static int volumeSlices() {
+        if (!CONFIG.smokeVolumetric) return 1;
+        switch (quality()) {
+            case LOW: return 1;
+            case MEDIUM: return 2;
+            default: return 3;
+        }
+    }
+
+    /** Turns a pair of billboard axes down towards lying flat on the ground. */
+    private static void flatten(float[] ax, float[] ay, float settled, float half) {
+        // The flat target is the world's own X and Z, so settled smoke spreads over the surface.
+        float fx = half * 1.35f, fz = half * 1.35f;
+        ax[0] += (fx - ax[0]) * settled;
+        ax[1] += (0f - ax[1]) * settled;
+        ax[2] += (0f - ax[2]) * settled;
+        ay[0] += (0f - ay[0]) * settled;
+        ay[1] += (0f - ay[1]) * settled;
+        ay[2] += (fz - ay[2]) * settled;
+    }
+
+    /** The light the smoke is shaded from: high, and a little to one side. */
+    private static final float[] LIGHT = {0.35f, 0.86f, 0.38f};
+
+    /**
+     * A quad whose corners are lit by {@link #LIGHT}.
+     *
+     * <p>The corner facing the light is brightened and the opposite one darkened, which is what
+     * gives a flat plate the look of a rounded mass. The texture is unchanged; only the vertex
+     * colours differ, so this costs nothing beyond the colours already being written.
+     */
+    private static void shadedQuad(WorldRenderer buffer, double x, double y, double z,
+                                   float[] ax, float[] ay, float u0, float v0, float u1, float v1,
+                                   float r, float g, float b, float a, P p) {
+        float lx = dot(ax, LIGHT), ly = dot(ay, LIGHT);
+        float len = (float) Math.sqrt(lx * lx + ly * ly);
+        if (len > 1e-4f) {
+            lx /= len;
+            ly /= len;
+        }
+        float strength = p.kind == Kind.SMOKE ? 0.45f : 0.25f;
+        float c00 = 1f + (-lx - ly) * strength;
+        float c10 = 1f + (lx - ly) * strength;
+        float c11 = 1f + (lx + ly) * strength;
+        float c01 = 1f + (-lx + ly) * strength;
+        buffer.pos(x - ax[0] - ay[0], y - ax[1] - ay[1], z - ax[2] - ay[2]).tex(u0, v1)
+                .color(r * c00, g * c00, b * c00, a).endVertex();
+        buffer.pos(x + ax[0] - ay[0], y + ax[1] - ay[1], z + ax[2] - ay[2]).tex(u1, v1)
+                .color(r * c10, g * c10, b * c10, a).endVertex();
+        buffer.pos(x + ax[0] + ay[0], y + ax[1] + ay[1], z + ax[2] + ay[2]).tex(u1, v0)
+                .color(r * c11, g * c11, b * c11, a).endVertex();
+        buffer.pos(x - ax[0] + ay[0], y - ax[1] + ay[1], z - ax[2] + ay[2]).tex(u0, v0)
+                .color(r * c01, g * c01, b * c01, a).endVertex();
+    }
+
+    private static float dot(float[] a, float[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    /**
+     * A settled puff, as a fragment of glass lying on the ground.
+     *
+     * <p>Smoke that has come to rest on a surface is drawn as an irregular flat sliver with a lit
+     * edge rather than as another soft blob: angular, slightly raised off the surface so it does
+     * not fight with it, and catching the light along one side as it turns. The shape is fixed per
+     * particle, so a fragment does not shimmer as it fades.
+     */
+    private static void groundShard(WorldRenderer buffer, P p, float pt, double cx, double cy, double cz,
+                                    float[] accent, float a) {
+        double x = p.px + (p.x - p.px) * pt - cx;
+        double z = p.pz + (p.z - p.pz) * pt - cz;
+        double y = p.groundY + 0.02 - cy;
+        float half = p.size(pt) * 0.62f;
+        int sides = 5 + (p.variant & 1);
+        float spin = (float) Math.toRadians(p.rot * 0.35f);
+        // A sliver is brightest where it is edge-on to the light, which sweeps as it turns.
+        float glint = 0.35f + 0.65f * Math.abs(MathHelper.sin(spin * 2f + p.seed));
+        float r = p.r * 0.5f + accent[0] * 0.5f;
+        float g = p.g * 0.5f + accent[1] * 0.5f;
+        float b = p.b * 0.5f + accent[2] * 0.5f;
+        float edgeR = Math.min(1f, r * 0.4f + accent[0] * 0.9f + glint * 0.35f);
+        float edgeG = Math.min(1f, g * 0.4f + accent[1] * 0.9f + glint * 0.35f);
+        float edgeB = Math.min(1f, b * 0.4f + accent[2] * 0.9f + glint * 0.35f);
+        float px = 0f, pz = 0f;
+        for (int i = 0; i <= sides; i++) {
+            float ang = spin + (float) (i / (double) sides * Math.PI * 2);
+            // A radius that varies per corner is what makes it a shard and not a coin.
+            float radius = half * (0.45f + 0.55f * Math.abs(MathHelper.sin(p.seed * 3.1f + i * 2.3f)));
+            float vx = MathHelper.cos(ang) * radius, vz = MathHelper.sin(ang) * radius;
+            if (i > 0) {
+                // Centre, then the edge pair, with the last vertex doubled: a fan drawn as quads.
+                buffer.pos(x, y, z).color(r, g, b, a * 0.85f).endVertex();
+                buffer.pos(x + px, y, z + pz).color(edgeR, edgeG, edgeB, a * 0.5f).endVertex();
+                buffer.pos(x + vx, y, z + vz).color(edgeR, edgeG, edgeB, a * 0.5f).endVertex();
+                buffer.pos(x, y, z).color(r, g, b, a * 0.85f).endVertex();
+            }
+            px = vx;
+            pz = vz;
+        }
     }
 
     private static void accentQuad(WorldRenderer buffer, P p, float pt, double cx, double cy, double cz,
@@ -782,6 +995,9 @@ public final class SmokeFx extends ConfigurableModule {
 
     private static final float[] SCRATCH_A = new float[3];
     private static final float[] SCRATCH_B = new float[3];
+    /** The slice axes, so drawing a puff as several plates still allocates nothing. */
+    private static final float[] SCRATCH_C = new float[3];
+    private static final float[] SCRATCH_D = new float[3];
 
     private static void quad(WorldRenderer buffer, double x, double y, double z, float[] ax, float[] ay,
                              float u0, float v0, float u1, float v1, float r, float g, float b, float a) {

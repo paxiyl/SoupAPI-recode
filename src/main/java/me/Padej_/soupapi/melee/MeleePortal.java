@@ -61,13 +61,28 @@ public final class MeleePortal extends ConfigurableModule {
     }
 
     static boolean active(MeleeState state) {
-        return CONFIG.meleeSummonEnabled && state.summoning() && state.mainTime() < END;
+        return CONFIG.meleeSummonEnabled && state.summoning() && time(state) < END;
+    }
+
+    /**
+     * Where the rift is in its own sequence, in the katana's timing.
+     *
+     * <p>Every beat below was written against that weapon's {@value #END}-second summon. Weapons
+     * whose summon is shorter - the claw assembling in the hand, the spectral blade drawing itself
+     * out of its hilt - would otherwise leave the rift hanging open after they had finished, so the
+     * rift is run on the clip's own progress rather than on the clock.
+     */
+    private static float time(MeleeState state) {
+        me.Padej_.soupapi.bedrock.GeoClip clip = state.mainClip();
+        float t = time(state);
+        if (clip == null || clip.length <= 0.1f) return t;
+        return t / clip.length * END;
     }
 
     /** The rift, rings, core and smoke: drawn before the weapon so the blade comes out in front. */
     static void renderBack(MeleeState state) {
         if (!active(state)) return;
-        float t = state.mainTime();
+        float t = time(state);
         float size = CONFIG.meleePortalSize / 100f;
         float glow = CONFIG.meleePortalGlow / 100f;
         float intensity = CONFIG.meleePortalIntensity / 100f;
@@ -190,7 +205,7 @@ public final class MeleePortal extends ConfigurableModule {
     /** Stage 5's burst, drawn after the weapon so the shards fly in front of it. */
     static void renderFront(MeleeState state) {
         if (!active(state)) return;
-        float t = state.mainTime();
+        float t = time(state);
         float burst = (t - 1.95f) / 0.55f;
         if (burst <= 0f || burst >= 1f) return;
         float size = CONFIG.meleePortalSize / 100f;

@@ -42,8 +42,8 @@ import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
 public class Render2D {
     private final static Minecraft mc = Minecraft.getMinecraft();
-    public static HashMap<Integer, BlurredShadow> shadowCache = new HashMap<>();
-    public static HashMap<Integer, BlurredShadow> shadowCache1 = new HashMap<>();
+    public static HashMap<Long, BlurredShadow> shadowCache = new HashMap<>();
+    public static HashMap<Long, BlurredShadow> shadowCache1 = new HashMap<>();
 
 
     public static void renderMiscTexture(MatrixStack matrices, ResourceLocation textureId, float scale) {
@@ -278,23 +278,82 @@ public class Render2D {
         }
     }
 
+    /**
+     * A rounded rectangle with a colour at each corner.
+     *
+     * <p>Colours are given bottom-left, bottom-right, top-right, top-left and interpolated across
+     * the shape's own vertices.
+     *
+     * <p>This used to be drawn with the destination-alpha trick it was ported with: clear the whole
+     * framebuffer's alpha channel behind a colour mask, stamp the rounded shape into that alpha,
+     * then blend the gradient against it. Two things were wrong with that. It needs a framebuffer
+     * with an alpha channel and a driver that honours a colour mask during a clear - and gl4es, the
+     * GL translation layer PojavLauncher runs on, honours neither dependably, so the clear took the
+     * whole frame with it and the game went black. It also meant a full-screen clear per bar, of
+     * which the HUD draws upwards of twenty a frame. Drawing the gradient into the shape's vertices
+     * needs neither.
+     */
     public static void renderRoundedGradientRect(MatrixStack matrices, Color color1, Color color2, Color color3, Color color4, float x, float y, float width, float height, float Radius) {
-        Mat4 matrix = matrices.peek().getPositionMatrix();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        if (width <= 0f || height <= 0f) return;
+        float radius = Math.min(Radius, Math.min(width, height) / 2f);
+        // renderRoundedQuad2 takes its colours top-right, bottom-right, top-left, bottom-left.
+        renderRoundedQuad2(matrices, color3, color2, color4, color1, x, y, x + width, y + height, radius);
+    }
 
-        drawRound(matrices, x, y, width, height, Radius, color1);
+    /**
+     * A texture drawn inside a rounded rectangle, tinted per corner.
+     *
+     * <p>The replacement for masking a texture through the framebuffer's alpha channel: the corners
+     * are rounded by the geometry the texture is mapped onto, so nothing is cleared and nothing
+     * depends on there being a destination alpha to blend against.
+     */
+    public static void renderRoundedTexture(MatrixStack matrices, ResourceLocation texture,
+                                            float x, float y, float width, float height,
+                                            float u, float v, float regionWidth, float regionHeight,
+                                            float textureWidth, float textureHeight,
+                                            float radius, Color tint) {
+        if (width <= 0f || height <= 0f) return;
+        radius = Math.min(radius, Math.min(width, height) / 2f);
         setupRender();
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(matrix, x, y + height, 0.0F).color(color1.getRGB());
-        bufferBuilder.vertex(matrix, x + width, y + height, 0.0F).color(color2.getRGB());
-        bufferBuilder.vertex(matrix, x + width, y, 0.0F).color(color3.getRGB());
-        bufferBuilder.vertex(matrix, x, y, 0.0F).color(color4.getRGB());
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
+        Mat4 matrix = matrices.peek().getPositionMatrix();
+        BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_TEXTURE_COLOR);
+        float x2 = x + width, y2 = y + height;
+        float u0 = u / textureWidth, v0 = v / textureHeight;
+        float du = regionWidth / textureWidth, dv = regionHeight / textureHeight;
+        int rgb = tint.getRGB();
+        // Centre first, then the four corner arcs, then back to the start: a fan that covers the
+        // rounded rectangle whatever its radius.
+        fanVertex(buffer, matrix, (x + x2) / 2f, (y + y2) / 2f, x, y, width, height, u0, v0, du, dv, rgb);
+        float[][] corners = {{x2 - radius, y2 - radius}, {x2 - radius, y + radius},
+                {x + radius, y + radius}, {x + radius, y2 - radius}};
+        int steps = radius < 0.5f ? 0 : Math.max(2, Math.min(10, (int) radius));
+        float firstX = 0f, firstY = 0f;
+        for (int i = 0; i < 4; i++) {
+            for (int k = 0; k <= steps; k++) {
+                double a = Math.toRadians(i * 90 + (steps == 0 ? 0 : 90.0 * k / steps));
+                float px = corners[i][0] + (float) Math.sin(a) * radius;
+                float py = corners[i][1] + (float) Math.cos(a) * radius;
+                if (i == 0 && k == 0) {
+                    firstX = px;
+                    firstY = py;
+                }
+                fanVertex(buffer, matrix, px, py, x, y, width, height, u0, v0, du, dv, rgb);
+            }
+        }
+        fanVertex(buffer, matrix, firstX, firstY, x, y, width, height, u0, v0, du, dv, rgb);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        RenderSystem.setShaderTexture(0, 0);
         endRender();
+    }
+
+    private static void fanVertex(BufferBuilder buffer, Mat4 matrix, float px, float py,
+                                  float x, float y, float width, float height,
+                                  float u0, float v0, float du, float dv, int rgb) {
+        buffer.vertex(matrix, px, py, 0f)
+                .texture(u0 + du * ((px - x) / width), v0 + dv * ((py - y) / height))
+                .color(rgb);
     }
 
     /*
@@ -377,25 +436,47 @@ public class Render2D {
         x = x - blurRadius;
         y = y - blurRadius;
 
-        int identifier = (int) (width * height + width * blurRadius);
-        if (shadowCache.containsKey(identifier)) {
-            shadowCache.get(identifier).bind();
-        } else {
-            BufferedImage original = new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
-            Graphics g = original.getGraphics();
-            g.setColor(new Color(-1));
-            g.fillRect(blurRadius, blurRadius, (int) (width - blurRadius * 2), (int) (height - blurRadius * 2));
-            g.dispose();
-            GaussianFilter op = new GaussianFilter(blurRadius);
-            BufferedImage blurred = op.filter(original, null);
-            shadowCache.put(identifier, new BlurredShadow(blurred));
-            return;
+        int w = Math.max(1, (int) width), h = Math.max(1, (int) height);
+        // A key the three inputs cannot collide on. The old one multiplied them together, so two
+        // differently shaped shadows could share a texture and one of them came out stretched.
+        long identifier = ((long) w << 40) | ((long) h << 16) | (blurRadius & 0xFFFF);
+        BlurredShadow shadow = shadowCache.get(identifier);
+        if (shadow == null) {
+            shadow = new BlurredShadow(blurMask(w, h, blurRadius));
+            shadowCache.put(identifier, shadow);
         }
+        shadow.bind();
 
         setupRender();
         RenderSystem.setShaderColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() / 255f);
-        renderTexture(matrices, x, y, width, height, 0, 0, width, height, width, height);
+        // The mask lives in the top-left of a power-of-two texture, so only that part is sampled.
+        renderTexture(matrices, x, y, width, height, 0, 0, w, h, shadow.width, shadow.height);
         endRender();
+    }
+
+    /**
+     * The blurred rounded mask a soft shadow is drawn with, on a power-of-two canvas.
+     *
+     * <p>gl4es - which is what PojavLauncher runs GL through - is only dependable with
+     * power-of-two textures, and these are built at whatever size the caller's rectangle happens to
+     * be. The mask is drawn into the top-left corner and the rest of the canvas is left
+     * transparent; callers sample only the part they filled.
+     */
+    private static BufferedImage blurMask(int w, int h, int blurRadius) {
+        int pw = pot(w), ph = pot(h);
+        BufferedImage original = new BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = original.getGraphics();
+        g.setColor(new Color(-1));
+        g.fillRect(blurRadius, blurRadius, Math.max(1, w - blurRadius * 2), Math.max(1, h - blurRadius * 2));
+        g.dispose();
+        return new GaussianFilter(blurRadius).filter(original, null);
+    }
+
+    /** The next power of two at or above {@code v}, capped at the size any driver will take. */
+    private static int pot(int v) {
+        int p = 1;
+        while (p < v && p < 4096) p <<= 1;
+        return p;
     }
 
     public static void drawGradientBlurredShadow1(MatrixStack matrices, float x, float y, float width, float height, int blurRadius, Color color1, Color color2, Color color3, Color color4) {
@@ -405,40 +486,21 @@ public class Render2D {
         x = x - blurRadius;
         y = y - blurRadius;
 
-        // Округление размеров для уменьшения уникальных ключей
-        int roundedWidth = Math.round(width / 10) * 10;
-        int roundedHeight = Math.round(height / 10) * 10;
-        int identifier = roundedWidth * roundedHeight + roundedWidth * blurRadius;
+        int w = Math.max(1, (int) width), h = Math.max(1, (int) height);
+        long identifier = ((long) w << 40) | ((long) h << 16) | (blurRadius & 0xFFFF);
 
         BlurredShadow shadow = shadowCache1.get(identifier);
         if (shadow == null) {
-            BufferedImage original = new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
-            Graphics g = original.getGraphics();
-            g.setColor(new Color(-1));
-            g.fillRect(blurRadius, blurRadius, (int) (width - blurRadius * 2), (int) (height - blurRadius * 2));
-            g.dispose();
-            BufferedImage blurred = new GaussianFilter(blurRadius).filter(original, null);
-
-            BufferedImage black = new BufferedImage((int) width + blurRadius * 2, (int) height + blurRadius * 2, BufferedImage.TYPE_INT_ARGB);
-            Graphics g2 = black.getGraphics();
-            g2.setColor(new Color(0x000000));
-            g2.fillRect(0, 0, (int) width + blurRadius * 2, (int) height + blurRadius * 2);
-            g2.dispose();
-
-            BufferedImage combined = new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
-            Graphics g1 = combined.getGraphics();
-            g1.drawImage(black, -blurRadius, -blurRadius, null);
-            g1.drawImage(blurred, 0, 0, null);
-            g1.dispose();
-
-            shadowCache1.put(identifier, new BlurredShadow(combined));
-            shadow = shadowCache1.get(identifier);
+            // Just the blurred mask. It used to be composited over an opaque black rectangle, which
+            // is invisible under the additive blend below and a solid black box under any other.
+            shadow = new BlurredShadow(blurMask(w, h, blurRadius));
+            shadowCache1.put(identifier, shadow);
         }
 
         shadow.bind();
         setupRender();
         RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
-        renderGradientTexture(matrices, x, y, width, height, 0, 0, width, height, width, height, color1, color2, color3, color4);
+        renderGradientTexture(matrices, x, y, width, height, 0, 0, w, h, shadow.width, shadow.height, color1, color2, color3, color4);
         endRender();
     }
 
@@ -470,9 +532,14 @@ public class Render2D {
 
     public static class BlurredShadow {
         Texture id;
+        /** The canvas size, which is a power of two and so usually larger than what was drawn. */
+        public final int width;
+        public final int height;
 
         public BlurredShadow(BufferedImage bufferedImage) {
             this.id = new Texture("texture/remote/" + RandomStringUtils.randomAlphanumeric(16));
+            this.width = bufferedImage.getWidth();
+            this.height = bufferedImage.getHeight();
             registerBufferedImageTexture(id, bufferedImage);
         }
 

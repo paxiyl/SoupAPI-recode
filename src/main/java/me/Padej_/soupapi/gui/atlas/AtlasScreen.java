@@ -107,6 +107,23 @@ public final class AtlasScreen extends SoupScreen {
     private final List<Hit> hits = new ArrayList<Hit>();
     private Option.Num slider;
     private Hit sliderHit;
+    /**
+     * Touch scrolling. A press inside one of the panes does not act straight away: it is held
+     * until the finger comes up, so the same press can become a scroll if it moves first. Anything
+     * that is itself a drag - a slider, the title bar, the resize corner, the scroll rails - is
+     * excluded and keeps acting on the press.
+     */
+    private Hit pending;
+    private double pressX, pressY;
+    private String scrollPane;
+    private double scrollLast;
+    private boolean scrolled;
+    /** The rail being dragged, and where in the thumb it was taken hold of. */
+    private String railPane;
+    private float railGrab;
+    private static final float DRAG_SLOP = 3f;
+    private static final float RAIL_W = 7f;
+    private static final float RAIL_ARROW = 11f;
     private Option editing;
     private String editBuffer = "";
     private Option.Key listening;
@@ -299,8 +316,15 @@ public final class AtlasScreen extends SoupScreen {
             winX = (sw - winW) / 2;
             winY = (sh - winH) / 2;
         }
-        winX = Math.max(4 - winW + 60, Math.min(winX, sw - 60));
-        winY = Math.max(4, Math.min(winY, sh - 30));
+        // A window that fills the screen is pinned rather than allowed to hang off the edge; a
+        // smaller one can be dragged most of the way off, as long as a corner stays reachable.
+        if (winW >= sw - 8) winX = (sw - winW) / 2;
+        else winX = Math.max(4 - winW + 60, Math.min(winX, sw - 60));
+        if (winH >= sh - 8) winY = (sh - winH) / 2;
+        else winY = Math.max(4, Math.min(winY, sh - 30));
+        // Resizing never pushes the far edge past the screen.
+        if (winX + winW > sw - 4) winX = Math.max(4 - winW + 60, sw - 4 - winW);
+        if (winY + winH > sh - 4) winY = Math.max(4, sh - 4 - winH);
     }
 
     private int sidebarWidth() {
@@ -465,7 +489,7 @@ public final class AtlasScreen extends SoupScreen {
             }
         }
         context.disableScissor();
-        scrollbar(ms, x + width - 5, top, bottom, shown, listMax);
+        rail(ms, "list", x + width - RAIL_W - 5, top, bottom, shown, listMax, mx, my);
     }
 
     /** A switch whose knob travels on a spring and stretches with its speed. */
@@ -508,7 +532,7 @@ public final class AtlasScreen extends SoupScreen {
             ry += rh;
         }
         context.disableScissor();
-        scrollbar(ms, x + width - 5, top, bottom, shown, detailMax);
+        rail(ms, "detail", x + width - RAIL_W - 5, top, bottom, shown, detailMax, mx, my);
     }
 
     private float rowHeight(Option o) {
@@ -680,12 +704,44 @@ public final class AtlasScreen extends SoupScreen {
                 (int) Math.ceil(py + (y2 - py) * scale));
     }
 
-    private void scrollbar(MatrixStack ms, float x, float top, float bottom, float shown, float max) {
+    /**
+     * The scroll rail: a thumb between two arrow buttons.
+     *
+     * <p>There was only a two-pixel indicator here, which is not something a finger can use, and
+     * the wheel was the only way to move either pane - PojavLauncher has no wheel. The rail is
+     * wide enough to hit, the arrows page the list, and the track jumps to where it is tapped.
+     */
+    private void rail(MatrixStack ms, String pane, float x, float top, float bottom, float shown, float max,
+                      double mx, double my) {
         if (max <= 0) return;
-        float track = bottom - top;
-        float thumb = Math.max(18f, track * track / (track + max));
-        float along = (track - thumb) * (shown / max);
-        Glass.rect(ms, x, top + along, x + 2.5f, top + along + thumb, 1.25f, Glass.alpha(ink, 0.3f));
+        float x2 = x + RAIL_W;
+        Glass.rect(ms, x, top, x2, bottom, RAIL_W / 2f, Glass.alpha(ink, 0.05f));
+
+        float upLit = ease("railUp:" + pane, inside(mx, my, x, top, x2, top + RAIL_ARROW), 12f);
+        float downLit = ease("railDown:" + pane, inside(mx, my, x, bottom - RAIL_ARROW, x2, bottom), 12f);
+        arrow(ms, (x + x2) / 2f, top + RAIL_ARROW / 2f, true, Glass.blend(Glass.alpha(ink, 0.35f), accent, upLit));
+        arrow(ms, (x + x2) / 2f, bottom - RAIL_ARROW / 2f, false, Glass.blend(Glass.alpha(ink, 0.35f), accent, downLit));
+        hit("railUp", pane, x - 2, top, x2 + 2, top + RAIL_ARROW);
+        hit("railDown", pane, x - 2, bottom - RAIL_ARROW, x2 + 2, bottom);
+
+        float trackTop = top + RAIL_ARROW + 2, trackBottom = bottom - RAIL_ARROW - 2;
+        float track = Math.max(1f, trackBottom - trackTop);
+        float thumb = Math.max(22f, track * track / (track + max));
+        float along = (track - thumb) * Math.max(0f, Math.min(1f, shown / max));
+        float lit = ease("railThumb:" + pane, pane.equals(railPane)
+                || inside(mx, my, x, trackTop + along, x2, trackTop + along + thumb), 12f);
+        Glass.rect(ms, x + 1, trackTop + along, x2 - 1, trackTop + along + thumb, (RAIL_W - 2) / 2f,
+                Glass.blend(Glass.alpha(ink, 0.3f), accent, lit));
+        hit("railTrack", pane, x - 2, trackTop, x2 + 2, trackBottom);
+    }
+
+    private void arrow(MatrixStack ms, float cx, float cy, boolean up, int colour) {
+        for (int i = 0; i < 3; i++) {
+            float w = 1f + i;
+            // Widening downward points up; widening upward points down.
+            float y = up ? cy - 1.5f + i : cy + 1.5f - i;
+            Glass.rect(ms, cx - w, y, cx + w, y + 1f, 0f, colour);
+        }
     }
 
     private void footer(MatrixStack ms, int x, int y, int w) {
@@ -753,6 +809,27 @@ public final class AtlasScreen extends SoupScreen {
                 return true;
             }
         }
+        // Rails act on the press; they are drags themselves.
+        if ("railUp".equals(kind) || "railDown".equals(kind)) {
+            page((String) h.payload, "railUp".equals(kind) ? -1 : 1);
+            return true;
+        }
+        if ("railTrack".equals(kind)) {
+            railPane = (String) h.payload;
+            railGrab = Float.NaN;
+            railDrag(h, my);
+            return true;
+        }
+        // A press inside a pane waits for the release, so that the same press can scroll instead.
+        if (button == 0 && deferrable(kind)) {
+            pending = h;
+            pressX = mx;
+            pressY = my;
+            scrolled = false;
+            scrollPane = paneAt(mx, my);
+            scrollLast = my;
+            return true;
+        }
         if ("close".equals(kind)) {
             close();
         } else if ("classic".equals(kind)) {
@@ -771,14 +848,6 @@ public final class AtlasScreen extends SoupScreen {
             search = "";
             listScroll = detailScroll = 0;
             colourOpen = null;
-        } else if ("page".equals(kind)) {
-            page = (OptionPage) h.payload;
-            detailScroll = 0;
-            colourOpen = null;
-            for (String g : groupNames) if (grouped.get(g).contains(page) && search.isEmpty()) group = g;
-        } else if ("toggle".equals(kind)) {
-            ((Option.Toggle) h.payload).toggle();
-            ConfigSchema.save();
         } else if ("slider".equals(kind)) {
             slider = (Option.Num) h.payload;
             sliderHit = h;
@@ -787,12 +856,79 @@ public final class AtlasScreen extends SoupScreen {
             Object[] p = (Object[]) h.payload;
             channel(p, mx);
             sliderHit = h;
-        } else if ("hex".equals(kind)) {
-            startEditing((Option) h.payload, ((Option.Colour) h.payload).hex());
-        } else if ("row".equals(kind)) {
-            clickRow((Option) h.payload, h, mx, my);
+        } else if (deferrable(kind)) {
+            // Reached by a button that does not scroll; the deferred path handles the usual ones.
+            apply(h, mx, my);
         }
         return true;
+    }
+
+    /** Kinds whose action waits for the release, so the press can turn into a scroll. */
+    private static boolean deferrable(String kind) {
+        return "row".equals(kind) || "page".equals(kind) || "toggle".equals(kind) || "hex".equals(kind);
+    }
+
+    /** Which scrolling pane a point is over, or null. */
+    private String paneAt(double mx, double my) {
+        for (int i = hits.size() - 1; i >= 0; i--) {
+            Hit c = hits.get(i);
+            if (c.contains(mx, my)) {
+                if ("listArea".equals(c.kind)) return "list";
+                if ("detailArea".equals(c.kind)) return "detail";
+            }
+        }
+        return null;
+    }
+
+    /** Moves a pane by whole rows, for the rail's arrows. */
+    private void page(String pane, int direction) {
+        float step = ROW * 3;
+        if ("list".equals(pane)) listScroll = Math.max(0, Math.min(listMax, listScroll + direction * step));
+        else detailScroll = Math.max(0, Math.min(detailMax, detailScroll + direction * step));
+    }
+
+    /** Scrolls a pane by a finger's travel, with the spring kept under the finger. */
+    private void scrollBy(String pane, float delta) {
+        if (pane == null) return;
+        if ("list".equals(pane)) {
+            listScroll = Math.max(0, Math.min(listMax, listScroll + delta));
+            snap("listScroll", listScroll);
+        } else {
+            detailScroll = Math.max(0, Math.min(detailMax, detailScroll + delta));
+            snap("detailScroll", detailScroll);
+        }
+    }
+
+    /** Puts a spring exactly where it is being dragged, so the pane tracks the finger one to one. */
+    private void snap(String key, float value) {
+        Spring spring = springs.get(key);
+        if (spring != null) spring.snap(value);
+    }
+
+    /** Drags a rail's thumb, keeping hold of the point on the thumb that was grabbed. */
+    private void railDrag(Hit h, double my) {
+        String pane = (String) h.payload;
+        float max = "list".equals(pane) ? listMax : detailMax;
+        if (max <= 0) return;
+        float trackTop = h.y, trackBottom = h.y2;
+        float track = Math.max(1f, trackBottom - trackTop);
+        float thumb = Math.max(22f, track * track / (track + max));
+        float travel = Math.max(1f, track - thumb);
+        float current = ("list".equals(pane) ? listScroll : detailScroll) / max * travel;
+        if (Float.isNaN(railGrab)) {
+            // Taking hold of the thumb keeps its offset; tapping the track jumps to that point.
+            float offset = (float) (my - trackTop) - current;
+            railGrab = (offset >= 0 && offset <= thumb) ? offset : thumb / 2f;
+        }
+        float at = (float) (my - trackTop) - railGrab;
+        float fraction = Math.max(0f, Math.min(1f, at / travel));
+        if ("list".equals(pane)) {
+            listScroll = fraction * max;
+            snap("listScroll", listScroll);
+        } else {
+            detailScroll = fraction * max;
+            snap("detailScroll", detailScroll);
+        }
     }
 
     private void clickRow(Option o, Hit h, double mx, double my) {
@@ -856,6 +992,24 @@ public final class AtlasScreen extends SoupScreen {
             dragSlider(mx);
         } else if (sliderHit != null && "channel".equals(sliderHit.kind)) {
             channel((Object[]) sliderHit.payload, mx);
+        } else if (railPane != null) {
+            for (int i = hits.size() - 1; i >= 0; i--) {
+                Hit c = hits.get(i);
+                if ("railTrack".equals(c.kind) && railPane.equals(c.payload)) {
+                    railDrag(c, my);
+                    break;
+                }
+            }
+        } else if (scrollPane != null) {
+            // Past a few pixels the press becomes a scroll, and whatever it was on is let go.
+            if (!scrolled && Math.abs(my - pressY) > DRAG_SLOP) {
+                scrolled = true;
+                pending = null;
+            }
+            if (scrolled) {
+                scrollBy(scrollPane, (float) (scrollLast - my));
+                scrollLast = my;
+            }
         }
         return true;
     }
@@ -863,11 +1017,38 @@ public final class AtlasScreen extends SoupScreen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (slider != null || sliderHit != null) ConfigSchema.save();
+        double mx = toLayoutX(mouseX), my = toLayoutY(mouseY);
+        Hit act = pending;
+        pending = null;
+        scrollPane = null;
+        railPane = null;
         dragging = resizing = false;
         slider = null;
         sliderHit = null;
+        // A press that never became a scroll, and came up on the control it went down on, is a tap.
+        if (act != null && !scrolled && act.contains(mx, my)) {
+            apply(act, mx, my);
+        }
+        scrolled = false;
         persist();
         return true;
+    }
+
+    /** What a tap on one of the deferred controls does. */
+    private void apply(Hit h, double mx, double my) {
+        if ("toggle".equals(h.kind)) {
+            ((Option.Toggle) h.payload).toggle();
+            ConfigSchema.save();
+        } else if ("page".equals(h.kind)) {
+            page = (OptionPage) h.payload;
+            detailScroll = 0;
+            colourOpen = null;
+            for (String g : groupNames) if (grouped.get(g).contains(page) && search.isEmpty()) group = g;
+        } else if ("hex".equals(h.kind)) {
+            startEditing((Option) h.payload, ((Option.Colour) h.payload).hex());
+        } else if ("row".equals(h.kind)) {
+            clickRow((Option) h.payload, h, mx, my);
+        }
     }
 
     @Override

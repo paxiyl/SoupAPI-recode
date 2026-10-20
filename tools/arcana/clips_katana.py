@@ -5,9 +5,11 @@ Bones: `swing` (arcs about the shoulder: +x pitches down, +y yaws right, +z roll
 `lefthand_pos` (the second hand lets go for the showier moves), the secondary blades for flex and the
 eyes' irises for darting. Sounds are this pack's own (see sounds.py).
 """
+import math
+
 import numpy as np
 
-from anim import Clip
+from anim import Clip, arc
 from geo import bone_local
 
 SND = 'arcana:melee/fractured_eye_katana/'
@@ -53,12 +55,25 @@ def portal_offset(rig, p_eye, swing_rot, swing_pos):
 def build(rig):
     out = []
 
-    idle = Clip('static_idle', 4.0, loop=True)
-    for t, ph in ((0, 0), (1, 1), (2, 0), (3, -1), (4, 0)):
-        idle.pose(t, {'swing': {'rot': (ph * 1.2, ph * 0.6, 0), 'pos': (0, ph * 0.25, 0)},
-                      'weapon': {'rot': (0, ph * 3, ph * 1.5)},
-                      'ext_a': {'rot': (0, 0, ph * 2.5)}, 'ext_b': {'rot': (0, 0, -ph * 2)},
-                      'hook': {'rot': (0, 0, ph * 3)}})
+    # The hold. Two cycles of different lengths are laid over each other - a slow breath at the
+    # shoulder and a faster drift at the wrist - so the weapon never returns to exactly the same
+    # place and never looks pinned to the screen. The blade's tip travels further than the grip,
+    # which is what makes it read as something with weight being held rather than a still image.
+    idle = Clip('static_idle', 6.0, loop=True)
+    steps = 12
+    for i in range(steps + 1):
+        t = 6.0 * i / steps
+        ph = math.tau * i / steps
+        breath = math.sin(ph)
+        drift = math.sin(ph * 1.5 + 0.7)
+        lean = math.cos(ph * 0.5)
+        idle.pose(t, {'swing': {'rot': (breath * 2.2 + drift * 0.5, lean * 1.1, drift * 0.9),
+                                'pos': (lean * 0.3, breath * 0.55, math.cos(ph) * 0.3)},
+                      'weapon': {'rot': (drift * 1.4, breath * 4.5, drift * 2.6)},
+                      'ext_a': {'rot': (0, 0, drift * 3.2)}, 'ext_b': {'rot': (0, 0, -breath * 2.6)},
+                      'hook': {'rot': (0, 0, math.sin(ph * 2 + 1.1) * 3.4)}})
+    eyes_dart(idle, 1.4, 2.2, 21, 0.22, 4)
+    eyes_dart(idle, 4.2, 5.0, 22, 0.22, 4)
     out.append(idle)
 
     draw = Clip('draw', 1.25)
@@ -95,11 +110,10 @@ def build(rig):
     summon.sound(0, SND + 'summon')
     out.append(summon)
 
-    def attack(name, keys, hit, snd, seed):
+    def attack(name, keys, hit, snd, seed, kick_amount=2.0):
         c = Clip(name, keys[-1][0])
-        for t, sw, wp in keys:
-            c.pose(t, {'swing': {'rot': sw}, 'weapon': {'rot': wp}})
-        kick(c, hit, 2.0)
+        arc(c, keys)
+        kick(c, hit, kick_amount)
         eyes_dart(c, 0, keys[-1][0], seed, 0.3, 5)
         c.pose(0, {'ext_a': {'rot': (0, 0, 0)}, 'ext_b': {'rot': (0, 0, 0)}})
         c.pose(hit, {'ext_a': {'rot': (0, 0, -7)}, 'ext_b': {'rot': (0, 0, -6)}})
@@ -108,29 +122,40 @@ def build(rig):
         out.append(c)
 
     # Diagonal: wind up high right, cut down and across to low left. Arcs mostly by roll about the
-    # shoulder (which sweeps across the screen) and lean at the wrist; yaw and pitch stay small, as a
-    # pivot behind the camera throws the blade out of view for anything large.
-    attack('melee_1', [(0, (0, 0, 0), (0, 0, 0)), (0.16, (-8, 7, -18), (0, -10, -25)),
-                       (0.32, (4, -8, 30), (6, 8, 26)), (0.5, (6, -7, 34), (6, 6, 24)),
-                       (0.85, (0, 0, 0), (0, 0, 0))], 0.3, 'swing_1', 11)
-    # Rising: from low left up across to high right.
-    attack('melee_2', [(0, (0, 0, 0), (0, 0, 0)), (0.15, (10, -8, 44), (0, 15, 30)),
-                       (0.33, (-6, 4, -12), (-6, -12, -20)), (0.5, (-4, 3, -8), (-4, -8, -14)),
-                       (0.85, (0, 0, 0), (0, 0, 0))], 0.3, 'swing_2', 12)
-    # Horizontal: the blade laid flat by the wrist, swept right to left.
-    attack('melee_3', [(0, (0, 0, 0), (0, 0, 0)), (0.18, (-6, 8, 12), (0, -10, 64)),
-                       (0.36, (-7, -6, 10), (0, 5, 66)), (0.55, (-6, -8, 8), (0, 8, 62)),
-                       (0.9, (0, 0, 0), (0, 0, 0))], 0.33, 'swing_3', 13)
+    # shoulder (which sweeps across the screen) and lean at the wrist; yaw and pitch stay smaller,
+    # as a pivot behind the camera throws the blade out of view for anything large. The shoulder is
+    # pulled back and in on the wind-up and driven forward through the cut, which is what carries a
+    # swing this size without it leaving the frame.
+    attack('melee_1', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.12, (-15, 11, -36), (0, -17, -42), (2.5, 2.0, 3.0)),
+                       (0.26, (9, -13, 54), (11, 13, 46), (-2.0, -2.5, -3.5)),
+                       (0.34, (11, -14, 60), (12, 11, 42), (-2.2, -3.0, -3.0)),
+                       (0.55, (3, -4, 17), (3, 3, 12), (-0.5, -0.8, -0.6)),
+                       (0.9, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.26, 'swing_1', 11, 2.6)
+    # Rising: from low left up across to high right, the heaviest of the three.
+    attack('melee_2', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.13, (17, -13, 62), (0, 22, 44), (-2.0, -3.0, 3.0)),
+                       (0.28, (-11, 7, -22), (-10, -19, -34), (1.5, 3.0, -3.5)),
+                       (0.36, (-13, 8, -28), (-11, -16, -30), (1.6, 3.4, -3.0)),
+                       (0.56, (-4, 3, -9), (-4, -6, -11), (0.4, 0.8, -0.6)),
+                       (0.9, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.28, 'swing_2', 12, 2.6)
+    # Horizontal: the blade laid flat by the wrist, swept right to left across the whole view.
+    attack('melee_3', [(0, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                       (0.15, (-9, 15, 14), (0, -18, 78), (3.0, 1.0, 2.5)),
+                       (0.32, (-11, -13, 11), (0, 10, 82), (-3.0, 0.5, -3.0)),
+                       (0.42, (-11, -16, 10), (0, 14, 78), (-3.2, 0.6, -2.6)),
+                       (0.62, (-5, -5, 5), (0, 4, 24), (-0.8, 0.2, -0.5)),
+                       (0.95, (0, 0, 0), (0, 0, 0), (0, 0, 0))], 0.3, 'swing_3', 13, 2.2)
     # Thrust: drawn back, then driven straight forward.
     t4 = Clip('melee_4', 0.85)
     t4.pose(0, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    t4.pose(0.18, {'swing': {'rot': (-8, 8, 40), 'pos': (2, -1, 5)}, 'weapon': {'rot': (-55, 0, 0)}})
-    t4.pose(0.3, {'swing': {'rot': (-4, -5, 35), 'pos': (-1, 1, -9)}, 'weapon': {'rot': (-62, 0, 0)}})
-    t4.pose(0.48, {'swing': {'rot': (-3, -4, 30), 'pos': (-1, 1, -7)}, 'weapon': {'rot': (-58, 0, 0)}})
+    t4.pose(0.16, {'swing': {'rot': (-11, 11, 46), 'pos': (3, -1.5, 8)}, 'weapon': {'rot': (-62, 0, 0)}})
+    t4.pose(0.28, {'swing': {'rot': (-5, -7, 38), 'pos': (-1.5, 1.5, -15)}, 'weapon': {'rot': (-70, 0, 0)}})
+    t4.pose(0.46, {'swing': {'rot': (-4, -5, 32), 'pos': (-1, 1, -11)}, 'weapon': {'rot': (-64, 0, 0)}})
     t4.pose(0.85, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    kick(t4, 0.3, 2.5)
+    kick(t4, 0.28, 3.0)
     eyes_dart(t4, 0, 0.85, 14, 0.3, 5)
-    t4.sound(0.16, SND + 'thrust')
+    t4.sound(0.14, SND + 'thrust')
     out.append(t4)
 
     # Flourish: a full turn about the grip, caught and settled.

@@ -108,18 +108,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         context.getMatrices().scale(1 - hurtPercent / 20f, 1 - hurtPercent / 20f, 1f);
         context.getMatrices().translate(-(x + 2.5 + 15), -(y + 2.5 + 15), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // The head used to be masked through the framebuffer's alpha channel, which meant
+        // clearing the whole frame behind a colour mask every time one was drawn. gl4es does
+        // not honour that mask, so on PojavLauncher the clear took the frame with it. The
+        // rounding is in the geometry the skin is mapped onto instead.
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
-        Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(1f, clamp01(1f - hurtPercent / 2), clamp01(1f - hurtPercent / 2), clamp01(animationFactor));
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x - 2, y + 2.5f, headScale, headScale, 8, 8, 8, 8, 64, 64, r, headTint);
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x - 2, y + 2.5f, headScale, headScale, 40, 8, 8, 8, 64, 64, r, headTint);
         RenderSystem.disableBlend();
         context.getMatrices().pop();
 
@@ -220,18 +216,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         context.getMatrices().scale(1 - hurtPercent / 20f, 1 - hurtPercent / 20f, 1f);
         context.getMatrices().translate(-(x + 2.5 + 15), -(y + 2.5 + 15), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // The head used to be masked through the framebuffer's alpha channel, which meant
+        // clearing the whole frame behind a colour mask every time one was drawn. gl4es does
+        // not honour that mask, so on PojavLauncher the clear took the frame with it. The
+        // rounding is in the geometry the skin is mapped onto instead.
         Render2D.drawRound(context.getMatrices(), x + 2.5f, y + 2.5f, 30, 30, 5, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 2.5, y + 2.5, x + 2.5 + 30, y + 2.5 + 30, 5, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(clamp01(1f), clamp01(1f - hurtPercent / 2), clamp01(1f - hurtPercent / 2), clamp01(animationFactor));
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 2.5f, y + 2.5f, 30, 30, 8, 8, 8, 8, 64, 64, 5, headTint);
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 2.5f, y + 2.5f, 30, 30, 40, 8, 8, 8, 64, 64, 5, headTint);
         RenderSystem.disableBlend();
         context.getMatrices().pop();
 
@@ -319,18 +311,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         context.getMatrices().scale(1 - hurtPercent / 15f, 1 - hurtPercent / 15f, 1f);
         context.getMatrices().translate(-(x + 3.5f + 20), -(y + 3.5f + 20), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // The head used to be masked through the framebuffer's alpha channel, which meant
+        // clearing the whole frame behind a colour mask every time one was drawn. gl4es does
+        // not honour that mask, so on PojavLauncher the clear took the frame with it. The
+        // rounding is in the geometry the skin is mapped onto instead.
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 7, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + 40, y + 3.5f + 40, 7, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(clamp01(1f), clamp01(1f - hurtPercent / 2), clamp01(1f - hurtPercent / 2), clamp01(animationFactor));
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64, 7, headTint);
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64, 7, headTint);
         RenderSystem.disableBlend();
         context.getMatrices().pop();
 
@@ -424,18 +412,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         context.getMatrices().scale(1 - hurtPercent / 15f, 1 - hurtPercent / 15f, 1f);
         context.getMatrices().translate(-(x + 3.5f + headScale), -(y + 3.5f + headScale), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // The head used to be masked through the framebuffer's alpha channel, which meant
+        // clearing the whole frame behind a colour mask every time one was drawn. gl4es does
+        // not honour that mask, so on PojavLauncher the clear took the frame with it. The
+        // rounding is in the geometry the skin is mapped onto instead.
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 5, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + headScale * 2, y + 3.5f + headScale * 2, 5, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(clamp01(1f), clamp01(1f - hurtPercent / 2), clamp01(1f - hurtPercent / 2), clamp01(animationFactor));
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 8, 8, 8, 8, 64, 64, 5, headTint);
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 40, 8, 8, 8, 64, 64, 5, headTint);
         RenderSystem.disableBlend();
         context.getMatrices().pop();
 
@@ -521,18 +505,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         context.getMatrices().scale(1 - hurtPercent / 20f, 1 - hurtPercent / 20f, 1f);
         context.getMatrices().translate(-(x + 2.5 + 15), -(y + 2.5 + 15), 0);
         RenderSystem.enableBlend();
-        RenderSystem.colorMask(false, false, false, true);
-        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
-        RenderSystem.colorMask(true, true, true, true);
+        // The head used to be masked through the framebuffer's alpha channel, which meant
+        // clearing the whole frame behind a colour mask every time one was drawn. gl4es does
+        // not honour that mask, so on PojavLauncher the clear took the frame with it. The
+        // rounding is in the geometry the skin is mapped onto instead.
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
-        Render2D.setupRender();
-        Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
-        RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
-        Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
-        Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
-        RenderSystem.defaultBlendFunc();
+        java.awt.Color headTint = new java.awt.Color(1f, clamp01(1f - hurtPercent / 2), clamp01(1f - hurtPercent / 2), clamp01(animationFactor));
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x - 2, y + 2.5f, headScale, headScale, 8, 8, 8, 8, 64, 64, r, headTint);
+        Render2D.renderRoundedTexture(context.getMatrices(), texture, x - 2, y + 2.5f, headScale, headScale, 40, 8, 8, 8, 64, 64, r, headTint);
         RenderSystem.disableBlend();
         context.getMatrices().pop();
 
@@ -598,5 +578,10 @@ public class TargetHudRenderer extends ConfigurableModule {
         int b = Math.round(Maths.lerp(progress, start.getBlue(), end.getBlue()));
         int a = Math.round(Maths.lerp(progress, start.getAlpha(), end.getAlpha()));
         return new Color(r, g, b, a);
+    }
+
+    /** Keeps a tint component inside the range java.awt.Color accepts. */
+    private static float clamp01(float v) {
+        return v < 0f ? 0f : (v > 1f ? 1f : v);
     }
 }

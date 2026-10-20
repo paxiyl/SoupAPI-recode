@@ -185,6 +185,12 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("smoke")
     @ConfigEntry.ColorPicker
     public int smokeAccentColor = 0x9b4dff;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.Gui.Tooltip
+    public boolean smokeVolumetric = true;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.Gui.Tooltip
+    public boolean smokeGroundShards = true;
 
     /**
      * TRAILS

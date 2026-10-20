@@ -453,6 +453,10 @@ text.autoconfig.soupapi.option.skyStyle=Sky Pattern (Plain = off, or follow the 
 text.autoconfig.soupapi.option.skyStyle.@PrefixText=Animated Sky
 text.autoconfig.soupapi.option.smokeAccentColor=Accent Colour
 text.autoconfig.soupapi.option.smokeAccentUseTheme=Accent Follows Theme
+text.autoconfig.soupapi.option.smokeVolumetric=Smoke Has Volume
+text.autoconfig.soupapi.option.smokeVolumetric.@Tooltip=Draws each puff as several slices so it has depth from any angle, instead of one flat plate facing the camera.
+text.autoconfig.soupapi.option.smokeGroundShards=Settles As Shards
+text.autoconfig.soupapi.option.smokeGroundShards.@Tooltip=Smoke that reaches the ground lies on it as glass fragments instead of cutting into the surface.
 text.autoconfig.soupapi.option.smokeColor=Smoke Colour
 text.autoconfig.soupapi.option.smokeDensity=Density
 text.autoconfig.soupapi.option.smokeEnabled=Layered Smoke
