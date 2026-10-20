@@ -1,20 +1,24 @@
 package me.Padej_.soupapi.modules;
 
+import me.Padej_.soupapi.compat.Cameras;
+
+import me.Padej_.soupapi.compat.Maths;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.block.AirBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import net.minecraft.block.BlockAir;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
+import me.Padej_.soupapi.compat.RotationAxis;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -24,7 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TotemPopParticles extends ConfigurableModule {
     public static final CopyOnWriteArrayList<Particle> particles = new CopyOnWriteArrayList<>();
-    private static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    private static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static final List<Emitter> emitters = new ArrayList<>();
     private static final Random RANDOM = new Random();
 
@@ -35,7 +39,7 @@ public class TotemPopParticles extends ConfigurableModule {
     }
 
     public static void onTotemPop(Entity entity) {
-        if (mc.player == null || !CONFIG.totemPopParticlesEnabled || !(entity instanceof PlayerEntity)) return;
+        if (mc.thePlayer == null || !CONFIG.totemPopParticlesEnabled || !(entity instanceof EntityPlayer)) return;
 
         updateAvailableTextures();
 
@@ -52,12 +56,12 @@ public class TotemPopParticles extends ConfigurableModule {
         emitters.add(new Emitter(entity, c));
 
         for (int i = 0; i < CONFIG.totemPopParticlesCount; i++) {
-            particles.add(new Particle((float) entity.getX(), (float) (entity.getY() + entity.getHeight() / 2), (float) entity.getZ(), MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
+            particles.add(new Particle((float) entity.posX, (float) (entity.posY + entity.height / 2), (float) entity.posZ, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
         }
     }
 
     public static void render(WorldRenderContext context) {
-        if (mc.player != null && mc.world != null) {
+        if (mc.thePlayer != null && mc.theWorld != null) {
             for (Particle particle : particles) {
                 particle.render(context.matrixStack(), context.tickCounter().getTickDelta(true));
             }
@@ -67,15 +71,15 @@ public class TotemPopParticles extends ConfigurableModule {
     private static void updateAvailableTextures() {
         AVAILABLE_TEXTURES.clear();
 
-        if (CONFIG.totemPopParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
-        if (CONFIG.totemPopParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
-        if (CONFIG.totemPopParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
-        if (CONFIG.totemPopParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.HEART);
-        if (CONFIG.totemPopParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.STAR);
-        if (CONFIG.totemPopParticlesIncludeGlyphs) AVAILABLE_TEXTURES.add(TexturesManager.getRandomGlyphParticle());
+        if (CONFIG.totemPopParticlesIncludeFirefly) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
+        if (CONFIG.totemPopParticlesIncludeDollar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
+        if (CONFIG.totemPopParticlesIncludeSnowflake) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
+        if (CONFIG.totemPopParticlesIncludeHeart) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
+        if (CONFIG.totemPopParticlesIncludeStar) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
+        if (CONFIG.totemPopParticlesIncludeGlyphs) AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.getRandomGlyphParticle()));
 
         if (AVAILABLE_TEXTURES.isEmpty()) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY));
         }
     }
 
@@ -85,7 +89,7 @@ public class TotemPopParticles extends ConfigurableModule {
         float rotationAngle, rotationSpeed;
         long time;
         Color color;
-        Identifier glyphTexture;
+        ResourceLocation glyphTexture;
 
         public Particle(float x, float y, float z, float rotationAngle, float rotationSpeed) {
             int speed = CONFIG.totemPopParticlesSpeed;
@@ -150,7 +154,7 @@ public class TotemPopParticles extends ConfigurableModule {
             if (!CONFIG.totemPopParticlesEnabled) return;
 
             float age = (System.currentTimeMillis() - time) / (float) (CONFIG.totemPopParticlesRenderTime * 1000L);
-            age = MathHelper.clamp(age, 0f, 1f);
+            age = Maths.clamp(age, 0f, 1f);
 
             float alpha = 1f;
             float scale = CONFIG.totemPopParticlesScale;
@@ -164,16 +168,16 @@ public class TotemPopParticles extends ConfigurableModule {
             if (alpha <= 0f || scale <= 0f) return;
 
             float renderScale = 0.07f;
-            double posX = MathHelper.lerp(tickDelta, px, x) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-            double posY = MathHelper.lerp(tickDelta, py, y) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-            double posZ = MathHelper.lerp(tickDelta, pz, z) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
+            double posX = Maths.lerp(tickDelta, px, x) - mc.getRenderManager().viewerPosX;
+            double posY = Maths.lerp(tickDelta, py, y) - mc.getRenderManager().viewerPosY;
+            double posZ = Maths.lerp(tickDelta, pz, z) - mc.getRenderManager().viewerPosZ;
 
             matrixStack.push();
             matrixStack.translate(posX, posY, posZ);
             matrixStack.scale(renderScale, renderScale, renderScale);
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-mc.gameRenderer.getCamera().getYaw()));
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(mc.gameRenderer.getCamera().getPitch()));
-            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / MinecraftClient.getInstance().getCurrentFps()) * rotationSpeed));
+            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-Cameras.get().getYaw()));
+            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Cameras.get().getPitch()));
+            matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotationAngle += (1f / Minecraft.getDebugFPS()) * rotationSpeed));
 
             if (glyphTexture != null) {
                 Render2D.drawGlyphs(matrixStack, glyphTexture, new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (alpha * 255)), scale);
@@ -183,8 +187,8 @@ public class TotemPopParticles extends ConfigurableModule {
         }
 
         private boolean posBlock(double x, double y, double z) {
-            if (mc.player == null || mc.world == null) return false;
-            return (!(mc.world.getBlockState(BlockPos.ofFloored(x, y, z)).getBlock() instanceof AirBlock));
+            if (mc.thePlayer == null || mc.theWorld == null) return false;
+            return (!(mc.theWorld.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BlockAir));
         }
     }
 
@@ -205,7 +209,7 @@ public class TotemPopParticles extends ConfigurableModule {
 
             int perTick = Math.max(1, CONFIG.totemPopParticlesCount / 30);
             for (int i = 0; i < perTick; i++) {
-                particles.add(new Particle((float) entity.getX(), (float) (entity.getY() + entity.getHeight() / 2f), (float) entity.getZ(), MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
+                particles.add(new Particle((float) entity.posX, (float) (entity.posY + entity.height / 2f), (float) entity.posZ, MathUtility.random(0, 180), MathUtility.random(10f, 60f)));
             }
             return false;
         }

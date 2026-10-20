@@ -1,0 +1,18 @@
+# Gradle / ForgeGradle
+build/
+.gradle/
+out/
+run/
+eclipse/
+*.ipr
+*.iws
+*.iml
+.idea/
+.settings/
+.classpath
+.project
+logs/
+
+# Python bytecode from tools/
+__pycache__/
+SoupAPI-overhaul-source.zip

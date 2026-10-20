@@ -1,29 +1,35 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.compat.Maths;
+
+import me.Padej_.soupapi.compat.Windows;
+
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.utils.CursorUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.SoupScreen;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
 
 import java.awt.*;
 import java.util.List;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
-public class ConfigHudPositionsScreen extends Screen {
+public class ConfigHudPositionsScreen extends SoupScreen {
     private final Frame targetHudFrame;
     private final Frame potionsHudFrame;
     private final Frame watermarkFrame;
     private final Frame mouseMoveFrame;
 
     public ConfigHudPositionsScreen() {
-        super(Text.of("SoupAPI config screen"));
-        int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+        super(Texts.literal("SoupAPI config screen"));
+        int centerX = Windows.scaledWidth() / 2;
+        int centerY = Windows.scaledHeight() / 2;
         targetHudFrame = new Frame(
                 centerX + CONFIG.targetHudOffsetX,
                 centerY - CONFIG.targetHudOffsetY,
@@ -108,8 +114,8 @@ public class ConfigHudPositionsScreen extends Screen {
             if (targetHudFrame.isDragging()) {
                 Point snapped = applySnappingOffsets(targetHudFrame, mouseX, mouseY);
                 targetHudFrame.setPosition(snapped.x, snapped.y);
-                int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-                int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+                int centerX = Windows.scaledWidth() / 2;
+                int centerY = Windows.scaledHeight() / 2;
                 CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
                 CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
                 return true;
@@ -152,8 +158,8 @@ public class ConfigHudPositionsScreen extends Screen {
 
     @Override
     public void close() {
-        int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
+        int centerX = Windows.scaledWidth() / 2;
+        int centerY = Windows.scaledHeight() / 2;
         CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
         CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
         CONFIG.hudBetterPotionsHudX = potionsHudFrame.getOffsetX(0);
@@ -168,8 +174,8 @@ public class ConfigHudPositionsScreen extends Screen {
     }
 
     private void renderSnapGuides(DrawContext context, Frame movingFrame) {
-        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        int screenWidth = Windows.scaledWidth();
+        int screenHeight = Windows.scaledHeight();
 
         int snapThreshold = 5;
         boolean drawVertical = false, drawHorizontal = false;
@@ -178,8 +184,8 @@ public class ConfigHudPositionsScreen extends Screen {
         int centerY = screenHeight / 2;
 
         // Центры рамки
-        int frameCenterX = movingFrame.getX() + movingFrame.width / 2;
-        int frameCenterY = movingFrame.getY() + movingFrame.height / 2;
+        int frameCenterX = movingFrame.x + movingFrame.width / 2;
+        int frameCenterY = movingFrame.y + movingFrame.height / 2;
 
         // Привязка к центру экрана
         if (Math.abs(frameCenterX - centerX) < snapThreshold) {
@@ -192,11 +198,11 @@ public class ConfigHudPositionsScreen extends Screen {
         }
 
         // Привязка к другим рамкам (по центрам)
-        for (Frame other : List.of(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
             if (other == movingFrame) continue;
 
-            int otherCenterX = other.getX() + other.width / 2;
-            int otherCenterY = other.getY() + other.height / 2;
+            int otherCenterX = other.x + other.width / 2;
+            int otherCenterY = other.y + other.height / 2;
 
             if (Math.abs(frameCenterX - otherCenterX) < snapThreshold) {
                 drawVertical = true;
@@ -209,10 +215,10 @@ public class ConfigHudPositionsScreen extends Screen {
             }
 
             // Привязка по левому и правому краям
-            if (Math.abs(movingFrame.getX() - other.getX()) < snapThreshold) {
-                movingFrame.snapX(other.getX());
-            } else if (Math.abs((movingFrame.getX() + movingFrame.width) - (other.getX() + other.width)) < snapThreshold) {
-                movingFrame.snapX(other.getX() + other.width - movingFrame.width);
+            if (Math.abs(movingFrame.x - other.x) < snapThreshold) {
+                movingFrame.snapX(other.x);
+            } else if (Math.abs((movingFrame.x + movingFrame.width) - (other.x + other.width)) < snapThreshold) {
+                movingFrame.snapX(other.x + other.width - movingFrame.width);
             }
         }
 
@@ -226,8 +232,8 @@ public class ConfigHudPositionsScreen extends Screen {
     }
 
     private Point applySnappingOffsets(Frame frame, double mouseX, double mouseY) {
-        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        int screenWidth = Windows.scaledWidth();
+        int screenHeight = Windows.scaledHeight();
         int snapThreshold = 5;
 
         int newX = (int)(mouseX - frame.dragOffsetX);
@@ -248,11 +254,11 @@ public class ConfigHudPositionsScreen extends Screen {
         }
 
         // Привязка к другим рамкам
-        for (Frame other : List.of(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
             if (other == frame) continue;
 
-            int otherCenterX = other.getX() + other.width / 2;
-            int otherCenterY = other.getY() + other.height / 2;
+            int otherCenterX = other.x + other.width / 2;
+            int otherCenterY = other.y + other.height / 2;
 
             if (Math.abs(frameCenterX - otherCenterX) < snapThreshold) {
                 newX = otherCenterX - frame.width / 2;
@@ -263,23 +269,23 @@ public class ConfigHudPositionsScreen extends Screen {
             }
 
             // Левые / правые края
-            if (Math.abs(newX - other.getX()) < snapThreshold) {
-                newX = other.getX();
-            } else if (Math.abs((newX + frame.width) - (other.getX() + other.width)) < snapThreshold) {
-                newX = other.getX() + other.width - frame.width;
+            if (Math.abs(newX - other.x) < snapThreshold) {
+                newX = other.x;
+            } else if (Math.abs((newX + frame.width) - (other.x + other.width)) < snapThreshold) {
+                newX = other.x + other.width - frame.width;
             }
 
             // Верх / низ
-            if (Math.abs(newY - other.getY()) < snapThreshold) {
-                newY = other.getY();
-            } else if (Math.abs((newY + frame.height) - (other.getY() + other.height)) < snapThreshold) {
-                newY = other.getY() + other.height - frame.height;
+            if (Math.abs(newY - other.y) < snapThreshold) {
+                newY = other.y;
+            } else if (Math.abs((newY + frame.height) - (other.y + other.height)) < snapThreshold) {
+                newY = other.y + other.height - frame.height;
             }
         }
 
         // Ограничения
-        newX = MathHelper.clamp(newX, 0, screenWidth - frame.width);
-        newY = MathHelper.clamp(newY, 0, screenHeight - frame.height);
+        newX = Maths.clamp(newX, 0, screenWidth - frame.width);
+        newY = Maths.clamp(newY, 0, screenHeight - frame.height);
 
         return new Point(newX, newY);
     }
@@ -306,8 +312,8 @@ public class ConfigHudPositionsScreen extends Screen {
             context.fill(x, y, x + width, y + height, color);
             context.drawBorder(x, y, width, height, color);
 
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-            int textHeight = textRenderer.fontHeight;
+            FontRenderer textRenderer = Minecraft.getMinecraft().fontRendererObj;
+            int textHeight = textRenderer.FONT_HEIGHT;
 
             int textY = y - textHeight - 2;
 
@@ -333,14 +339,14 @@ public class ConfigHudPositionsScreen extends Screen {
 
         public void updatePosition(double mouseX, double mouseY) {
             if (isDragging) {
-                int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-                int screenHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+                int screenWidth = Windows.scaledWidth();
+                int screenHeight = Windows.scaledHeight();
 
                 int newX = (int)(mouseX - dragOffsetX);
                 int newY = (int)(mouseY - dragOffsetY);
 
-                newX = MathHelper.clamp(newX, 0, screenWidth - width);
-                newY = MathHelper.clamp(newY, 0, screenHeight - height);
+                newX = Maths.clamp(newX, 0, screenWidth - width);
+                newY = Maths.clamp(newY, 0, screenHeight - height);
 
                 x = newX;
                 y = newY;

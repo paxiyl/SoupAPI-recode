@@ -1,16 +1,20 @@
 package me.Padej_.soupapi.particle.ambient;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.BlockPos;
+import me.Padej_.soupapi.compat.RotationAxis;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -29,9 +33,10 @@ public class FireFly extends DefaultAmbientParticle {
 
     @Override
     public boolean tick() {
-        if (mc.player == null || mc.world == null) return false;
-        if (mc.player.squaredDistanceTo(posX, posY, posZ) > 100) age -= 4;
-        else if (!mc.world.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ)).isAir()) age -= 8;
+        if (mc.thePlayer == null || mc.theWorld == null) return false;
+        if (mc.thePlayer.getDistanceSq(posX, posY, posZ) > 100) age -= 4;
+        else if (mc.theWorld.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ))
+                .getBlock() != net.minecraft.init.Blocks.air) age -= 8;
         else age--;
 
         if (age < 0)
@@ -47,7 +52,7 @@ public class FireFly extends DefaultAmbientParticle {
         posY += motionY;
         posZ += motionZ;
 
-        trails.add(new Trail(new Vec3d(prevPosX, prevPosY, prevPosZ), new Vec3d(posX, posY, posZ), this.color));
+        trails.add(new Trail(new Vec3(prevPosX, prevPosY, prevPosZ), new Vec3(posX, posY, posZ), this.color));
 
         motionX *= 0.99f;
         motionY *= 0.99f;
@@ -60,11 +65,11 @@ public class FireFly extends DefaultAmbientParticle {
     public void render(WorldRenderContext context) {
         float tickDelta = context.tickCounter().getTickDelta(true);
         if (!trails.isEmpty()) {
-            Camera camera = context.camera();
+            Camera camera = Cameras.get();
             for (Trail ctx : trails) {
-                Vec3d pos = ctx.interpolate(1f);
+                Vec3 pos = ctx.interpolate(1f);
                 MatrixStack matrices = new MatrixStack();
-                matrices.translate(pos.x, pos.y, pos.z);
+                matrices.translate(pos.xCoord, pos.yCoord, pos.zCoord);
                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
                 matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
 
@@ -72,7 +77,7 @@ public class FireFly extends DefaultAmbientParticle {
                 int alpha = (int) (255 * ((float) age / (float) maxAge) * alphaFactor);
                 Color withAlpha = Render2D.injectAlpha(ctx.color(), alpha);
 
-                Render2D.drawGlyphs(matrices, TexturesManager.FIREFLY, withAlpha, AmbientParticle.particlesWithTrailScale.getValue() / 100f);
+                Render2D.drawGlyphs(matrices, TexturesManager.FIREFLY, withAlpha, ConfigurableModule.CONFIG.ambientParticlesParticleWithTrailScale / 100f);
             }
         }
     }

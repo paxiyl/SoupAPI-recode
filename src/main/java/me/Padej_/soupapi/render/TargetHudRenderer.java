@@ -1,6 +1,8 @@
 package me.Padej_.soupapi.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.Maths;
+
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.font.FontRenderers;
 import me.Padej_.soupapi.particle.Particle2D;
@@ -8,17 +10,16 @@ import me.Padej_.soupapi.reduce.ModuleSupressor;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.player.PlayerEntity;
+import me.Padej_.soupapi.compat.DrawContext;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import me.Padej_.soupapi.compat.RenderLayer;
+import net.minecraft.potion.Potion;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import org.lwjgl.opengl.GL40C;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -28,6 +29,41 @@ import static me.Padej_.soupapi.modules.TargetHud.smoothedScreenX;
 import static me.Padej_.soupapi.modules.TargetHud.smoothedScreenY;
 
 public class TargetHudRenderer extends ConfigurableModule {
+    /** Vanilla's inventory sheet, which carries the 18x18 status-effect icons at y=198. */
+    private static final ResourceLocation INVENTORY_ICONS =
+            new ResourceLocation("textures/gui/container/inventory.png");
+
+    /**
+     * Resolves a vanilla effect name to its {@link Potion}.
+     *
+     * <p>1.8.9 has no string-keyed effect registry — {@code Potion} is a static table — so the
+     * handful of names the target HUD shows are mapped explicitly.
+     */
+    private static Potion vanillaPotion(String name) {
+        if ("speed".equals(name)) return Potion.moveSpeed;
+        if ("slowness".equals(name)) return Potion.moveSlowdown;
+        if ("haste".equals(name)) return Potion.digSpeed;
+        if ("mining_fatigue".equals(name)) return Potion.digSlowdown;
+        if ("strength".equals(name)) return Potion.damageBoost;
+        if ("jump_boost".equals(name)) return Potion.jump;
+        if ("nausea".equals(name)) return Potion.confusion;
+        if ("regeneration".equals(name)) return Potion.regeneration;
+        if ("resistance".equals(name)) return Potion.resistance;
+        if ("fire_resistance".equals(name)) return Potion.fireResistance;
+        if ("water_breathing".equals(name)) return Potion.waterBreathing;
+        if ("invisibility".equals(name)) return Potion.invisibility;
+        if ("blindness".equals(name)) return Potion.blindness;
+        if ("night_vision".equals(name)) return Potion.nightVision;
+        if ("hunger".equals(name)) return Potion.hunger;
+        if ("weakness".equals(name)) return Potion.weakness;
+        if ("poison".equals(name)) return Potion.poison;
+        if ("wither".equals(name)) return Potion.wither;
+        if ("health_boost".equals(name)) return Potion.healthBoost;
+        if ("absorption".equals(name)) return Potion.absorption;
+        if ("saturation".equals(name)) return Potion.saturation;
+        return null;
+    }
+
     public static final ArrayList<Particle2D> particles = new ArrayList<>();
     public static boolean sentParticles = false;
     public static float ticks = 0f;
@@ -44,7 +80,7 @@ public class TargetHudRenderer extends ConfigurableModule {
             "resistance", "slow_falling", "slowness", "speed", "strength", "weakness", "wither"
     };
 
-    public static void renderTinyHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, PlayerEntity target, int x, int y, Vec3d screenPos) {
+    public static void renderTinyHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, EntityPlayer target, int x, int y, Vec3 screenPos) {
         float hurtPercent = (Render2D.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, normalizedDelta)) / 8f;
 
         Color c1 = TargetHudRenderer.topLeft;
@@ -60,12 +96,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         int headScale = 25;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
-        } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
+        } else if (target instanceof EntityPlayer) {
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -74,12 +110,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
@@ -90,7 +126,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? (float) screenPos.z : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? (float) screenPos.zCoord : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -119,8 +155,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 2);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.getInventory().armor;
-        ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 25;
         for (ItemStack itemStack : items) {
@@ -129,7 +165,7 @@ public class TargetHudRenderer extends ConfigurableModule {
             context.getMatrices().scale(0.5f, 0.5f, 0.5f);
             context.drawItem(itemStack, 0, 0);
             if (!ModuleSupressor.disableItemOverlay()) {
-                context.drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
+                context.drawStackOverlay(mc.fontRendererObj, itemStack, 0, 0);
             }
             context.getMatrices().pop();
             xItemOffset += 10;
@@ -138,13 +174,19 @@ public class TargetHudRenderer extends ConfigurableModule {
         float effectXOffset = x + 25;
         float effectYOffset = y + 18;
         for (String effectName : effectNames) {
-            Identifier effectId = Identifier.ofVanilla(effectName);
-            StatusEffect effect = Registries.STATUS_EFFECT.get(effectId);
-            if (effect != null && target.hasStatusEffect(Registries.STATUS_EFFECT.getEntry(effectId).orElse(null))) {
+            Potion effect = vanillaPotion(effectName);
+            if (effect != null && target.isPotionActive(effect)) {
                 context.getMatrices().push();
                 context.getMatrices().translate(effectXOffset, effectYOffset, 0);
                 context.getMatrices().scale(0.5f, 0.5f, 0.5f);
-                context.drawTexture(RenderLayer::getGuiTextured, Identifier.ofVanilla("textures/mob_effect/" + effectName + ".png"), 0, 0, 0, 0, 18, 18, 18, 18);
+                // 1.8.9 keeps the 18x18 effect icons on the inventory sheet at y=198, in an
+                // 8-wide grid indexed by Potion.getStatusIconIndex(); there are no
+                // per-effect textures/mob_effect files until 1.19.
+                if (effect.hasStatusIcon()) {
+                    int icon = effect.getStatusIconIndex();
+                    context.drawTexture(INVENTORY_ICONS, 0, 0, 18, 18,
+                            (icon % 8) * 18, 198 + (icon / 8) * 18, 18, 18, 256, 256);
+                }
                 context.getMatrices().pop();
                 effectXOffset += 10;
             }
@@ -153,7 +195,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
-    public static void renderMiniHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, PlayerEntity target, int x, int y, Vec3d screenPos) {
+    public static void renderMiniHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, EntityPlayer target, int x, int y, Vec3 screenPos) {
         float hurtPercent = (Render2D.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, normalizedDelta)) / 8f;
 
         Color c1 = Palette.getColor(0f);
@@ -165,13 +207,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 94, 34, 7, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
-        } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+        } else if (target instanceof EntityPlayer) {
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -180,12 +222,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 2.5f, y + 2.5f, 30, 30, 5, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 2.5, y + 2.5, x + 2.5 + 30, y + 2.5 + 30, 5, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 2.5, y + 2.5, 30, 30, 40, 8, 8, 8, 64, 64);
@@ -195,7 +237,7 @@ public class TargetHudRenderer extends ConfigurableModule {
 
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.z, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -234,8 +276,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold_mini.drawString(context.getMatrices(), displayName, x + 38, y + 5, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.getInventory().armor;
-        ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 38;
         for (ItemStack itemStack : items) {
@@ -244,7 +286,7 @@ public class TargetHudRenderer extends ConfigurableModule {
             context.getMatrices().scale(0.5f, 0.5f, 0.5f);
             context.drawItem(itemStack, 0, 0);
             if (!ModuleSupressor.disableItemOverlay()) {
-                context.drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
+                context.drawStackOverlay(mc.fontRendererObj, itemStack, 0, 0);
             }
             context.getMatrices().pop();
             xItemOffset += 9;
@@ -252,7 +294,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
-    public static void renderNormalHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, PlayerEntity target, int x, int y, Vec3d screenPos) {
+    public static void renderNormalHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, EntityPlayer target, int x, int y, Vec3 screenPos) {
         float hurtPercent = (Render2D.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, normalizedDelta)) / 8f;
 
         Color c1 = Palette.getColor(0f);
@@ -264,13 +306,13 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, 136, 46, 9, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
-        } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+        } else if (target instanceof EntityPlayer) {
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 3.5f + 20, y + 3.5f + 20, 0);
@@ -279,12 +321,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 7, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + 40, y + 3.5f + 40, 7, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, 40, 40, 40, 8, 8, 8, 64, 64);
@@ -295,7 +337,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.z, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -334,8 +376,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         FontRenderers.sf_bold.drawString(context.getMatrices(), displayName, x + 48, y + 7, Render2D.applyOpacity(Palette.getTextColor(), animationFactor));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        List<ItemStack> armor = target.getInventory().armor;
-        ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 48;
         for (ItemStack itemStack : items) {
@@ -344,7 +386,7 @@ public class TargetHudRenderer extends ConfigurableModule {
             context.getMatrices().scale(0.75f, 0.75f, 0.75f);
             context.drawItem(itemStack, 0, 0);
             if (!ModuleSupressor.disableItemOverlay()) {
-                context.drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
+                context.drawStackOverlay(mc.fontRendererObj, itemStack, 0, 0);
             }
             context.getMatrices().pop();
             xItemOffset += 12;
@@ -352,19 +394,19 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
-    public static void renderAresHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, PlayerEntity target, int x, int y, Vec3d screenPos) {
+    public static void renderAresHUD(DrawContext context, float normalizedDelta, float health, float animationFactor, EntityPlayer target, int x, int y, Vec3 screenPos) {
         float hurtPercent = (Render2D.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, normalizedDelta)) / 8f;
 
         Color c1 = Palette.getColor(0f);
         Color c3 = Palette.getColor(0.66f);
 
-        Identifier texture = mc.player.getSkinTextures().texture();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
-        } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+        } else if (target instanceof EntityPlayer) {
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
+            displayName = target.getName();
         }
 
         int textWidth = (int) FontRenderers.sf_bold_17.getStringWidth(displayName);
@@ -384,12 +426,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x + 3.5f, y + 3.5f, 40, 40, 5, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x + 3.5f, y + 3.5f, x + 3.5f + headScale * 2, y + 3.5f + headScale * 2, 5, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x + 3.5f, y + 3.5f, headScale * 2, headScale * 2, 40, 8, 8, 8, 64, 64);
@@ -400,7 +442,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? MathHelper.clamp(1.0f - (float) screenPos.z, 0.1f, 1.0f) : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? Maths.clamp(1.0f - (float) screenPos.zCoord, 0.1f, 1.0f) : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -449,7 +491,7 @@ public class TargetHudRenderer extends ConfigurableModule {
     }
 
 
-    public static void renderAlt_1_HUD(DrawContext context, float normalizedDelta, float health, float animationFactor, PlayerEntity target, int x, int y, Vec3d screenPos) {
+    public static void renderAlt_1_HUD(DrawContext context, float normalizedDelta, float health, float animationFactor, EntityPlayer target, int x, int y, Vec3 screenPos) {
         float hurtPercent = (Render2D.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, normalizedDelta)) / 8f;
 
         Color c1 = TargetHudRenderer.topLeft;
@@ -465,14 +507,14 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.drawRound(context.getMatrices(), x + xOffset, y + 0.5f + yOffset, w, h, r, Palette.getBackColor());
 
         // Голова игрока
-        Identifier texture = mc.player.getSkinTextures().texture();
+        ResourceLocation texture = mc.thePlayer.getLocationSkin();
         String displayName = "Invisible";
         int headScale = 20;
         if (target.isInvisible()) {
             texture = TexturesManager.ANON_SKIN;
-        } else if (target instanceof PlayerEntity) {
-            texture = ((AbstractClientPlayerEntity) target).getSkinTextures().texture();
-            displayName = target.getName().getString();
+        } else if (target instanceof EntityPlayer) {
+            texture = ((AbstractClientPlayer) target).getLocationSkin();
+            displayName = target.getName();
         }
         context.getMatrices().push();
         context.getMatrices().translate(x + 2.5 + 15, y + 2.5 + 15, 0);
@@ -481,12 +523,12 @@ public class TargetHudRenderer extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.colorMask(false, false, false, true);
         RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        RenderSystem.clear(GL40C.GL_COLOR_BUFFER_BIT);
+        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT);
         RenderSystem.colorMask(true, true, true, true);
         Render2D.drawRound(context.getMatrices(), x - 2, y + 2.5f, headScale, headScale, r, Palette.getBackColor());
         Render2D.setupRender();
         Render2D.renderRoundedQuadInternal(context.getMatrices().peek().getPositionMatrix(), animationFactor, animationFactor, animationFactor, animationFactor, x - 2, y + 2.5, x - 2 + headScale, y + 2.5 + headScale, r, 3);
-        RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
+        RenderSystem.blendFunc(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA);
         RenderSystem.setShaderColor(1f, 1f - hurtPercent / 2, 1f - hurtPercent / 2, 1f);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 8, 8, 8, 8, 64, 64);
         Render2D.renderTexture(context.getMatrices(), texture, x - 2, y + 2.5, headScale, headScale, 40, 8, 8, 8, 64, 64);
@@ -497,7 +539,7 @@ public class TargetHudRenderer extends ConfigurableModule {
         // Партиклы
         for (final Particle2D p : particles) {
             if (p.opacity > 4) {
-                float depthFactor = CONFIG.targetHudFollow ? (float) screenPos.z : 1.0f;
+                float depthFactor = CONFIG.targetHudFollow ? (float) screenPos.zCoord : 1.0f;
                 p.render2D(context.getMatrices(), smoothedScreenX, smoothedScreenY, depthFactor);
             }
         }
@@ -528,8 +570,8 @@ public class TargetHudRenderer extends ConfigurableModule {
         Render2D.renderRoundedGradientRect(context.getMatrices(), c4, c3, c3, c4, barX, barY, innerBarWidth, barHeight, 1);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, animationFactor);
-        java.util.List<ItemStack> armor = target.getInventory().armor;
-        ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
+        ItemStack[] armor = target.inventory.armorInventory;
+        ItemStack[] items = new ItemStack[]{target.getHeldItem(), armor[3], armor[2], armor[1], armor[0], target.getHeldItem()};
 
         float xItemOffset = x + 20;
         float yItemOffset = y + 12;
@@ -541,7 +583,7 @@ public class TargetHudRenderer extends ConfigurableModule {
             context.getMatrices().scale(itemScale, itemScale, itemScale);
             context.drawItem(itemStack, 0, 0);
             if (!ModuleSupressor.disableItemOverlay()) {
-                context.drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
+                context.drawStackOverlay(mc.fontRendererObj, itemStack, 0, 0);
             }
             context.getMatrices().pop();
             xItemOffset += itemGap;
@@ -551,10 +593,10 @@ public class TargetHudRenderer extends ConfigurableModule {
     }
 
     private static Color interpolateColor(Color start, Color end, float progress) {
-        int r = MathHelper.lerp(progress, start.getRed(), end.getRed());
-        int g = MathHelper.lerp(progress, start.getGreen(), end.getGreen());
-        int b = MathHelper.lerp(progress, start.getBlue(), end.getBlue());
-        int a = MathHelper.lerp(progress, start.getAlpha(), end.getAlpha());
+        int r = Math.round(Maths.lerp(progress, start.getRed(), end.getRed()));
+        int g = Math.round(Maths.lerp(progress, start.getGreen(), end.getGreen()));
+        int b = Math.round(Maths.lerp(progress, start.getBlue(), end.getBlue()));
+        int a = Math.round(Maths.lerp(progress, start.getAlpha(), end.getAlpha()));
         return new Color(r, g, b, a);
     }
 }

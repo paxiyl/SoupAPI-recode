@@ -1,25 +1,39 @@
 package me.Padej_.soupapi.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.Mat4;
+
+import me.Padej_.soupapi.compat.Cameras;
+
+import me.Padej_.soupapi.compat.BlendFactor;
+import me.Padej_.soupapi.compat.Maths;
+import me.Padej_.soupapi.compat.Quaternionf;
+import me.Padej_.soupapi.compat.ShaderKey;
+
+import net.minecraft.client.renderer.GlStateManager;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
-import me.Padej_.soupapi.main.SoupAPI_Main;
+import me.Padej_.soupapi.SoupAPI;
 import me.Padej_.soupapi.modules.Halo;
 import me.Padej_.soupapi.modules.TargetRender;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.NotNull;
-import org.joml.Math;
-import org.joml.*;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
+import me.Padej_.soupapi.compat.RotationAxis;
+import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -29,17 +43,23 @@ import java.util.List;
 public class Render3D extends ConfigurableModule {
     private static float rollAngle = 0.0f;
     private static long lastUpdateTime = System.currentTimeMillis();
-    private static Camera camera = mc.gameRenderer.getCamera();
+    private static Camera camera = Cameras.get();
 
     public static void renderChinaHat(MatrixStack matrices, VertexConsumer vertexConsumer) {
-        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        Mat4 matrix = matrices.peek().getPositionMatrix();
 
         float baseRadius = CONFIG.chinaHatBaseRadius / 100f;
-        float height = CONFIG.chinaHatTipHeight / 100f;
+        // The brim sits at the offset and the tip rises above it. The cone used to be built the
+        // other way round - brim high, tip below - which drew the hat upside down over the head.
         float yOffset = -CONFIG.chinaHatYOffset / 100f;
+        float brimY = yOffset;
+        float tipY = yOffset + CONFIG.chinaHatTipHeight / 100f;
         int segments = 60;
-        float time = mc.world.getTime() % 360;
-        int alpha = (int) (1 - (CONFIG.chinaHatAlpha * 255 / 100f));
+        float time = mc.theWorld.getTotalWorldTime() % 360;
+        // 0..1, because the vertex colour below takes floats. This read
+        // `(int) (1 - (chinaHatAlpha * 255 / 100f))`, which is negative for every setting above 0 -
+        // so the hat was drawn fully transparent and the feature looked like it did nothing.
+        float alpha = CONFIG.chinaHatAlpha / 100f;
         boolean isHalf = CONFIG.chinaHatRenderHalf;
 
         int rotation = 360 / 5;
@@ -70,7 +90,7 @@ public class Render3D extends ConfigurableModule {
 
             // Вычисляем альфа-значение в зависимости от расстояния от центра
             if (isHalf) {
-                float distanceFromCenter = Math.sqrt(xCoords[i] * xCoords[i] + zCoords[i] * zCoords[i]);
+                float distanceFromCenter = (float) Math.sqrt(xCoords[i] * xCoords[i] + zCoords[i] * zCoords[i]);
                 float alphaFactor = 1.0f - (distanceFromCenter / baseRadius); // От 1 в центре до 0 на краю
                 alphas[i] = Math.max(alphaFactor, 0) * alpha; // Умножаем на базовую альфу
             } else {
@@ -105,45 +125,45 @@ public class Render3D extends ConfigurableModule {
             float alpha2 = alphas[i + 1];
 
             // Первая грань (от основания сверху к вершине снизу)
-            vertexConsumer.vertex(matrix, x1, height, z1)
+            vertexConsumer.vertex(matrix, x1, brimY, z1)
                     .color(red1, green1, blue1, isHalf ? alpha1 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, x2, height, z2)
+            vertexConsumer.vertex(matrix, x2, brimY, z2)
                     .color(red2, green2, blue2, isHalf ? alpha2 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, tipX, yOffset, tipZ)
+            vertexConsumer.vertex(matrix, tipX, tipY, tipZ)
                     .color(redTip, greenTip, blueTip, alpha)
                     .normal(0, -1, 0);
 
             // Вторая грань (для заполнения обратной стороны)
-            vertexConsumer.vertex(matrix, x2, height, z2)
+            vertexConsumer.vertex(matrix, x2, brimY, z2)
                     .color(red2, green2, blue2, isHalf ? alpha2 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, x1, height, z1)
+            vertexConsumer.vertex(matrix, x1, brimY, z1)
                     .color(red1, green1, blue1, isHalf ? alpha1 : alpha)
                     .normal(0, -1, 0);
-            vertexConsumer.vertex(matrix, tipX, yOffset, tipZ)
+            vertexConsumer.vertex(matrix, tipX, tipY, tipZ)
                     .color(redTip, greenTip, blueTip, alpha)
                     .normal(0, -1, 0);
         }
     }
 
-    private static Vec3d calculateEntityPositionRelativeToCamera(Camera camera, float tickDelta, Entity targetEntity) {
-        double interpolatedX = MathHelper.lerp(tickDelta, targetEntity.prevX, targetEntity.getX());
-        double interpolatedY = MathHelper.lerp(tickDelta, targetEntity.prevY, targetEntity.getY()) + (double) (targetEntity.getHeight() / 2.0F);
-        double interpolatedZ = MathHelper.lerp(tickDelta, targetEntity.prevZ, targetEntity.getZ());
-        Vec3d entityPos = new Vec3d(interpolatedX, interpolatedY, interpolatedZ);
-        return entityPos.subtract(camera.getPos());
+    private static Vec3 calculateEntityPositionRelativeToCamera(Camera camera, float tickDelta, Entity targetEntity) {
+        double interpolatedX = Maths.lerp(tickDelta, targetEntity.prevPosX, targetEntity.posX);
+        double interpolatedY = Maths.lerp(tickDelta, targetEntity.prevPosY, targetEntity.posY) + (double) (targetEntity.height / 2.0F);
+        double interpolatedZ = Maths.lerp(tickDelta, targetEntity.prevPosZ, targetEntity.posZ);
+        Vec3 entityPos = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
+        return entityPos.subtract(camera.getPositionVector());
     }
 
     public static void drawLegacy(float tickDelta, Entity targetEntity) {
-        if (targetEntity == null || mc.world == null) return;
+        if (targetEntity == null || mc.theWorld == null) return;
 
-        Vec3d entityPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
+        Vec3 entityPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
         float halfSize = (CONFIG.targetRenderLegacyScale / 50f) / 2.0F;
         float alpha = CONFIG.targetRenderLegacyAlpha / 100f;
 
-        float time = mc.world.getTime() % 360;
+        float time = mc.theWorld.getTotalWorldTime() % 360;
         int rotationAngle = 360 / 5;
         float rotationOffset = (time % rotationAngle) / (float) rotationAngle;
 
@@ -160,19 +180,19 @@ public class Render3D extends ConfigurableModule {
         MatrixStack matrices = new MatrixStack();
         matrices.push();
 
-        matrices.translate(entityPos.x, entityPos.y, entityPos.z);
+        matrices.translate(entityPos.xCoord, entityPos.yCoord, entityPos.zCoord);
 
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rollAngle));
 
-        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        Mat4 matrix = matrices.peek().getPositionMatrix();
 
         RenderSystem.enableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         RenderSystem.setShaderTexture(0, TexturesManager.getTargetRenderTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
 
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
@@ -205,8 +225,8 @@ public class Render3D extends ConfigurableModule {
 
         if (targetEntity == null) return;
 
-        Vec3d newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
-        float entityAge = targetEntity.age + tickDelta;
+        Vec3 newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
+        float entityAge = targetEntity.ticksExisted + tickDelta;
 
         MatrixStack matrices = new MatrixStack();
         MatrixStack matricesB = new MatrixStack();
@@ -219,9 +239,9 @@ public class Render3D extends ConfigurableModule {
         matricesB.pop();
 
         matrices.push();
-        matrices.translate(newPos.getX(), newPos.getY(), newPos.getZ());
+        matrices.translate(newPos.xCoord, newPos.yCoord, newPos.zCoord);
 
-        Matrix4f baseMatrix = matrices.peek().getPositionMatrix();
+        Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
         Color shaderColor = TargetHudRenderer.bottomLeft;
         RenderSystem.setShaderColor(
@@ -233,9 +253,9 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -258,11 +278,11 @@ public class Render3D extends ConfigurableModule {
                     particleMatrix.translate(x, y, z);
 
                     Quaternionf billboardRot = new Quaternionf().identity();
-                    billboardRot.rotateY(Math.toRadians(-camera.getYaw()));
-                    billboardRot.rotateX(Math.toRadians(camera.getPitch()));
+                    billboardRot.rotateY((float) Math.toRadians(-camera.getYaw()));
+                    billboardRot.rotateX((float) Math.toRadians(camera.getPitch()));
                     particleMatrix.multiply(billboardRot);
 
-                    Matrix4f matrix = particleMatrix.peek().getPositionMatrix();
+                    Mat4 matrix = particleMatrix.peek().getPositionMatrix();
 
                     float scale = Math.max((endSize + offset * (startSize - endSize)) * scaleModifier, 0.15f * scaleModifier);
 
@@ -293,17 +313,17 @@ public class Render3D extends ConfigurableModule {
         float layerSpacing = 2;
 
         if (targetEntity == null) return;
-        if (targetEntity instanceof PlayerEntity playerEntity && playerEntity.isGliding()) return;
-        Vec3d newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
-        float entityAge = targetEntity.age + tickDelta;
+        if (targetEntity instanceof EntityPlayer && ((EntityPlayer) targetEntity) == null) return;
+        Vec3 newPos = calculateEntityPositionRelativeToCamera(camera, tickDelta, targetEntity);
+        float entityAge = targetEntity.ticksExisted + tickDelta;
 
         MatrixStack matrices = new MatrixStack();
         matrices.push();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        matrices.translate(newPos.getX(), newPos.getY() + 1, newPos.getZ());
+        matrices.translate(newPos.xCoord, newPos.yCoord + 1, newPos.zCoord);
 
-        Matrix4f baseMatrix = matrices.peek().getPositionMatrix();
+        Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
         Color shaderColor = TargetHudRenderer.bottomRight;
         RenderSystem.setShaderColor(
@@ -315,9 +335,9 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE_MINUS_SRC_COLOR);
         RenderSystem.setShaderTexture(0, TexturesManager.getSoulTexture());
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX);
         TargetRender.TargetRenderSoulStyle.setupBlendFunc();
         BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -341,12 +361,12 @@ public class Render3D extends ConfigurableModule {
                     particleMatrix.translate(x, y, z);
 
                     Quaternionf billboardRot = new Quaternionf().identity();
-                    billboardRot.rotateY(Math.toRadians(-camera.getYaw()));
-                    billboardRot.rotateX(Math.toRadians(camera.getPitch())); // хотим только для квадрата
+                    billboardRot.rotateY((float) Math.toRadians(-camera.getYaw()));
+                    billboardRot.rotateX((float) Math.toRadians(camera.getPitch())); // хотим только для квадрата
 
                     particleMatrix.multiply(billboardRot);
 
-                    Matrix4f matrix = particleMatrix.peek().getPositionMatrix();
+                    Mat4 matrix = particleMatrix.peek().getPositionMatrix();
                     int argb = 0xFFFFFFFF;
 
                     float scale = Math.max((endSize + offset * (startSize - endSize)) * scaleModifier, 0.15f * scaleModifier);
@@ -367,9 +387,9 @@ public class Render3D extends ConfigurableModule {
         matrices.pop();
     }
 
-    public static void drawSpiralsEsp(MatrixStack stack, @NotNull Entity target) {
+    public static void drawSpiralsEsp(MatrixStack stack, Entity target) {
 
-        float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
+        float tickDelta = me.Padej_.soupapi.compat.Cameras.get().getTickDelta();
 
         float radius = 0.75f;
         float heightStep = 0.004f;
@@ -378,13 +398,13 @@ public class Render3D extends ConfigurableModule {
         float alphaDivider = 100f;
 
         // Интерполяция позиции цели относительно камеры
-        double x = MathHelper.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-        double y = MathHelper.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-        double z = MathHelper.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
-        double height = target.getHeight();
+        double x = Maths.lerp(tickDelta, target.prevPosX, target.posX) - mc.getRenderManager().viewerPosX;
+        double y = Maths.lerp(tickDelta, target.prevPosY, target.posY) - mc.getRenderManager().viewerPosY;
+        double z = Maths.lerp(tickDelta, target.prevPosZ, target.posZ) - mc.getRenderManager().viewerPosZ;
+        double height = target.height;
 
         // Генерация трёх спиралей с разными угловыми сдвигами
-        var spirals = new ArrayList[]{new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
+        ArrayList[] spirals = new ArrayList[]{new ArrayList<>(), new ArrayList<>(), new ArrayList<>()};
         generateSpiralVectors(spirals, radius, height, heightStep);
 
         stack.push();
@@ -393,7 +413,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
 
-        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Mat4 matrix = stack.peek().getPositionMatrix();
 
         // Рендеринг всех трёх спиралей
         renderSpiral(matrix, spirals[0], 0.0f, heightOffset, animationSpeed, alphaDivider);  // Первая спираль
@@ -407,21 +427,21 @@ public class Render3D extends ConfigurableModule {
         stack.pop();
     }
 
-    private static void generateSpiralVectors(ArrayList<Vec3d>[] spirals, float radius, double initialHeight, float heightStep) {
+    private static void generateSpiralVectors(ArrayList<Vec3>[] spirals, float radius, double initialHeight, float heightStep) {
         for (int i = 0; i <= 360; ++i) {
             double height = initialHeight - i * heightStep;
             for (int spiralIndex = 0; spiralIndex < 3; spiralIndex++) {
                 double angle = Math.toRadians(i + spiralIndex * 120);
                 double u = Math.cos(angle);
                 double v = Math.sin(angle);
-                spirals[spiralIndex].add(new Vec3d((float) (u * radius), (float) height, (float) (v * radius)));
+                spirals[spiralIndex].add(new Vec3((float) (u * radius), (float) height, (float) (v * radius)));
             }
         }
     }
 
     // Метод для рендеринга одной спирали
-    private static void renderSpiral(Matrix4f matrix, ArrayList<Vec3d> vecs, float progressOffset, float heightOffset, float animationSpeed, float alphaDivider) {
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+    private static void renderSpiral(Mat4 matrix, ArrayList<Vec3> vecs, float progressOffset, float heightOffset, float animationSpeed, float alphaDivider) {
+        RenderSystem.setShader(ShaderKey.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
         int size = vecs.size();
@@ -441,7 +461,7 @@ public class Render3D extends ConfigurableModule {
         float smoothingEnd = 1.0f - smoothingRange;
 
         for (int j = 0; j < size - 1; ++j) {
-            float alpha = 1f - (((float) j + ((System.currentTimeMillis() - SoupAPI_Main.initTime) / animationSpeed)) % 360) / alphaDivider;
+            float alpha = 1f - (((float) j + ((System.currentTimeMillis() - SoupAPI.initTime) / animationSpeed)) % 360) / alphaDivider;
             float progress = (j / (float) size + progressOffset) % 1f;
 
             // Определяем цвет с учётом сглаживания
@@ -470,14 +490,14 @@ public class Render3D extends ConfigurableModule {
             }
 
             // Добавляем вершины: нижняя и верхняя для текущей точки
-            Vec3d current = vecs.get(j);
+            Vec3 current = vecs.get(j);
             Color finalColor = Render2D.injectAlpha(currentColor, (int) (alpha * 255));
 
-            bufferBuilder.vertex(matrix, (float) current.x, (float) current.y, (float) current.z)
+            bufferBuilder.vertex(matrix, (float) current.xCoord, (float) current.yCoord, (float) current.zCoord)
                     .color(finalColor.getRed(), finalColor.getGreen(), finalColor.getBlue(), finalColor.getAlpha());
 
-            Vec3d next = vecs.get(j + 1);
-            bufferBuilder.vertex(matrix, (float) next.x, (float) next.y + heightOffset, (float) next.z)
+            Vec3 next = vecs.get(j + 1);
+            bufferBuilder.vertex(matrix, (float) next.xCoord, (float) next.yCoord + heightOffset, (float) next.zCoord)
                     .color(finalColor.getRed(), finalColor.getGreen(), finalColor.getBlue(), finalColor.getAlpha());
         }
 
@@ -486,17 +506,17 @@ public class Render3D extends ConfigurableModule {
 
     public static void drawScanEsp(MatrixStack stack, Entity target) {
 
-        float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
+        float tickDelta = me.Padej_.soupapi.compat.Cameras.get().getTickDelta();
         float animationSpeed = CONFIG.targetRenderTopkaSpeed / 100f;
         float minHeightOffset = 0.01f;
         float maxHeightOffset = 0.5f;
 
         float radius = CONFIG.targetRenderTopkaRadius / 100f;
 
-        double x = MathHelper.lerp(tickDelta, target.prevX, target.getX()) - mc.getEntityRenderDispatcher().camera.getPos().getX();
-        double y = MathHelper.lerp(tickDelta, target.prevY, target.getY()) - mc.getEntityRenderDispatcher().camera.getPos().getY();
-        double z = MathHelper.lerp(tickDelta, target.prevZ, target.getZ()) - mc.getEntityRenderDispatcher().camera.getPos().getZ();
-        double height = target.getHeight();
+        double x = Maths.lerp(tickDelta, target.prevPosX, target.posX) - mc.getRenderManager().viewerPosX;
+        double y = Maths.lerp(tickDelta, target.prevPosY, target.posY) - mc.getRenderManager().viewerPosY;
+        double z = Maths.lerp(tickDelta, target.prevPosZ, target.posZ) - mc.getRenderManager().viewerPosZ;
+        double height = target.height;
 
         float time = (System.currentTimeMillis() % 1000000) / 1000.0f;
         float t = (time * animationSpeed) % 1.0f;
@@ -510,12 +530,12 @@ public class Render3D extends ConfigurableModule {
         float heightOffset = minHeightOffset + (maxHeightOffset - minHeightOffset) * speed;
         heightOffset = Math.max(heightOffset, minHeightOffset);
 
-        ArrayList<Vec3d> ring = generateRingVectors(radius, heightStep);
+        ArrayList<Vec3> ring = generateRingVectors(radius, heightStep);
 
         stack.push();
         stack.translate(x, y, z);
 
-        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Mat4 matrix = stack.peek().getPositionMatrix();
 
         renderRing(matrix, ring, heightOffset, movingUp);
 
@@ -524,21 +544,21 @@ public class Render3D extends ConfigurableModule {
         stack.pop();
     }
 
-    private static ArrayList<Vec3d> generateRingVectors(float radius, double heightStep) {
-        ArrayList<Vec3d> ring = new ArrayList<>();
+    private static ArrayList<Vec3> generateRingVectors(float radius, double heightStep) {
+        ArrayList<Vec3> ring = new ArrayList<>();
         int numPoints = 360;
 
         for (int i = 0; i <= numPoints; ++i) {
             double angle = Math.toRadians(i);
             double u = Math.cos(angle);
             double v = Math.sin(angle);
-            ring.add(new Vec3d((float) (u * radius), (float) heightStep, (float) (v * radius)));
+            ring.add(new Vec3((float) (u * radius), (float) heightStep, (float) (v * radius)));
         }
 
         return ring;
     }
 
-    private static void renderRing(Matrix4f matrix, ArrayList<Vec3d> ring, float heightOffset, boolean movingUp) {
+    private static void renderRing(Mat4 matrix, ArrayList<Vec3> ring, float heightOffset, boolean movingUp) {
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -546,7 +566,7 @@ public class Render3D extends ConfigurableModule {
         RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
         int size = ring.size();
@@ -596,15 +616,15 @@ public class Render3D extends ConfigurableModule {
 
             Color currentColor = new Color(r, g, b, a);
 
-            Vec3d current = ring.get(currentIndex);
+            Vec3 current = ring.get(currentIndex);
 
             float sinT = (float) Math.sin(1.0f * Math.PI / 2);
             int lowerAlpha = movingUp ? (int) (a * (1.0f - sinT)) : a;
             int upperAlpha = movingUp ? a : (int) (a * (1.0f - sinT));
 
-            bufferBuilder.vertex(matrix, (float) current.x, (float) current.y, (float) current.z)
+            bufferBuilder.vertex(matrix, (float) current.xCoord, (float) current.yCoord, (float) current.zCoord)
                     .color(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), lowerAlpha);
-            bufferBuilder.vertex(matrix, (float) current.x, (float) current.y + heightOffset, (float) current.z)
+            bufferBuilder.vertex(matrix, (float) current.xCoord, (float) current.yCoord + heightOffset, (float) current.zCoord)
                     .color(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), upperAlpha);
         }
 

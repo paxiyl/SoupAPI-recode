@@ -5,9 +5,8 @@ import me.Padej_.soupapi.sounds.CustomSounds;
 import me.Padej_.soupapi.utils.MC_Tiers;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.Weather;
-import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import me.Padej_.soupapi.config.annotation.Config;
+import me.Padej_.soupapi.config.annotation.ConfigEntry;
 
 @Config(name = "soupapi")
 public class SoupAPI_Config implements ConfigData {
@@ -41,9 +40,17 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public MC_Tiers.TierGameModes mctiersGameMode = MC_Tiers.TierGameModes.SWORD;
 
-    @ConfigEntry.Gui.PrefixText // Config Screen
+    @ConfigEntry.Gui.PrefixText // Config GuiScreen
     @ConfigEntry.Category("main")
     public boolean blurShadowEnabled = true;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.gui.atlas.AtlasScreen.Style guiStyle = me.Padej_.soupapi.gui.atlas.AtlasScreen.Style.ATLAS;
+    @ConfigEntry.Category("main")
+    public boolean guiCosmos = true;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int guiDim = 45;
 
     @ConfigEntry.Gui.PrefixText // Watermark
     @ConfigEntry.Category("main")
@@ -53,7 +60,32 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("main")
     public int waterMarkY = 20;
 
+    @ConfigEntry.Gui.PrefixText // Preset
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.config.Preset presetStyle = me.Padej_.soupapi.config.Preset.NONE;
+    @ConfigEntry.Category("main")
+    public boolean applyPreset_BUTTON = false;
+
     @ConfigEntry.Gui.PrefixText // Theme
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Theme themeStyle = me.Padej_.soupapi.utils.Theme.CUSTOM;
+    @ConfigEntry.Category("main")
+    public boolean themeParticles = true;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Symbol particleSymbol = me.Padej_.soupapi.utils.Symbol.RANDOM;
+    @ConfigEntry.Category("main")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.ParticleSprite particleSpriteOverride =
+            me.Padej_.soupapi.utils.ParticleSprite.NONE;
+    @ConfigEntry.Category("main")
+    public boolean themeVisuals = true;
+    @ConfigEntry.Category("main")
+    public boolean themeWorld = true;
+    @ConfigEntry.Category("main")
+    public boolean themeAmbience = true;
     @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Palette.ColorsStyle paletteStyle = Palette.ColorsStyle.QUARTET;
@@ -80,6 +112,81 @@ public class SoupAPI_Config implements ConfigData {
     public int backAlpha = 80;
 
     /**
+     * RGB — how the palette moves over time, and which parts of the mod it moves in.
+     **/
+    @ConfigEntry.Category("rgb")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Palette.RgbMode rgbMode = Palette.RgbMode.STATIC;
+    @ConfigEntry.Category("rgb")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 400)
+    public int rgbSpeed = 100;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbReverse = false;
+    @ConfigEntry.Category("rgb")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int rgbSpread = 100;
+    @ConfigEntry.Category("rgb")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int rgbSaturation = 80;
+    @ConfigEntry.Category("rgb")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
+    public int rgbBrightness = 100;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbSync = true;
+    @ConfigEntry.Gui.PrefixText // Where it applies
+    @ConfigEntry.Category("rgb")
+    public boolean rgbGui = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbHud = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbCrosshair = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbWeapon = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbTrails = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbParticles = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbSky = true;
+    @ConfigEntry.Category("rgb")
+    public boolean rgbAmbience = true;
+
+    /**
+     * SMOKE — the shared layered-smoke system that kill effects, the weapon portal and ambience use.
+     **/
+    @ConfigEntry.Category("smoke")
+    public boolean smokeEnabled = true;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.render.SmokeFx.Quality smokeQuality = me.Padej_.soupapi.render.SmokeFx.Quality.HIGH;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
+    public int smokeDensity = 100;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int smokeSpeed = 100;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 250)
+    public int smokeTurbulence = 100;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 25, max = 300)
+    public int smokeSize = 100;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int smokeOpacity = 85;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 250)
+    public int smokeGlow = 100;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.ColorPicker
+    public int smokeColor = 0x0b0812;
+    @ConfigEntry.Category("smoke")
+    public boolean smokeAccentUseTheme = true;
+    @ConfigEntry.Category("smoke")
+    @ConfigEntry.ColorPicker
+    public int smokeAccentColor = 0x9b4dff;
+
+    /**
      * TRAILS
      **/
     @ConfigEntry.Category("trails")
@@ -89,10 +196,15 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("trails")
     public boolean trailsRenderHalf = false;
     @ConfigEntry.Category("trails")
+    public boolean trailsGlow = true;
+    @ConfigEntry.Category("trails")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Trails.ColorMode trailsColorMode = Trails.ColorMode.GRADIENT_HUD;
+    @ConfigEntry.Category("trails")
     public boolean trailsForGliders = false;
-    //    @ConfigEntry.Category("trails")
-//    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-//    public Trails.Targets trailsTarget = Trails.Targets.PLAYERS;
+    @ConfigEntry.Category("trails")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Trails.Targets trailsTarget = Trails.Targets.BOTH;
     @ConfigEntry.Category("trails")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Trails.Style trailsStyle = Trails.Style.FADED;
@@ -105,6 +217,134 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("trails")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
     public int trailsAlphaFactor = 100;
+
+    /**
+     * HIT EFFECTS
+     **/
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsEnabled = false;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public HitEffects.Style hitEffectsStyle = HitEffects.Style.SHARDS;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsRandomColor = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsOnlyCrit = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsOnlyPlayers = false;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsFollow = true;
+    @ConfigEntry.Category("hit_effects")
+    public boolean hitEffectsStick = true;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int hitEffectsCount = 10;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int hitEffectsScale = 100;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int hitEffectsSpeed = 100;
+    @ConfigEntry.Category("hit_effects")
+    @ConfigEntry.BoundedDiscrete(min = 4, max = 60)
+    public int hitEffectsDuration = 14;
+
+    /**
+     * KILL EFFECTS
+     **/
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsEnabled = false;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public KillEffects.Style killEffectsStyle = KillEffects.Style.SOUL_BURST;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsRandomColor = false;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsOnlyPlayers = true;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsIncludeSelf = true;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int killEffectsCount = 12;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int killEffectsScale = 100;
+    @ConfigEntry.Category("kill_effects")
+    @ConfigEntry.BoundedDiscrete(min = 8, max = 80)
+    public int killEffectsDuration = 26;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsSmoke = true;
+    @ConfigEntry.Gui.PrefixText // Detection
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsDetectRemoval = true;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsDetectRespawn = true;
+    @ConfigEntry.Category("kill_effects")
+    public boolean killEffectsOnlyMine = false;
+
+    /**
+     * LANDING IMPACT
+     **/
+    @ConfigEntry.Category("landing_impact")
+    public boolean landingImpactEnabled = false;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public LandingImpact.Style landingImpactStyle = LandingImpact.Style.SHOCKWAVE;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Target landingImpactTarget = PlayerEffects.Target.BOTH;
+    @ConfigEntry.Category("landing_impact")
+    public boolean landingImpactRandomColor = false;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int landingImpactCount = 10;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 300)
+    public int landingImpactScale = 100;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 6, max = 60)
+    public int landingImpactDuration = 16;
+    @ConfigEntry.Category("landing_impact")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int landingImpactMinFall = 8;
+
+    /**
+     * PLAYER EFFECTS
+     **/
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsEnabled = false;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Style playerEffectsStyle = PlayerEffects.Style.GHOST;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public PlayerEffects.Target playerEffectsTarget = PlayerEffects.Target.BOTH;
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsFirstPerson = false;
+    @ConfigEntry.Category("player_effects")
+    public boolean playerEffectsRandomColor = false;
+
+    @ConfigEntry.Gui.PrefixText // Shape
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int playerEffectsScale = 100;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int playerEffectsSpeed = 100;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int playerEffectsAlpha = 70;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 24)
+    public int playerEffectsCount = 8;
+
+    @ConfigEntry.Gui.PrefixText // Ghost
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 16)
+    public int playerEffectsGhostCount = 6;
+    @ConfigEntry.Category("player_effects")
+    @ConfigEntry.BoundedDiscrete(min = 2, max = 40)
+    public int playerEffectsGhostSpacing = 14;
 
     /**
      * CHINA HAT
@@ -133,6 +373,9 @@ public class SoupAPI_Config implements ConfigData {
      **/
     @ConfigEntry.Category("halo")
     public boolean haloEnabled = false;
+    @ConfigEntry.Category("halo")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Halo.Style haloStyle = Halo.Style.RING;
 
     @ConfigEntry.Gui.PrefixText // soul
     @ConfigEntry.Category("halo")
@@ -279,8 +522,54 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public Weather weatherType = Weather.RAIN;
 
-    @ConfigEntry.Gui.PrefixText // Colored Sky
-    @ConfigEntry.Category("world")
+    // The sky lives on its own page - "Animated Sky" in the category list - rather than as a group
+    // inside World. It was a group there, with its master switch on the World page and its twenty
+    // one patterns on another, and the first person to look for it could not find it.
+    @ConfigEntry.Gui.PrefixText // Animated Sky
+    @ConfigEntry.Category("colored_sky")
+    public boolean skyEnabled = true;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.SkyStyle skyStyle = me.Padej_.soupapi.utils.SkyStyle.PLAIN;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 400)
+    public int skySpeed = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
+    public int skyScale = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int skyStars = 140;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
+    public int skyOpacity = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 250)
+    public int skyIntensity = 100;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int skyHorizonBlend = 70;
+    @ConfigEntry.Category("colored_sky")
+    public boolean skyCelestials = true;
+    @ConfigEntry.Category("colored_sky")
+    public boolean skyHideClouds = false;
+
+    @ConfigEntry.Gui.PrefixText // Sky Colors
+    @ConfigEntry.Category("colored_sky")
+    public boolean coloredSkyUseTheme = true;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int coloredSkyColor = 0x66a0ff;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int skyColor2 = 0x7a2fff;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.ColorPicker
+    public int skyDarkColor = 0x05060e;
+    @ConfigEntry.Category("colored_sky")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int coloredSkyAlpha = 60;
+    @ConfigEntry.Category("colored_sky")
     public boolean coloredSkyEnabled = false;
 
     @ConfigEntry.Gui.PrefixText // Custom Fog
@@ -432,6 +721,15 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("hud")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public BetterHudStyles.HotbarStyle hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.SIMPLE;
+    @ConfigEntry.Category("hud")
+    public boolean hudBetterHotbarRgbBorder = false;
+    @ConfigEntry.Category("hud")
+    public boolean hudBetterHotbarPop = true;
+    @ConfigEntry.Category("hud")
+    public boolean hudBetterHotbarHeldInfo = true;
+    @ConfigEntry.Category("hud")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int hudBetterHotbarOpacity = 80;
 
     @ConfigEntry.Gui.PrefixText // scoreboard
     @ConfigEntry.Category("hud")
@@ -458,6 +756,9 @@ public class SoupAPI_Config implements ConfigData {
      **/
     @ConfigEntry.Category("hit_bubbles")
     public boolean hitBubblesEnabled = false;
+    @ConfigEntry.Category("hit_bubbles")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public HitBubbles.Animation hitBubblesAnimation = HitBubbles.Animation.SPIN;
     @ConfigEntry.Category("hit_bubbles")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public HitBubbles.Style hitBubblesStyle = HitBubbles.Style.PORTAL;
@@ -744,4 +1045,342 @@ public class SoupAPI_Config implements ConfigData {
     public boolean trajectoriesPreviewLandSideOutline = false;
     @ConfigEntry.Category("trajectories")
     public boolean trajectoriesPreviewLandSideFill = false;
+
+    /**
+     * MELEE
+     **/
+    @ConfigEntry.Gui.PrefixText // Melee
+    @ConfigEntry.Category("melee")
+    public boolean meleeEnabled = false;
+    @ConfigEntry.Category("melee")
+    public String meleeWeapon = "";
+    @ConfigEntry.Category("melee")
+    public String[] meleeDisabled = new String[0];
+    @ConfigEntry.Category("melee")
+    public String meleePackPath = "";
+    @ConfigEntry.Category("melee")
+    public boolean selectMelee_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean rescanMeleePacks_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean meleeAnnounce = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeThirdPerson = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.melee.MeleeTrigger meleeShowWhen =
+            me.Padej_.soupapi.melee.MeleeTrigger.SWORD;
+    @ConfigEntry.Gui.PrefixText // Melee Hands
+    @ConfigEntry.Category("melee")
+    public boolean meleeHands = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeLeftHand = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 20, max = 400)
+    public int meleeHandsScale = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeHandsPitch = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeHandsYaw = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetX = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetY = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -100, max = 100)
+    public int meleeHandsOffsetZ = 0;
+    @ConfigEntry.Category("melee")
+    public boolean resetMeleePlacement_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSounds = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeSoundVolume = 100;
+
+    @ConfigEntry.Gui.PrefixText // Melee Placement
+    @ConfigEntry.Category("melee")
+    public boolean meleeRunAnimation = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int meleeComboWindow = 30;
+    @ConfigEntry.Category("melee")
+    public String[] meleePlacements = new String[0];
+    @ConfigEntry.Category("melee")
+    public boolean saveMeleePlacement_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    public boolean forgetMeleePlacement_BUTTON = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeSize = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeDistance = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetX = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetY = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -200, max = 200)
+    public int meleeOffsetZ = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeYaw = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleePitch = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = -180, max = 180)
+    public int meleeRoll = 0;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 300)
+    public int meleeAnimationSpeed = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeCameraShake = 25;
+    @ConfigEntry.Category("melee")
+    public boolean meleeBob = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeBobStrength = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSway = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeSwayStrength = 100;
+
+    @ConfigEntry.Gui.PrefixText // Melee Glow
+    @ConfigEntry.Category("melee")
+    public boolean meleeGlow = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeGlowUseTheme = true;
+    // Tints the whole weapon toward the theme's colour — demonic red, angelic gold, matrix green —
+    // so the blade itself changes with the theme, not only its glow.
+    @ConfigEntry.Category("melee")
+    public boolean meleeRecolor = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int meleeRecolorStrength = 45;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.ColorPicker
+    public int meleeGlowColor = 0x5cf0ff;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeGlowStrength = 45;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeGlowPulse = 50;
+    @ConfigEntry.Category("melee")
+    public boolean meleeOutline = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 300)
+    public int meleeOutlineStrength = 45;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 120)
+    public int meleeOutlineWidth = 15;
+    @ConfigEntry.Category("melee")
+    public boolean meleeChroma = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeChromaStrength = 35;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 100)
+    public int meleeChromaSpread = 12;
+
+    @ConfigEntry.Gui.PrefixText // Melee Motion Effects
+    @ConfigEntry.Category("melee")
+    public boolean meleePhantom = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 6)
+    public int meleePhantomCount = 3;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 4)
+    public int meleePhantomGap = 2;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePhantomStrength = 40;
+    @ConfigEntry.Category("melee")
+    public boolean meleeTrail = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 2, max = 40)
+    public int meleeTrailLength = 16;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeTrailWidth = 55;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeTrailStrength = 65;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeTrailFade = 120;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSparks = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 60)
+    public int meleeSparkCount = 6;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeSparkSize = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleePulse = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleePulseSize = 90;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePulseStrength = 80;
+    @ConfigEntry.Category("melee")
+    public boolean meleeRunes = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 16)
+    public int meleeRuneCount = 5;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeRuneRadius = 80;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int meleeRuneSize = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int meleeRuneSpeed = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeRuneStrength = 80;
+
+    @ConfigEntry.Gui.PrefixText // Materials & life
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.melee.MeleeFinish meleeFinish = me.Padej_.soupapi.melee.MeleeFinish.DEFAULT;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeEmissiveStrength = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeEyeIntensity = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeEyeAnimation = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleeEyeUseTheme = false;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.ColorPicker
+    public int meleeEyeColor = 0xff2418;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleeClawFlex = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleeShards = true;
+
+    @ConfigEntry.Gui.PrefixText // Summoning portal
+    @ConfigEntry.Category("melee")
+    public boolean meleeSummonEnabled = true;
+    @ConfigEntry.Category("melee")
+    public boolean meleeSummonOnEquip = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 50, max = 200)
+    public int meleeSummonSpeed = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePortalIntensity = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 40, max = 200)
+    public int meleePortalSize = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePortalGlow = 100;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
+    public int meleePortalParticles = 100;
+    @ConfigEntry.Category("melee")
+    public boolean meleePortalSmoke = true;
+    @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+    public int meleeSummonVolume = 80;
+
+    /**
+     * CROSSHAIR
+     **/
+    @ConfigEntry.Gui.PrefixText // Crosshair
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairEnabled = false;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public Crosshair.Style crosshairStyle = Crosshair.Style.FOUR_SEGMENT;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 20)
+    public int crosshairSize = 5;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 1, max = 6)
+    public int crosshairThickness = 1;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 12)
+    public int crosshairGap = 3;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 360)
+    public int crosshairRotation = 0;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 400)
+    public int crosshairSpinSpeed = 0;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairDynamic = true;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
+    public int crosshairOpacity = 100;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairOutline = true;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairGlow = false;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairUseTheme = true;
+    @ConfigEntry.Category("crosshair")
+    @ConfigEntry.ColorPicker
+    public int crosshairColor = 0xFFFFFF;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairHitConfirm = true;
+    @ConfigEntry.Category("crosshair")
+    public boolean crosshairShowInThirdPerson = false;
+
+    /**
+     * AMBIENCE
+     **/
+    @ConfigEntry.Gui.PrefixText // Ambience
+    @ConfigEntry.Category("ambience")
+    public boolean ambienceEnabled = false;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Ambience ambienceStyle = me.Padej_.soupapi.utils.Ambience.NONE;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 150)
+    public int ambienceDensity = 45;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 4, max = 48)
+    public int ambienceRadius = 14;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 3, max = 32)
+    public int ambienceHeight = 9;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int ambienceSpeed = 100;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
+    public int ambienceSize = 100;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 5, max = 100)
+    public int ambienceAlpha = 80;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public me.Padej_.soupapi.utils.Ambience.Quality ambienceQuality = me.Padej_.soupapi.utils.Ambience.Quality.MEDIUM;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.BoundedDiscrete(min = 4, max = 64)
+    public int ambienceDrawDistance = 32;
+    @ConfigEntry.Category("ambience")
+    public boolean ambienceUseTheme = true;
+    @ConfigEntry.Category("ambience")
+    @ConfigEntry.ColorPicker
+    public int ambienceColor = 0x00ff41;
 }

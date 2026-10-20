@@ -1,17 +1,21 @@
 package me.Padej_.soupapi.particle.ambient;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
+import me.Padej_.soupapi.compat.Cameras;
+
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.ResourceLocation;
+import me.Padej_.soupapi.compat.RotationAxis;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
 import java.util.Random;
@@ -20,9 +24,9 @@ import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 import static me.Padej_.soupapi.modules.AmbientParticle.AVAILABLE_TEXTURES;
 
 public class DefaultAmbientParticle {
-    public static MinecraftClient mc = MinecraftClient.getInstance();
+    public static Minecraft mc = Minecraft.getMinecraft();
 
-    protected Identifier texture;
+    protected ResourceLocation texture;
     protected final Color color;
     protected float prevPosX, prevPosY, prevPosZ, posX, posY, posZ, motionX, motionY, motionZ;
     protected int age;
@@ -30,7 +34,7 @@ public class DefaultAmbientParticle {
 
     public DefaultAmbientParticle(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
         this.texture = AVAILABLE_TEXTURES.get(new Random().nextInt(AVAILABLE_TEXTURES.size()));
-        this.color = AmbientParticle.useRandomColor.getValue() ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
+        this.color = ConfigurableModule.CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
         this.posX = posX;
         this.posY = posY;
         this.posZ = posZ;
@@ -45,7 +49,7 @@ public class DefaultAmbientParticle {
     }
 
     public boolean tick() {
-        if (mc.player.squaredDistanceTo(posX, posY, posZ) > 4096) age -= 8;
+        if (mc.thePlayer.getDistanceSq(posX, posY, posZ) > 4096) age -= 8;
         else age--;
 
         if (age < 0)
@@ -60,7 +64,7 @@ public class DefaultAmbientParticle {
         posZ += motionZ;
 
         motionX *= 0.9f;
-        if (AmbientParticle.physic.getValue().equals(AmbientParticle.Physics.FALL)) {
+        if (ConfigurableModule.CONFIG.ambientParticlesPhysic.equals(AmbientParticle.Physics.FALL)) {
             motionY *= 0.9f;
         }
         motionZ *= 0.9f;
@@ -71,12 +75,12 @@ public class DefaultAmbientParticle {
     }
 
     public void render(WorldRenderContext context) {
-        Camera camera = context.camera();
+        Camera camera = Cameras.get();
         Color color = TargetHudRenderer.topLeft;
-        Vec3d pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
+        Vec3 pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
 
         MatrixStack matrices = new MatrixStack();
-        matrices.translate(pos.x, pos.y, pos.z);
+        matrices.translate(pos.xCoord, pos.yCoord, pos.zCoord);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
@@ -84,15 +88,15 @@ public class DefaultAmbientParticle {
         int alpha = (int) (255 * ((float) age / (float) maxAge));
         Color withAlpha = Render2D.injectAlpha(color, alpha);
 
-        Render2D.drawGlyphs(matrices, texture, withAlpha, AmbientParticle.particleScale.getValue() / 100f);
+        Render2D.drawGlyphs(matrices, texture, withAlpha, ConfigurableModule.CONFIG.ambientParticlesDefaultParticleScale / 100f);
     }
 
-    private static Vec3d interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
+    private static Vec3 interpolatePos(WorldRenderContext context, float prevPosX, float prevPosY, float prevPosZ, float posX, float posY, float posZ) {
         float tickDelta = context.tickCounter().getTickDelta(true);
-        Vec3d cameraPos = context.camera().getPos();
-        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.getX();
-        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.getY();
-        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.getZ();
-        return new Vec3d(x, y, z);
+        Vec3 cameraPos = Cameras.get().getPositionVector();
+        double x = prevPosX + ((posX - prevPosX) * tickDelta) - cameraPos.xCoord;
+        double y = prevPosY + ((posY - prevPosY) * tickDelta) - cameraPos.yCoord;
+        double z = prevPosZ + ((posZ - prevPosZ) * tickDelta) - cameraPos.zCoord;
+        return new Vec3(x, y, z);
     }
 }

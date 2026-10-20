@@ -1,19 +1,22 @@
 package me.Padej_.soupapi.screen;
 
+import me.Padej_.soupapi.config.ConfigurableModule;
+
+import me.Padej_.soupapi.compat.Texts;
+
 import me.Padej_.soupapi.config.ConfigManager;
 import me.Padej_.soupapi.modules.Capes;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.SoupScreen;
+import me.Padej_.soupapi.compat.RenderLayer;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 import static me.Padej_.soupapi.config.ConfigurableModule.saveConfig;
 
-public class CapeSelectScreen extends Screen {
+public class CapeSelectScreen extends SoupScreen {
     private static final int TEXTURE_RENDER_WIDTH = 20;
     private static final int TEXTURE_RENDER_HEIGHT = 32;
     private static final int PADDING = 8;
@@ -22,7 +25,7 @@ public class CapeSelectScreen extends Screen {
     private final String[] categories = {"APRIL", "DEFAULT", "XBOX", "MCD", "CUSTOM", "OPTIFINE", "STAFF"};
 
     public CapeSelectScreen() {
-        super(Text.of("Cape Textures"));
+        super(Texts.literal("Cape Textures"));
     }
 
     @Override
@@ -34,8 +37,10 @@ public class CapeSelectScreen extends Screen {
 
         for (String category : categories) {
             context.drawText(
-                    MinecraftClient.getInstance().textRenderer,
-                    Text.of(category).copy().formatted(Formatting.BOLD),
+                    Minecraft.getMinecraft().fontRendererObj,
+                    // 1.8.9 has no IChatComponent.formatted(); the legacy bold code is the
+                    // equivalent and renders identically.
+                    Texts.literal("\u00A7l" + category),
                     x,
                     categoryY, 0xFFFFFFFF, true
             );
@@ -46,11 +51,11 @@ public class CapeSelectScreen extends Screen {
 
             for (Capes.CapeTextures cape : Capes.CapeTextures.values()) {
                 if (cape.name().startsWith(category)) {
-                    Identifier texture = cape.getTexturePath();
+                    ResourceLocation texture = cape.getTexturePath();
 
                     drawTexture(context, texture, textureX, textureY);
 
-                    if (cape == Capes.cape.getValue()) {
+                    if (cape == ConfigurableModule.CONFIG.capesTexture) {
                         context.drawBorder(textureX - BORDER_SIZE, textureY - BORDER_SIZE, TEXTURE_RENDER_WIDTH + BORDER_SIZE * 2, TEXTURE_RENDER_HEIGHT + BORDER_SIZE * 2, 0xFF00FFFF);
                         context.drawBorder(textureX - BORDER_SIZE - 1, textureY - BORDER_SIZE - 1, 2 + TEXTURE_RENDER_WIDTH + BORDER_SIZE * 2, 2 + TEXTURE_RENDER_HEIGHT + BORDER_SIZE * 2, 0xFF00FFFF);
                     }
@@ -89,7 +94,8 @@ public class CapeSelectScreen extends Screen {
             for (Capes.CapeTextures cape : Capes.CapeTextures.values()) {
                 if (cape.name().startsWith(category)) {
                     if (isMouseOverTexture((int) mouseX, (int) mouseY, textureX, textureY)) {
-                        Capes.cape.setValue(cape);
+                        ConfigurableModule.CONFIG.capesTexture = cape;
+                        ConfigurableModule.saveConfig();
                         ConfigManager.saveConfig();
                         return true;
                     }
@@ -108,7 +114,9 @@ public class CapeSelectScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private void drawTexture(DrawContext context, Identifier texture, int x, int y) {
-        context.drawTexture(RenderLayer::getGuiTextured, texture, x, y, 2, 2, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT, 128, 64);
+    private void drawTexture(DrawContext context, ResourceLocation texture, int x, int y) {
+        // 1.8.9 has no render-layer parameter: DrawContext binds the texture itself.
+        context.drawTexture(texture, x, y, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT,
+                2, 2, TEXTURE_RENDER_WIDTH, TEXTURE_RENDER_HEIGHT, 128, 64);
     }
 }

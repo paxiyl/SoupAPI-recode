@@ -5,8 +5,8 @@ import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.render.TargetHudRenderer;
 import me.Padej_.soupapi.utils.MouseUtils;
 import me.Padej_.soupapi.utils.Palette;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
+import me.Padej_.soupapi.compat.DrawContext;
+import me.Padej_.soupapi.compat.MatrixStack;
 
 import java.awt.*;
 

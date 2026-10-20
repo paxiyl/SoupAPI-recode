@@ -1,28 +1,34 @@
 package me.Padej_.soupapi.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
-import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
+import me.Padej_.soupapi.compat.ShaderKey;
+import me.Padej_.soupapi.compat.Windows;
+
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.ResourceLocation;
+import me.Padej_.soupapi.compat.Mat4;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -33,19 +39,26 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FontRenderer extends ConfigurableModule implements Closeable {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
-    private static final Char2IntArrayMap colorCodes = new Char2IntArrayMap() {{
-        put('0', 0x000000);put('1', 0x0000AA);put('2', 0x00AA00);put('3', 0x00AAAA);
-        put('4', 0xAA0000);put('5', 0xAA00AA);put('6', 0xFFAA00);put('7', 0xAAAAAA);
-        put('8', 0x555555);put('9', 0x5555FF);put('A', 0x55FF55);put('B', 0x55FFFF);
-        put('C', 0xFF5555);put('D', 0xFF55FF);put('E', 0xFFFF55);put('F', 0xFFFFFF);
-    }};
+    private static final Minecraft mc = Minecraft.getMinecraft();
+    /** Legacy section-sign colour codes, keyed by the upper-case code character. */
+    private static final Map<Character, Integer> colorCodes = new HashMap<Character, Integer>();
+
+    static {
+        colorCodes.put('0', 0x000000); colorCodes.put('1', 0x0000AA);
+        colorCodes.put('2', 0x00AA00); colorCodes.put('3', 0x00AAAA);
+        colorCodes.put('4', 0xAA0000); colorCodes.put('5', 0xAA00AA);
+        colorCodes.put('6', 0xFFAA00); colorCodes.put('7', 0xAAAAAA);
+        colorCodes.put('8', 0x555555); colorCodes.put('9', 0x5555FF);
+        colorCodes.put('A', 0x55FF55); colorCodes.put('B', 0x55FFFF);
+        colorCodes.put('C', 0xFF5555); colorCodes.put('D', 0xFF55FF);
+        colorCodes.put('E', 0xFFFF55); colorCodes.put('F', 0xFFFFFF);
+    }
 
     private static final ExecutorService ASYNC_WORKER = Executors.newCachedThreadPool();
-    private final Object2ObjectMap<Identifier, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, List<DrawEntry>> GLYPH_PAGE_CACHE = new LinkedHashMap<ResourceLocation, List<DrawEntry>>();
     private final float originalSize;
-    private final ObjectList<GlyphMap> maps = new ObjectArrayList<>();
-    private final Char2ObjectArrayMap<Glyph> allGlyphs = new Char2ObjectArrayMap<>();
+    private final List<GlyphMap> maps = new ArrayList<GlyphMap>();
+    private final Map<Character, Glyph> allGlyphs = new HashMap<Character, Glyph>();
     private final int charsPerPage;
     private final int padding;
     private final String prebakeGlyphs;
@@ -55,12 +68,49 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     private Future<Void> prebakeGlyphsFuture;
     private boolean initialized;
 
-    public FontRenderer(Font font, float sizePx, int charactersPerPage, int paddingBetweenCharacters, @Nullable String prebakeCharacters) {
+    /**
+     * When true, drawing and measuring are delegated to vanilla's {@code FontRenderer} instead of
+     * an AWT-rasterised atlas.
+     *
+     * <p>1.8.9 needs {@code BufferedImage} and {@code ImageIO} to boot at all, so those are always
+     * present — but {@code java.awt.Font} glyph rasterisation goes through libfontmanager/freetype,
+     * which is a separate native library and is not reliably functional in PojavLauncher's JREs.
+     * Rather than lose all text, the renderer falls back to the bitmap font vanilla already has.
+     * See {@link me.Padej_.soupapi.compat.Caps#canRasteriseAwtFonts()}.
+     */
+    private final boolean useVanillaFallback;
+
+    public FontRenderer(Font font, float sizePx, int charactersPerPage, int paddingBetweenCharacters, String prebakeCharacters) {
         this.originalSize = sizePx;
         this.charsPerPage = charactersPerPage;
         this.padding = paddingBetweenCharacters;
         this.prebakeGlyphs = prebakeCharacters;
+        this.useVanillaFallback = false;
         init(font, sizePx);
+    }
+
+    /** Constructs a renderer that delegates to vanilla's font; see {@link #useVanillaFallback}. */
+    private FontRenderer(float sizePx) {
+        this.originalSize = sizePx;
+        this.charsPerPage = 0;
+        this.padding = 0;
+        this.prebakeGlyphs = null;
+        this.useVanillaFallback = true;
+        this.initialized = true;
+        this.scaleMul = 1;
+    }
+
+    /**
+     * A renderer backed by vanilla's bitmap font, scaled to approximately {@code sizePx} tall.
+     * Used when AWT cannot rasterise glyphs.
+     */
+    public static FontRenderer vanillaBacked(float sizePx) {
+        return new FontRenderer(sizePx);
+    }
+
+    /** Vanilla's font is 9px tall; scale it towards this renderer's requested size. */
+    private float fallbackScale() {
+        return originalSize / 9f;
     }
 
     public FontRenderer(Font font, float sizePx) {
@@ -86,7 +136,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     private void sizeCheck() {
-        int gs = (int) mc.getWindow().getScaleFactor();
+        int gs = (int) Windows.scaleFactor();
         if (gs != this.previousGameScale) {
             close();
             init(this.font, this.originalSize);
@@ -96,7 +146,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     private void init(Font font, float sizePx) {
         if (initialized) throw new IllegalStateException("Double call to init()");
         initialized = true;
-        this.previousGameScale = (int) mc.getWindow().getScaleFactor();
+        this.previousGameScale = (int) Windows.scaleFactor();
         this.scaleMul = this.previousGameScale;
         this.font = font.deriveFont(sizePx * this.scaleMul);
         if (prebakeGlyphs != null && !prebakeGlyphs.isEmpty()) {
@@ -131,9 +181,16 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         return glyphMap.getGlyph(glyph);
     }
 
-    @Nullable
     private Glyph locateGlyph1(char glyph) {
-        return allGlyphs.computeIfAbsent(glyph, this::locateGlyph0);
+        Character key = Character.valueOf(glyph);
+        Glyph cached = allGlyphs.get(key);
+        if (cached == null) {
+            cached = locateGlyph0(glyph);
+            if (cached != null) {
+                allGlyphs.put(key, cached);
+            }
+        }
+        return cached;
     }
 
     public void drawString(MatrixStack stack, String s, double x, double y, int color) {
@@ -153,6 +210,10 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float b, float a, boolean gradient, int offset) {
+        if (useVanillaFallback) {
+            drawStringVanilla(stack, s, x, y, r, g, b, a, gradient);
+            return;
+        }
         if (prebakeGlyphsFuture != null && !prebakeGlyphsFuture.isDone()) {
             try {
                 prebakeGlyphsFuture.get();
@@ -171,9 +232,9 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
 
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+        RenderSystem.setShader(ShaderKey.POSITION_TEX_COLOR);
         BufferBuilder bb;
-        Matrix4f mat = stack.peek().getPositionMatrix();
+        Mat4 mat = stack.peek().getPositionMatrix();
         char[] chars = s.toCharArray();
         float xOffset = 0;
         float yOffset = 0;
@@ -186,7 +247,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                     inSel = false;
                     char c1 = Character.toUpperCase(c);
                     if (colorCodes.containsKey(c1)) {
-                        int ii = colorCodes.get(c1);
+                        int ii = colorCodes.get(c1).intValue();
                         int[] col = RGBIntToRGB(ii);
                         r2 = col[0] / 255f;
                         g2 = col[1] / 255f;
@@ -219,14 +280,19 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
                 Glyph glyph = locateGlyph1(c);
                 if (glyph != null) {
                     if (glyph.value() != ' ') {
-                        Identifier i1 = glyph.owner().bindToTexture;
+                        ResourceLocation i1 = glyph.owner().bindToTexture;
                         DrawEntry entry = new DrawEntry(xOffset, yOffset, r2, g2, b2, glyph);
-                        GLYPH_PAGE_CACHE.computeIfAbsent(i1, integer -> new ObjectArrayList<>()).add(entry);
+                        List<DrawEntry> page = GLYPH_PAGE_CACHE.get(i1);
+                        if (page == null) {
+                            page = new ArrayList<DrawEntry>();
+                            GLYPH_PAGE_CACHE.put(i1, page);
+                        }
+                        page.add(entry);
                     }
                     xOffset += glyph.width();
                 }
             }
-            for (Identifier identifier : GLYPH_PAGE_CACHE.keySet()) {
+            for (ResourceLocation identifier : GLYPH_PAGE_CACHE.keySet()) {
                 RenderSystem.setShaderTexture(0, identifier);
                 List<DrawEntry> objects = GLYPH_PAGE_CACHE.get(identifier);
 
@@ -257,7 +323,7 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
 
             GLYPH_PAGE_CACHE.clear();
         }
-        RenderSystem.disableBlend();
+        Render2D.endRender();
         stack.pop();
     }
 
@@ -278,6 +344,14 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public float getStringWidth(String text) {
+        if (useVanillaFallback) {
+            float scale = fallbackScale();
+            float widest = 0f;
+            for (String line : stripControlCodes(text).split("\n", -1)) {
+                widest = Math.max(widest, mc.fontRendererObj.getStringWidth(line) * scale);
+            }
+            return widest;
+        }
         char[] c = stripControlCodes(text).toCharArray();
         float currentLine = 0;
         float maxPreviousLines = 0;
@@ -294,6 +368,10 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
     public float getStringHeight(String text) {
+        if (useVanillaFallback) {
+            int lines = Math.max(1, stripControlCodes(text).split("\n", -1).length);
+            return mc.fontRendererObj.FONT_HEIGHT * fallbackScale() * lines;
+        }
         char[] c = stripControlCodes(text).toCharArray();
         if (c.length == 0) {
             c = new char[]{' '};
@@ -320,8 +398,46 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     }
 
 
+    /**
+     * Draws through vanilla's {@code FontRenderer}, scaled to match this renderer's size.
+     *
+     * <p>Colour-code handling differs slightly: vanilla parses the section-sign codes itself, so
+     * the string is passed through intact rather than being split into per-run colours. Gradient
+     * mode collapses to the first palette colour, which is the closest vanilla can express.
+     */
+    private void drawStringVanilla(MatrixStack stack, String s, float x, float y,
+                                   float r, float g, float b, float a, boolean gradient) {
+        int argb;
+        if (gradient) {
+            Color c = new Color(CONFIG.c1);
+            argb = (Math.round(a * 255f) << 24) | (c.getRed() << 16) | (c.getGreen() << 8) | c.getBlue();
+        } else {
+            argb = (Math.round(a * 255f) << 24)
+                    | (Math.round(r * 255f) << 16)
+                    | (Math.round(g * 255f) << 8)
+                    | Math.round(b * 255f);
+        }
+
+        float scale = fallbackScale();
+        stack.push();
+        stack.translate(x, y - 3f, 0f);
+        stack.scale(scale, scale, 1f);
+        stack.applyToGl();
+        try {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            mc.fontRendererObj.drawString(s, 0, 0, argb, false);
+        } finally {
+            stack.undoGl();
+            stack.pop();
+        }
+    }
+
     @Override
     public void close() {
+        if (useVanillaFallback) {
+            return;
+        }
         try {
             if (prebakeGlyphsFuture != null && !prebakeGlyphsFuture.isDone() && !prebakeGlyphsFuture.isCancelled()) {
                 prebakeGlyphsFuture.cancel(true);
@@ -338,17 +454,20 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         }
     }
 
-    @Contract(value = "-> new", pure = true)
-    public static @NotNull Identifier randomIdentifier() {
-        return Identifier.of("soupapi", "temp/" + randomString());
+    public static ResourceLocation randomIdentifier() {
+        return new ResourceLocation("soupapi", "temp/" + randomString());
     }
 
     private static String randomString() {
-        return IntStream.range(0, 32).mapToObj(operand -> String.valueOf((char) new Random().nextInt('a', 'z' + 1))).collect(Collectors.joining());
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(32);
+        for (int i = 0; i < 32; i++) {
+            sb.append((char) ('a' + random.nextInt(26)));
+        }
+        return sb.toString();
     }
 
-    @Contract(value = "_ -> new", pure = true)
-    public static int @NotNull [] RGBIntToRGB(int in) {
+    public static int [] RGBIntToRGB(int in) {
         int red = in >> 8 * 2 & 0xFF;
         int green = in >> 8 & 0xFF;
         int blue = in & 0xFF;
@@ -366,8 +485,77 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
     public void drawGradientCenteredString(MatrixStack matrices, String s, float x, float y, int i) {
         drawGradientString(matrices, s, x - getStringWidth(s) / 2f, y, i);
     }
+static final class DrawEntry {
+    private final float atX;
+    private final float atY;
+    private final float r;
+    private final float g;
+    private final float b;
+    private final Glyph toDraw;
 
-    record DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
+    public DrawEntry(float atX, float atY, float r, float g, float b, Glyph toDraw) {
+        this.atX = atX;
+        this.atY = atY;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.toDraw = toDraw;
+    }
+
+    public float atX() {
+        return atX;
+    }
+
+    public float atY() {
+        return atY;
+    }
+
+    public float r() {
+        return r;
+    }
+
+    public float g() {
+        return g;
+    }
+
+    public float b() {
+        return b;
+    }
+
+    public Glyph toDraw() {
+        return toDraw;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DrawEntry)) return false;
+        DrawEntry other = (DrawEntry) o;
+        if (Float.compare(atX, other.atX) != 0) return false;
+        if (Float.compare(atY, other.atY) != 0) return false;
+        if (Float.compare(r, other.r) != 0) return false;
+        if (Float.compare(g, other.g) != 0) return false;
+        if (Float.compare(b, other.b) != 0) return false;
+        if (toDraw == null ? other.toDraw != null : !toDraw.equals(other.toDraw)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + Float.floatToIntBits(atX);
+        result = 31 * result + Float.floatToIntBits(atY);
+        result = 31 * result + Float.floatToIntBits(r);
+        result = 31 * result + Float.floatToIntBits(g);
+        result = 31 * result + Float.floatToIntBits(b);
+        result = 31 * result + (toDraw == null ? 0 : toDraw.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DrawEntry[" + "atX=" + atX + ", " + "atY=" + atY + ", " + "r=" + r + ", " + "g=" + g + ", " + "b=" + b + ", " + "toDraw=" + toDraw + "]";
+    }
     }
 
     private static double roundToDecimal(double n, int point) {
@@ -378,11 +566,19 @@ public class FontRenderer extends ConfigurableModule implements Closeable {
         return Math.round(n * factor) / factor;
     }
 
+    /**
+     * Flushes a glyph page.
+     *
+     * <p>1.21.4 used {@code endNullable()} to skip the draw when no vertices were written. 1.8.9's
+     * tessellator has no such check, but the caller only reaches here with at least one glyph
+     * queued, so the draw is unconditional.
+     */
+    /**
+     * Draws one glyph page. State is restored once by the caller after the last page: restoring it
+     * here turned blending off after the first page, so in any string whose glyphs span two pages
+     * (Cyrillic mixed with Latin, or a dash or guillemets) the second page drew as opaque boxes.
+     */
     private static void endBuilding(BufferBuilder bb) {
-        BuiltBuffer builtBuffer = bb.endNullable();
-        if (builtBuffer != null) {
-            BufferRenderer.drawWithGlobalProgram(builtBuffer);
-            Render2D.endRender();
-        }
+        BufferRenderer.drawWithGlobalProgram(bb);
     }
 }

@@ -8,17 +8,27 @@ public class MC_Tiers {
     }
 
     public static String getMcTiersGameModeIcon() {
-        return switch (CONFIG.mctiersGameMode) {
-            case LTMs -> "2v2";
-            case VANILLA -> "vanilla";
-            case UHC -> "uhc";
-            case POT -> "pot";
-            case NETHER_OP -> "nethop";
-            case SMP -> "smp";
-            case SWORD -> "sword";
-            case AXE -> "axe";
-            case MACE -> "mace";
-        };
+        switch (CONFIG.mctiersGameMode) {
+            case LTMs:
+                return "2v2";
+            case VANILLA:
+                return "vanilla";
+            case UHC:
+                return "uhc";
+            case POT:
+                return "pot";
+            case NETHER_OP:
+                return "nethop";
+            case SMP:
+                return "smp";
+            case SWORD:
+                return "sword";
+            case AXE:
+                return "axe";
+            case MACE:
+                return "mace";
+        }
+        throw new IllegalStateException("Unexpected value: " + CONFIG.mctiersGameMode);
     }
 
     public enum TierGameModes {

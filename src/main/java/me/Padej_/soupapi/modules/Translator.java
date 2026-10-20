@@ -24,7 +24,9 @@ public class Translator extends ConfigurableModule {
     private static int failCounter = 0;
 
     public static void onTick() {
-        if (true) return;
+        // Was hard-disabled with `if (true) return;`, so the option could never do anything. It is
+        // gated on its own setting now, and nothing is sent anywhere while that setting is off.
+        if (!ConfigurableModule.CONFIG.translatorBruhEnabled) return;
 
         long currentTime = System.currentTimeMillis();
 
@@ -77,6 +79,14 @@ public class Translator extends ConfigurableModule {
         return false;
     }
 
+    /** A finished translation for {@code text}, or {@code null} while it is still in flight. */
+    public static String cachedTranslation(String text) {
+        synchronized (translationCache) {
+            Object value = translationCache.get(text);
+            return value == null ? null : String.valueOf(value);
+        }
+    }
+
     public static void queueTranslation(String text) {
         if (!translationCache.containsKey(text) && !translationQueue.contains(text) && !processing.contains(text)) {
             translationQueue.add(text);
@@ -84,7 +94,7 @@ public class Translator extends ConfigurableModule {
     }
 
     private static String translateText(String text) throws IOException {
-        String apiUrl = "https://api.mymemory.translated.net/get?q=" + URLEncoder.encode(text, StandardCharsets.UTF_8) + "&langpair=ru|en";
+        String apiUrl = "https://api.mymemory.translated.net/get?q=" + URLEncoder.encode(text, "UTF-8") + "&langpair=ru|en";
 
         HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
         connection.setRequestMethod("GET");
@@ -99,7 +109,7 @@ public class Translator extends ConfigurableModule {
         scanner.close();
         connection.disconnect();
 
-        JsonObject jsonObject = JsonParser.parseString(json.toString()).getAsJsonObject();
+        JsonObject jsonObject = new JsonParser().parse(json.toString()).getAsJsonObject();
         String translated = jsonObject.getAsJsonObject("responseData").get("translatedText").getAsString();
 
         // ПРОВЕРКА: перевод не должен содержать подозрительные вещи
@@ -113,7 +123,8 @@ public class Translator extends ConfigurableModule {
 
     public static void loadCache() {
         if (cacheFile.exists()) {
-            try (Reader reader = new FileReader(cacheFile, StandardCharsets.UTF_8)) {
+            try (Reader reader = new java.io.InputStreamReader(
+                    new java.io.FileInputStream(cacheFile), StandardCharsets.UTF_8)) {
                 Map<?, ?> loaded = gson.fromJson(reader, Map.class);
                 for (Map.Entry<?, ?> entry : loaded.entrySet()) {
                     translationCache.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
@@ -125,7 +136,8 @@ public class Translator extends ConfigurableModule {
     }
 
     private static void saveCache() {
-        try (Writer writer = new FileWriter(cacheFile, StandardCharsets.UTF_8)) {
+        try (Writer writer = new java.io.OutputStreamWriter(
+                new java.io.FileOutputStream(cacheFile), StandardCharsets.UTF_8)) {
             gson.toJson(translationCache, writer);
         } catch (IOException e) {
             e.printStackTrace();

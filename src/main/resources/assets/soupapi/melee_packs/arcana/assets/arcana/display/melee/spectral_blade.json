@@ -1,0 +1,1 @@
+{"model":"arcana:melee/spectral_blade_geo","animation":"arcana:melee/spectral_blade","texture":"arcana:melee/spectral_blade","slot_texture":"arcana:melee/slot/spectral_blade","soupapi":{"profile":"spectral_blade","trail":[0.35,0.9,1],"trail2":[0.85,0.95,1],"ribbons":2,"emissive":[0.45,0.95,1],"finishes":["obsidian","molten","spectral","dark_metal"]}}

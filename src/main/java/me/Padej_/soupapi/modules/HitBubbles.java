@@ -1,23 +1,26 @@
 package me.Padej_.soupapi.modules;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.Cameras;
+
+import me.Padej_.soupapi.compat.BlendFactor;
+
+import net.minecraft.client.renderer.GlStateManager;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.utils.Timer;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import me.Padej_.soupapi.event.AttackEntityCallback;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MovingObjectPosition;
+import me.Padej_.soupapi.compat.RotationAxis;
+import net.minecraft.util.Vec3;
 
 import java.util.ArrayList;
 
@@ -28,24 +31,24 @@ public class HitBubbles extends ConfigurableModule {
 
     public static void registerOnHit() {
         AttackEntityCallback.EVENT.register((playerEntity, world, hand, entity, hitResult) -> {
-            if ((entity instanceof LivingEntity && !EntityUtils.isFriend(entity) && !entity.isSpectator()) && CONFIG.hitBubblesEnabled) {
+            if ((entity instanceof EntityLivingBase && !EntityUtils.isFriend(entity) && !EntityUtils.isSpectator(entity)) && CONFIG.hitBubblesEnabled) {
                 long now = System.currentTimeMillis();
-                if (now - lastHitTime < 150) return ActionResult.PASS; // защита от спама (150мс)
+                if (now - lastHitTime < 150) return AttackEntityCallback.Result.PASS; // защита от спама (150мс)
                 lastHitTime = now;
 
-                float yaw = playerEntity.getYaw();
-                float pitch = playerEntity.getPitch();
+                float yaw = playerEntity.rotationYaw;
+                float pitch = playerEntity.rotationPitch;
                 double distance = 5.0;
-                Vec3d point = getRtxPoint(yaw, pitch, distance);
+                Vec3 point = getRtxPoint(yaw, pitch, distance);
 
                 if (point != null) {
                     bubbles.add(new HitBubble(
-                            (float) point.x, (float) point.y, (float) point.z,
+                            (float) point.xCoord, (float) point.yCoord, (float) point.zCoord,
                             -yaw, pitch, new Timer()
                     ));
                 }
             }
-            return ActionResult.PASS;
+            return AttackEntityCallback.Result.PASS;
         });
     }
 
@@ -57,9 +60,9 @@ public class HitBubbles extends ConfigurableModule {
         for (HitBubble b : copy) {
             matrixStack.push();
             matrixStack.translate(
-                    b.x - mc.gameRenderer.getCamera().getPos().getX(),
-                    b.y - mc.gameRenderer.getCamera().getPos().getY(),
-                    b.z - mc.gameRenderer.getCamera().getPos().getZ()
+                    b.x - Cameras.get().getPositionVector().xCoord,
+                    b.y - Cameras.get().getPositionVector().yCoord,
+                    b.z - Cameras.get().getPositionVector().zCoord
             );
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(b.yaw));
             matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(b.pitch));
@@ -78,11 +81,33 @@ public class HitBubbles extends ConfigurableModule {
     private static void drawBubble(MatrixStack matrices, float angle, float factor) {
         Render2D.setupRender();
         RenderSystem.disableCull();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, TexturesManager.getHitBubbleTexture());
 
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
-        float scale = factor * 2f * (CONFIG.hitBubblesScale / 100f);
+        // How the bubble moves over its life. Expanding and spinning was the only behaviour;
+        // these are the same ring drawn with a different curve.
+        float growth;
+        switch (CONFIG.hitBubblesAnimation) {
+            case SPIN:
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
+                growth = factor;
+                break;
+            case SHRINK:
+                growth = 1f - factor * 0.75f;
+                break;
+            case PULSE:
+                growth = factor * (0.8f + 0.2f * (float) Math.sin(factor * Math.PI * 4));
+                break;
+            case FLASH:
+                // Most of the growth happens immediately, then it hangs and fades.
+                growth = (float) Math.sqrt(factor);
+                break;
+            case EXPAND:
+            default:
+                growth = factor;
+                break;
+        }
+        float scale = growth * 2f * (CONFIG.hitBubblesScale / 100f);
         Render2D.renderGradientTexture(matrices,
                 -scale / 2, -scale / 2, scale, scale,
                 0, 0, 128, 128, 128, 128,
@@ -94,40 +119,140 @@ public class HitBubbles extends ConfigurableModule {
         RenderSystem.enableCull();
     }
 
-    private static Vec3d getRtxPoint(float yaw, float pitch, double distance) {
-        Vec3d from = mc.player.getPos().add(0, mc.player.getEyeHeight(mc.player.getPose()), 0);
-        Vec3d direction = getRotationVector(pitch, yaw);
-        Vec3d to = from.add(direction.multiply(distance));
-        double distanceSq = distance * distance;
+    /**
+     * Finds where the player's look ray first meets a living entity, or {@code null}.
+     *
+     * <p>1.8.9 has no {@code ProjectileUtil.raycast} and no {@code EntityHitResult}, so the sweep
+     * is done directly: collect entities within the ray's expanded bounding box, intersect the ray
+     * with each one's box, and keep the nearest hit. This is the same algorithm vanilla 1.8.9 uses
+     * for the player's own reach check in {@code EntityRenderer.getMouseOver}.
+     */
+    private static Vec3 getRtxPoint(float yaw, float pitch, double distance) {
+        if (mc.thePlayer == null || mc.theWorld == null) return null;
 
-        Box box = mc.player.getBoundingBox().stretch(direction.multiply(distance)).expand(1.0, 1.0, 1.0);
-        EntityHitResult result = ProjectileUtil.raycast(
-                mc.player,
-                from,
-                to,
-                box,
-                (entity) -> !entity.isSpectator() && entity.canHit(),
-                distanceSq
-        );
+        Vec3 from = mc.thePlayer.getPositionVector()
+                .addVector(0, mc.thePlayer.getEyeHeight(), 0);
+        Vec3 direction = getRotationVector(pitch, yaw);
+        Vec3 to = from.addVector(direction.xCoord * distance,
+                direction.yCoord * distance,
+                direction.zCoord * distance);
 
-        if (result != null && result.getEntity() instanceof LivingEntity) {
-            return result.getPos();
+        AxisAlignedBB sweep = mc.thePlayer.getEntityBoundingBox()
+                .addCoord(direction.xCoord * distance,
+                        direction.yCoord * distance,
+                        direction.zCoord * distance)
+                .expand(1.0, 1.0, 1.0);
+
+        Vec3 nearestHit = null;
+        double nearestSq = distance * distance;
+
+        java.util.List<Entity> candidates =
+                mc.theWorld.getEntitiesWithinAABBExcludingEntity(mc.thePlayer, sweep);
+        for (int i = 0; i < candidates.size(); i++) {
+            Entity entity = candidates.get(i);
+            if (!(entity instanceof EntityLivingBase)) continue;
+            if (EntityUtils.isSpectator(entity) || !entity.canBeCollidedWith()) continue;
+
+            float border = entity.getCollisionBorderSize();
+            AxisAlignedBB box = entity.getEntityBoundingBox().expand(border, border, border);
+            MovingObjectPosition hit = box.calculateIntercept(from, to);
+            if (hit == null) continue;
+
+            double distSq = from.squareDistanceTo(hit.hitVec);
+            if (distSq < nearestSq) {
+                nearestSq = distSq;
+                nearestHit = hit.hitVec;
+            }
         }
-        return null;
+        return nearestHit;
     }
 
-    private static Vec3d getRotationVector(float pitch, float yaw) {
+    private static Vec3 getRotationVector(float pitch, float yaw) {
         float f = (float) Math.cos(-yaw * 0.017453292F - Math.PI);
         float g = (float) Math.sin(-yaw * 0.017453292F - Math.PI);
         float h = (float) -Math.cos(-pitch * 0.017453292F);
         float i = (float) Math.sin(-pitch * 0.017453292F);
-        return new Vec3d(g * h, i, f * h);
+        return new Vec3(g * h, i, f * h);
     }
 
     public enum Style {
-        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, PORTAL_2
+        CIRCLE, CIRCLE_BOLD, HEXAGON, PORTAL, PORTAL_2, RUNE, SAKURA, SNOWFLAKE, MAGIC, SHATTER
     }
 
-    public record HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
+    /** How a bubble behaves over its lifetime. */
+    public enum Animation {
+        EXPAND, SPIN, PULSE, SHRINK, FLASH
+    }
+public static final class HitBubble {
+    private final float x;
+    private final float y;
+    private final float z;
+    private final float yaw;
+    private final float pitch;
+    private final Timer life;
+
+    public HitBubble(float x, float y, float z, float yaw, float pitch, Timer life) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.life = life;
+    }
+
+    public float x() {
+        return x;
+    }
+
+    public float y() {
+        return y;
+    }
+
+    public float z() {
+        return z;
+    }
+
+    public float yaw() {
+        return yaw;
+    }
+
+    public float pitch() {
+        return pitch;
+    }
+
+    public Timer life() {
+        return life;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HitBubble)) return false;
+        HitBubble other = (HitBubble) o;
+        if (Float.compare(x, other.x) != 0) return false;
+        if (Float.compare(y, other.y) != 0) return false;
+        if (Float.compare(z, other.z) != 0) return false;
+        if (Float.compare(yaw, other.yaw) != 0) return false;
+        if (Float.compare(pitch, other.pitch) != 0) return false;
+        if (life == null ? other.life != null : !life.equals(other.life)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + Float.floatToIntBits(x);
+        result = 31 * result + Float.floatToIntBits(y);
+        result = 31 * result + Float.floatToIntBits(z);
+        result = 31 * result + Float.floatToIntBits(yaw);
+        result = 31 * result + Float.floatToIntBits(pitch);
+        result = 31 * result + (life == null ? 0 : life.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "HitBubble[" + "x=" + x + ", " + "y=" + y + ", " + "z=" + z + ", " + "yaw=" + yaw + ", " + "pitch=" + pitch + ", " + "life=" + life + "]";
+    }
     }
 }

@@ -1,33 +1,30 @@
 package me.Padej_.soupapi.main;
 
+import me.Padej_.soupapi.SoupAPI;
+import me.Padej_.soupapi.config.ConfigHolder;
 import me.Padej_.soupapi.config.SoupAPI_Config;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.ConfigHolder;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
-import net.minecraft.particle.SimpleParticleType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
 
-public class SoupAPI_Main implements ModInitializer {
-    public static ConfigHolder<SoupAPI_Config> configHolder;
-    public static long initTime;
-    public static String ac = "";
+/**
+ * Compatibility shim for the former Fabric entrypoint.
+ *
+ * <p>The Forge entry point is {@link SoupAPI}, but a lot of the mod reads
+ * {@code SoupAPI_Main.configHolder} and {@code SoupAPI_Main.initTime}. Keeping this as a thin
+ * forwarder avoids touching all of those call sites for no behavioural gain.
+ */
+public final class SoupAPI_Main {
 
-    public static final SimpleParticleType STAR = FabricParticleTypes.simple();
-
-    @Override
-    public void onInitialize() {
-        initTime = System.currentTimeMillis();
-        configHolder = AutoConfig.register(SoupAPI_Config.class, GsonConfigSerializer::new);
-        registerParticles();
-
-//        ExordiumMod.setForceBlend(false);
+    private SoupAPI_Main() {
     }
 
-    private void registerParticles() {
-        Registry.register(Registries.PARTICLE_TYPE, Identifier.of("soupapi", "star"), STAR);
+    public static ConfigHolder<SoupAPI_Config> configHolder() {
+        return SoupAPI.configHolder;
+    }
+
+    /**
+     * Field-style access, matching how the sources already read it. Kept as a method-backed
+     * constant would not see the config registered in pre-init.
+     */
+    public static ConfigHolder<SoupAPI_Config> getConfigHolder() {
+        return SoupAPI.configHolder;
     }
 }

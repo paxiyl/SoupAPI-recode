@@ -1,7 +1,6 @@
 package me.Padej_.soupapi.utils;
 
 import net.minecraft.entity.Entity;
-import org.jetbrains.annotations.Nullable;
 
 public class CaptureArmoredEntity {
 
@@ -9,7 +8,7 @@ public class CaptureArmoredEntity {
 
     private static final ThreadLocal<Entity> entity = new ThreadLocal<>();
 
-    public void setEntity(@Nullable Entity e) {
+    public void setEntity(Entity e) {
         entity.set(e);
     }
 
@@ -17,7 +16,6 @@ public class CaptureArmoredEntity {
         entity.remove();
     }
 
-    @Nullable
     public static Entity get() {
         return entity.get();
     }

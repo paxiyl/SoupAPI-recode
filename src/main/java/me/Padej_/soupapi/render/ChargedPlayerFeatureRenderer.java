@@ -1,21 +1,31 @@
 package me.Padej_.soupapi.render;
 
-import net.minecraft.client.render.entity.feature.FeatureRendererContext;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.util.ResourceLocation;
 
-public class ChargedPlayerFeatureRenderer extends CustomEnergySwirlOverlayFeatureRenderer<PlayerEntityRenderState, PlayerEntityModel> {
-    private static final Identifier SKIN = Identifier.of("soupapi", "textures/i.png");
-    private final PlayerEntityModel model;
+/**
+ * Applies the energy-swirl overlay to players.
+ *
+ * <p>{@code soupapi:textures/i.png} was one of the 39 textures the code referenced but that were
+ * never committed upstream; it is authored for this port. Because the overlay is blended
+ * {@code GL_ONE}/{@code GL_ONE} with the GL texture matrix scrolling, the artwork is emissive on
+ * black (the source alpha is ignored) and tiles seamlessly in both axes.
+ */
+public class ChargedPlayerFeatureRenderer
+        extends CustomEnergySwirlOverlayFeatureRenderer<AbstractClientPlayer> {
 
-    public ChargedPlayerFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState, PlayerEntityModel> context, PlayerEntityModel model) {
-        super(context);
+    private static final ResourceLocation SKIN = new ResourceLocation("soupapi", "textures/i.png");
+
+    private final ModelPlayer model;
+
+    public ChargedPlayerFeatureRenderer(ModelPlayer model) {
         this.model = model;
     }
 
     @Override
-    protected boolean shouldRender(PlayerEntityRenderState state) {
+    protected boolean shouldRender(AbstractClientPlayer entity) {
         return true;
     }
 
@@ -25,14 +35,12 @@ public class ChargedPlayerFeatureRenderer extends CustomEnergySwirlOverlayFeatur
     }
 
     @Override
-    protected Identifier getEnergySwirlTexture() {
+    protected ResourceLocation getEnergySwirlTexture() {
         return SKIN;
     }
 
     @Override
-    protected PlayerEntityModel getEnergySwirlModel() {
+    protected ModelBase getEnergySwirlModel() {
         return model;
     }
 }
-
-

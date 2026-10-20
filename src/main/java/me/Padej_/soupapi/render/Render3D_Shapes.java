@@ -1,15 +1,26 @@
 package me.Padej_.soupapi.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.*;
-import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
+import me.Padej_.soupapi.compat.Cameras;
+
+import me.Padej_.soupapi.compat.ShaderKey;
+
+import me.Padej_.soupapi.compat.RenderSystem;
+import me.Padej_.soupapi.event.WorldRenderContext;
+import net.minecraft.client.Minecraft;
+import me.Padej_.soupapi.compat.BufferBuilder;
+import me.Padej_.soupapi.compat.BufferRenderer;
+import me.Padej_.soupapi.compat.Tessellator;
+import me.Padej_.soupapi.compat.VertexFormat;
+import me.Padej_.soupapi.compat.VertexFormats;
+import me.Padej_.soupapi.compat.VertexConsumer;
+import me.Padej_.soupapi.compat.VertexConsumerProvider;
+import me.Padej_.soupapi.compat.RenderLayer;
+import me.Padej_.soupapi.compat.Camera;
+import me.Padej_.soupapi.compat.RenderTickCounter;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.*;
+import me.Padej_.soupapi.compat.Mat4;
+import me.Padej_.soupapi.compat.Vector3f;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -24,7 +35,7 @@ public class Render3D_Shapes {
     public static List<DebugLineAction> DEBUG_LINE_QUEUE = new ArrayList<>();
     public static List<LineAction> LINE_QUEUE = new ArrayList<>();
 
-    private static MinecraftClient mc = MinecraftClient.getInstance();
+    private static Minecraft mc = Minecraft.getMinecraft();
 
     public static void render(WorldRenderContext context) {
         MatrixStack stack = context.matrixStack();
@@ -34,9 +45,9 @@ public class Render3D_Shapes {
             BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
             RenderSystem.disableDepthTest();
             setupRender();
-            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+            RenderSystem.setShader(ShaderKey.POSITION_COLOR);
 
-            Matrix4f matrix = stack.peek().getPositionMatrix();
+            Mat4 matrix = stack.peek().getPositionMatrix();
             FILLED_QUEUE.forEach(action -> setFilledBoxVertexes(bufferBuilder, matrix, action.box(), action.color()));
 
             FADE_QUEUE.forEach(action -> setFilledFadePoints(action.box(), bufferBuilder, matrix, action.color(), action.color2()));
@@ -53,74 +64,58 @@ public class Render3D_Shapes {
         }
 
         if (!OUTLINE_QUEUE.isEmpty() || !OUTLINE_SIDE_QUEUE.isEmpty()) {
-            setupRender();
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-            RenderSystem.disableCull();
-            RenderSystem.disableDepthTest();
-            RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+            // Box outlines as glowing bands rather than GL lines: glLineWidth does nothing on
+            // gl4es, so on PojavLauncher every outline arrived as a one-pixel scratch.
+            OUTLINE_QUEUE.forEach(action -> glowBox(action.box(), action.color(), action.lineWidth()));
 
-            RenderSystem.lineWidth(2f);
+            OUTLINE_SIDE_QUEUE.forEach(action -> glowBoxSide(action.box(), action.color(),
+                    action.lineWidth(), action.side()));
 
-            OUTLINE_QUEUE.forEach(action -> {
-                setOutlinePoints(action.box(), matrixFrom(action.box().minX, action.box().minY, action.box().minZ), buffer, action.color());
-            });
-
-            OUTLINE_SIDE_QUEUE.forEach(action -> { // !!!
-                setSideOutlinePoints(action.box, matrixFrom(action.box().minX, action.box().minY, action.box().minZ), buffer, action.color(), action.side());
-            });
-
-            Render2D.endBuilding(buffer);
-
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            endRender();
             OUTLINE_QUEUE.clear();
             OUTLINE_SIDE_QUEUE.clear();
         }
 
         if (!DEBUG_LINE_QUEUE.isEmpty()) {
-            setupRender();
-            RenderSystem.disableDepthTest();
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.LINES);
-
-            RenderSystem.disableCull();
-            RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
-            DEBUG_LINE_QUEUE.forEach(action -> {
-                MatrixStack matrices = matrixFrom(action.start.getX(), action.start.getY(), action.start.getZ());
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.getX() - action.start.getX()), (float) (action.end.getY() - action.start.getY()), (float) (action.end.getZ() - action.start.getZ()), action.color);
-            });
-            Render2D.endBuilding(buffer);
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            endRender();
+            DEBUG_LINE_QUEUE.forEach(action -> Fx.glowLine(
+                    action.start.xCoord, action.start.yCoord, action.start.zCoord,
+                    action.end.xCoord, action.end.yCoord, action.end.zCoord,
+                    0.03f, action.color()));
             DEBUG_LINE_QUEUE.clear();
         }
 
         if (!LINE_QUEUE.isEmpty()) {
-            setupRender();
-            Tessellator tessellator = Tessellator.getInstance();
-            RenderSystem.disableCull();
-            RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
-            RenderSystem.lineWidth(2f);
-            RenderSystem.disableDepthTest();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
-            LINE_QUEUE.forEach(action -> { // !!!
-                MatrixStack matrices = matrixFrom(action.start.getX(), action.start.getY(), action.start.getZ());
-                vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.getX() - action.start.getX()), (float) (action.end.getY() - action.start.getY()), (float) (action.end.getZ() - action.start.getZ()), action.color);
-            });
-            Render2D.endBuilding(buffer);
-            RenderSystem.enableCull();
-            RenderSystem.lineWidth(1f);
-            RenderSystem.enableDepthTest();
-            endRender();
+            // Same reason as the outlines: a band of geometry, not a GL line.
+            float width = 0.04f;
+            LINE_QUEUE.forEach(action -> Fx.glowLine(
+                    action.start.xCoord, action.start.yCoord, action.start.zCoord,
+                    action.end.xCoord, action.end.yCoord, action.end.zCoord,
+                    width, action.color()));
             LINE_QUEUE.clear();
         }
     }
 
-    public static void setSideOutlinePoints(Box box, MatrixStack matrices, BufferBuilder buffer, Color color, Direction dir) {
-        box = box.offset(new Vec3d(box.minX, box.minY, box.minZ).negate());
+    /** The twelve edges of a box, each drawn as a glowing band. */
+    public static void glowBox(AxisAlignedBB box, Color colour, float lineWidth) {
+        double width = 0.035 * Math.max(1f, lineWidth);
+        double[][] corners = {
+                {box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                {box.maxX, box.minY, box.maxZ}, {box.minX, box.minY, box.maxZ},
+                {box.minX, box.maxY, box.minZ}, {box.maxX, box.maxY, box.minZ},
+                {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+        int[][] edges = {
+                {0, 1}, {1, 2}, {2, 3}, {3, 0},
+                {4, 5}, {5, 6}, {6, 7}, {7, 4},
+                {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+        for (int[] edge : edges) {
+            double[] a = corners[edge[0]];
+            double[] b = corners[edge[1]];
+            Fx.glowLine(a[0], a[1], a[2], b[0], b[1], b[2], width, colour);
+        }
+    }
+
+    public static void setSideOutlinePoints(AxisAlignedBB box, MatrixStack matrices, BufferBuilder buffer, Color color, EnumFacing dir) {
+        // 1.8.9 Vec3 has no negate(); offset by the inverse components directly.
+        box = box.offset(-box.minX, -box.minY, -box.minZ);
 
         float x1 = (float) box.minX;
         float y1 = (float) box.minY;
@@ -130,57 +125,114 @@ public class Render3D_Shapes {
         float z2 = (float) box.maxZ;
 
         switch (dir) {
-            case UP -> {
-                vertexLine(matrices, buffer, x1, y2, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y2, z1, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y2, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
-            }
-            case DOWN -> {
-                vertexLine(matrices, buffer, x1, y1, z1, x2, y1, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y1, z2, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x1, y1, z2, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
-            }
-            case EAST -> {
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y2, z2, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y1, z1, color);
-            }
-            case WEST -> {
-                vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
-            }
-            case NORTH -> {
-                vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
-                vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
-                vertexLine(matrices, buffer, x2, y1, z1, x1, y1, z1, color);
-                vertexLine(matrices, buffer, x2, y2, z1, x1, y2, z1, color);
-            }
-            case SOUTH -> {
-                vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
-                vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
-                vertexLine(matrices, buffer, x1, y1, z2, x2, y1, z2, color);
-                vertexLine(matrices, buffer, x1, y2, z2, x2, y2, z2, color);
-            }
+            case UP:
+                {
+                    vertexLine(matrices, buffer, x1, y2, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y2, z1, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y2, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
+
+                }
+                break;
+            case DOWN:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z1, x2, y1, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y1, z2, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x1, y1, z2, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
+
+                }
+                break;
+            case EAST:
+                {
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y2, z2, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y1, z1, color);
+
+                }
+                break;
+            case WEST:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y1, z1, color);
+
+                }
+                break;
+            case NORTH:
+                {
+                    vertexLine(matrices, buffer, x2, y1, z1, x2, y2, z1, color);
+                    vertexLine(matrices, buffer, x1, y1, z1, x1, y2, z1, color);
+                    vertexLine(matrices, buffer, x2, y1, z1, x1, y1, z1, color);
+                    vertexLine(matrices, buffer, x2, y2, z1, x1, y2, z1, color);
+
+                }
+                break;
+            case SOUTH:
+                {
+                    vertexLine(matrices, buffer, x1, y1, z2, x1, y2, z2, color);
+                    vertexLine(matrices, buffer, x2, y1, z2, x2, y2, z2, color);
+                    vertexLine(matrices, buffer, x1, y1, z2, x2, y1, z2, color);
+                    vertexLine(matrices, buffer, x1, y2, z2, x2, y2, z2, color);
+
+                }
+                break;
         }
     }
 
-    public static @NotNull MatrixStack matrixFrom(double x, double y, double z) {
+    /** The four edges of one face of a box, as glowing bands. */
+    public static void glowBoxSide(AxisAlignedBB box, Color colour, float lineWidth, EnumFacing side) {
+        double width = 0.035 * Math.max(1f, lineWidth);
+        double[][] corners;
+        switch (side) {
+            case DOWN:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                        {box.maxX, box.minY, box.maxZ}, {box.minX, box.minY, box.maxZ}};
+                break;
+            case UP:
+                corners = new double[][]{{box.minX, box.maxY, box.minZ}, {box.maxX, box.maxY, box.minZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+                break;
+            case NORTH:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.maxX, box.minY, box.minZ},
+                        {box.maxX, box.maxY, box.minZ}, {box.minX, box.maxY, box.minZ}};
+                break;
+            case SOUTH:
+                corners = new double[][]{{box.minX, box.minY, box.maxZ}, {box.maxX, box.minY, box.maxZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.maxZ}};
+                break;
+            case WEST:
+                corners = new double[][]{{box.minX, box.minY, box.minZ}, {box.minX, box.minY, box.maxZ},
+                        {box.minX, box.maxY, box.maxZ}, {box.minX, box.maxY, box.minZ}};
+                break;
+            case EAST:
+            default:
+                corners = new double[][]{{box.maxX, box.minY, box.minZ}, {box.maxX, box.minY, box.maxZ},
+                        {box.maxX, box.maxY, box.maxZ}, {box.maxX, box.maxY, box.minZ}};
+                break;
+        }
+        for (int i = 0; i < 4; i++) {
+            double[] a = corners[i];
+            double[] b = corners[(i + 1) % 4];
+            Fx.glowLine(a[0], a[1], a[2], b[0], b[1], b[2], width, colour);
+        }
+    }
+
+    public static MatrixStack matrixFrom(double x, double y, double z) {
         MatrixStack matrices = new MatrixStack();
 
-        Camera camera = mc.gameRenderer.getCamera();
+        Camera camera = Cameras.get();
 
-        matrices.translate(x - camera.getPos().x, y - camera.getPos().y, z - camera.getPos().z);
+        matrices.translate(x - camera.getPositionVector().xCoord, y - camera.getPositionVector().yCoord, z - camera.getPositionVector().zCoord);
 
         return matrices;
     }
 
-    public static void setOutlinePoints(Box box, MatrixStack matrices, BufferBuilder buffer, Color color) {
-        box = box.offset(new Vec3d(box.minX, box.minY, box.minZ).negate());
+    public static void setOutlinePoints(AxisAlignedBB box, MatrixStack matrices, BufferBuilder buffer, Color color) {
+        // 1.8.9 Vec3 has no negate(); offset by the inverse components directly.
+        box = box.offset(-box.minX, -box.minY, -box.minZ);
 
         float x1 = (float) box.minX;
         float y1 = (float) box.minY;
@@ -203,66 +255,66 @@ public class Render3D_Shapes {
         vertexLine(matrices, buffer, x1, y2, z2, x1, y2, z1, color);
     }
 
-    public static void vertexLine(@NotNull MatrixStack matrices, @NotNull VertexConsumer buffer, float x1, float y1, float z1, float x2, float y2, float z2, @NotNull Color lineColor) {
-        Matrix4f model = matrices.peek().getPositionMatrix();
+    public static void vertexLine(MatrixStack matrices, VertexConsumer buffer, float x1, float y1, float z1, float x2, float y2, float z2, Color lineColor) {
+        Mat4 model = matrices.peek().getPositionMatrix();
         MatrixStack.Entry entry = matrices.peek();
         Vector3f normalVec = getNormal(x1, y1, z1, x2, y2, z2);
-        buffer.vertex(model, x1, y1, z1).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(entry, normalVec.x(), normalVec.y(), normalVec.z());
-        buffer.vertex(model, x2, y2, z2).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(entry, normalVec.x(), normalVec.y(), normalVec.z());
+        buffer.vertex(model, x1, y1, z1).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(normalVec.x(), normalVec.y(), normalVec.z());
+        buffer.vertex(model, x2, y2, z2).color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha()).normal(normalVec.x(), normalVec.y(), normalVec.z());
     }
 
-    public static @NotNull Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {
+    public static Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {
         float xNormal = x2 - x1;
         float yNormal = y2 - y1;
         float zNormal = z2 - z1;
-        float normalSqrt = MathHelper.sqrt(xNormal * xNormal + yNormal * yNormal + zNormal * zNormal);
+        float normalSqrt = MathHelper.sqrt_float(xNormal * xNormal + yNormal * yNormal + zNormal * zNormal);
 
         return new Vector3f(xNormal / normalSqrt, yNormal / normalSqrt, zNormal / normalSqrt);
     }
 
-    public static void setFilledSidePoints(BufferBuilder buffer, Matrix4f matrix, Box box, Color c, Direction dir) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+    public static void setFilledSidePoints(BufferBuilder buffer, Mat4 matrix, AxisAlignedBB box, Color c, EnumFacing dir) {
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
-        if (dir == Direction.DOWN) {
+        if (dir == EnumFacing.DOWN) {
             buffer.vertex(matrix, minX, minY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, minY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, minY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, minX, minY, maxZ).color(c.getRGB());
         }
 
-        if (dir == Direction.NORTH) {
+        if (dir == EnumFacing.NORTH) {
             buffer.vertex(matrix, minX, minY, minZ).color(c.getRGB());
             buffer.vertex(matrix, minX, maxY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, maxY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, minY, minZ).color(c.getRGB());
         }
 
-        if (dir == Direction.EAST) {
+        if (dir == EnumFacing.EAST) {
             buffer.vertex(matrix, maxX, minY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, maxY, minZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, maxY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, minY, maxZ).color(c.getRGB());
         }
-        if (dir == Direction.SOUTH) {
+        if (dir == EnumFacing.SOUTH) {
             buffer.vertex(matrix, minX, minY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, minY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, maxY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, minX, maxY, maxZ).color(c.getRGB());
         }
 
-        if (dir == Direction.WEST) {
+        if (dir == EnumFacing.WEST) {
             buffer.vertex(matrix, minX, minY, minZ).color(c.getRGB());
             buffer.vertex(matrix, minX, minY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, minX, maxY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, minX, maxY, minZ).color(c.getRGB());
         }
 
-        if (dir == Direction.UP) {
+        if (dir == EnumFacing.UP) {
             buffer.vertex(matrix, minX, maxY, minZ).color(c.getRGB());
             buffer.vertex(matrix, minX, maxY, maxZ).color(c.getRGB());
             buffer.vertex(matrix, maxX, maxY, maxZ).color(c.getRGB());
@@ -270,13 +322,13 @@ public class Render3D_Shapes {
         }
     }
 
-    public static void setFilledFadePoints(Box box, BufferBuilder buffer, Matrix4f posMatrix, Color c, Color c1) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+    public static void setFilledFadePoints(AxisAlignedBB box, BufferBuilder buffer, Mat4 posMatrix, Color c, Color c1) {
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
         buffer.vertex(posMatrix, minX, minY, minZ).color(c.getRGB());
         buffer.vertex(posMatrix, minX, maxY, minZ).color(c1.getRGB());
@@ -304,13 +356,13 @@ public class Render3D_Shapes {
         buffer.vertex(posMatrix, maxX, maxY, minZ).color(c1.getRGB());
     }
 
-    public static void setFilledBoxVertexes(@NotNull BufferBuilder bufferBuilder, Matrix4f m, @NotNull Box box, @NotNull Color c) {
-        float minX = (float) (box.minX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float minY = (float) (box.minY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float minZ = (float) (box.minZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-        float maxX = (float) (box.maxX - mc.getEntityRenderDispatcher().camera.getPos().getX());
-        float maxY = (float) (box.maxY - mc.getEntityRenderDispatcher().camera.getPos().getY());
-        float maxZ = (float) (box.maxZ - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+    public static void setFilledBoxVertexes(BufferBuilder bufferBuilder, Mat4 m, AxisAlignedBB box, Color c) {
+        float minX = (float) (box.minX - mc.getRenderManager().viewerPosX);
+        float minY = (float) (box.minY - mc.getRenderManager().viewerPosY);
+        float minZ = (float) (box.minZ - mc.getRenderManager().viewerPosZ);
+        float maxX = (float) (box.maxX - mc.getRenderManager().viewerPosX);
+        float maxY = (float) (box.maxY - mc.getRenderManager().viewerPosY);
+        float maxZ = (float) (box.maxZ - mc.getRenderManager().viewerPosZ);
 
         bufferBuilder.vertex(m, minX, minY, minZ).color(c.getRGB());
         bufferBuilder.vertex(m, maxX, minY, minZ).color(c.getRGB());
@@ -352,52 +404,367 @@ public class Render3D_Shapes {
         RenderSystem.disableBlend();
     }
 
-    public static void drawFilledBox(MatrixStack stack, Box box, Color c) {
+    public static void drawFilledBox(MatrixStack stack, AxisAlignedBB box, Color c) {
         FILLED_QUEUE.add(new FillAction(box, c));
     }
 
-    public static void drawBoxOutline(@NotNull Box box, Color color, float lineWidth) {
+    public static void drawBoxOutline(AxisAlignedBB box, Color color, float lineWidth) {
         OUTLINE_QUEUE.add(new OutlineAction(box, color, lineWidth));
     }
 
-    public static void drawFilledFadeBox(@NotNull MatrixStack stack, @NotNull Box box, @NotNull Color c, @NotNull Color c1) {
+    public static void drawFilledFadeBox(MatrixStack stack, AxisAlignedBB box, Color c, Color c1) {
         FADE_QUEUE.add(new FadeAction(box, c, c1));
     }
 
-    public static void drawFilledSide(MatrixStack stack, @NotNull Box box, Color c, Direction dir) {
+    public static void drawFilledSide(MatrixStack stack, AxisAlignedBB box, Color c, EnumFacing dir) {
         FILLED_SIDE_QUEUE.add(new FillSideAction(box, c, dir));
     }
 
-    public static void drawSideOutline(@NotNull Box box, Color color, float lineWidth, Direction dir) {
+    public static void drawSideOutline(AxisAlignedBB box, Color color, float lineWidth, EnumFacing dir) {
         OUTLINE_SIDE_QUEUE.add(new OutlineSideAction(box, color, lineWidth, dir));
     }
 
-    public static void drawLineDebug(Vec3d start, Vec3d end, Color color) {
+    public static void drawLineDebug(Vec3 start, Vec3 end, Color color) {
         DEBUG_LINE_QUEUE.add(new DebugLineAction(start, end, color));
     }
 
-    public static void drawLine(@NotNull Vec3d start, @NotNull Vec3d end, @NotNull Color color) {
+    public static void drawLine(Vec3 start, Vec3 end, Color color) {
         LINE_QUEUE.add(new LineAction(start, end, color));
     }
+public static final class FillAction {
+    private final AxisAlignedBB box;
+    private final Color color;
 
-    public record FillAction(Box box, Color color) {
+    public FillAction(AxisAlignedBB box, Color color) {
+        this.box = box;
+        this.color = color;
     }
 
-    public record OutlineAction(Box box, Color color, float lineWidth) {
+    public AxisAlignedBB box() {
+        return box;
     }
 
-    public record FadeAction(Box box, Color color, Color color2) {
+    public Color color() {
+        return color;
     }
 
-    public record FillSideAction(Box box, Color color, Direction side) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FillAction)) return false;
+        FillAction other = (FillAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
     }
 
-    public record OutlineSideAction(Box box, Color color, float lineWidth, Direction side) {
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
     }
 
-    public record DebugLineAction(Vec3d start, Vec3d end, Color color) {
+    @Override
+    public String toString() {
+        return "FillAction[" + "box=" + box + ", " + "color=" + color + "]";
+    }
+    }
+public static final class OutlineAction {
+    private final AxisAlignedBB box;
+    private final Color color;
+    private final float lineWidth;
+
+    public OutlineAction(AxisAlignedBB box, Color color, float lineWidth) {
+        this.box = box;
+        this.color = color;
+        this.lineWidth = lineWidth;
     }
 
-    public record LineAction(Vec3d start, Vec3d end, Color color) {
+    public AxisAlignedBB box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public float lineWidth() {
+        return lineWidth;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OutlineAction)) return false;
+        OutlineAction other = (OutlineAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (Float.compare(lineWidth, other.lineWidth) != 0) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + Float.floatToIntBits(lineWidth);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "OutlineAction[" + "box=" + box + ", " + "color=" + color + ", " + "lineWidth=" + lineWidth + "]";
+    }
+    }
+public static final class FadeAction {
+    private final AxisAlignedBB box;
+    private final Color color;
+    private final Color color2;
+
+    public FadeAction(AxisAlignedBB box, Color color, Color color2) {
+        this.box = box;
+        this.color = color;
+        this.color2 = color2;
+    }
+
+    public AxisAlignedBB box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public Color color2() {
+        return color2;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FadeAction)) return false;
+        FadeAction other = (FadeAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (color2 == null ? other.color2 != null : !color2.equals(other.color2)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + (color2 == null ? 0 : color2.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FadeAction[" + "box=" + box + ", " + "color=" + color + ", " + "color2=" + color2 + "]";
+    }
+    }
+public static final class FillSideAction {
+    private final AxisAlignedBB box;
+    private final Color color;
+    private final EnumFacing side;
+
+    public FillSideAction(AxisAlignedBB box, Color color, EnumFacing side) {
+        this.box = box;
+        this.color = color;
+        this.side = side;
+    }
+
+    public AxisAlignedBB box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public EnumFacing side() {
+        return side;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FillSideAction)) return false;
+        FillSideAction other = (FillSideAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (side == null ? other.side != null : !side.equals(other.side)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + (side == null ? 0 : side.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FillSideAction[" + "box=" + box + ", " + "color=" + color + ", " + "side=" + side + "]";
+    }
+    }
+public static final class OutlineSideAction {
+    private final AxisAlignedBB box;
+    private final Color color;
+    private final float lineWidth;
+    private final EnumFacing side;
+
+    public OutlineSideAction(AxisAlignedBB box, Color color, float lineWidth, EnumFacing side) {
+        this.box = box;
+        this.color = color;
+        this.lineWidth = lineWidth;
+        this.side = side;
+    }
+
+    public AxisAlignedBB box() {
+        return box;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    public float lineWidth() {
+        return lineWidth;
+    }
+
+    public EnumFacing side() {
+        return side;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OutlineSideAction)) return false;
+        OutlineSideAction other = (OutlineSideAction) o;
+        if (box == null ? other.box != null : !box.equals(other.box)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        if (Float.compare(lineWidth, other.lineWidth) != 0) return false;
+        if (side == null ? other.side != null : !side.equals(other.side)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (box == null ? 0 : box.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        result = 31 * result + Float.floatToIntBits(lineWidth);
+        result = 31 * result + (side == null ? 0 : side.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "OutlineSideAction[" + "box=" + box + ", " + "color=" + color + ", " + "lineWidth=" + lineWidth + ", " + "side=" + side + "]";
+    }
+    }
+public static final class DebugLineAction {
+    private final Vec3 start;
+    private final Vec3 end;
+    private final Color color;
+
+    public DebugLineAction(Vec3 start, Vec3 end, Color color) {
+        this.start = start;
+        this.end = end;
+        this.color = color;
+    }
+
+    public Vec3 start() {
+        return start;
+    }
+
+    public Vec3 end() {
+        return end;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DebugLineAction)) return false;
+        DebugLineAction other = (DebugLineAction) o;
+        if (start == null ? other.start != null : !start.equals(other.start)) return false;
+        if (end == null ? other.end != null : !end.equals(other.end)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (start == null ? 0 : start.hashCode());
+        result = 31 * result + (end == null ? 0 : end.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DebugLineAction[" + "start=" + start + ", " + "end=" + end + ", " + "color=" + color + "]";
+    }
+    }
+public static final class LineAction {
+    private final Vec3 start;
+    private final Vec3 end;
+    private final Color color;
+
+    public LineAction(Vec3 start, Vec3 end, Color color) {
+        this.start = start;
+        this.end = end;
+        this.color = color;
+    }
+
+    public Vec3 start() {
+        return start;
+    }
+
+    public Vec3 end() {
+        return end;
+    }
+
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LineAction)) return false;
+        LineAction other = (LineAction) o;
+        if (start == null ? other.start != null : !start.equals(other.start)) return false;
+        if (end == null ? other.end != null : !end.equals(other.end)) return false;
+        if (color == null ? other.color != null : !color.equals(other.color)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + (start == null ? 0 : start.hashCode());
+        result = 31 * result + (end == null ? 0 : end.hashCode());
+        result = 31 * result + (color == null ? 0 : color.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "LineAction[" + "start=" + start + ", " + "end=" + end + ", " + "color=" + color + "]";
+    }
     }
 }

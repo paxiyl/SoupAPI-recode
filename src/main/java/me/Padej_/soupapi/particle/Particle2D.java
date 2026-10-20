@@ -1,11 +1,13 @@
 package me.Padej_.soupapi.particle;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import me.Padej_.soupapi.compat.BlendFactor;
+
+import net.minecraft.client.renderer.GlStateManager;
+import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.render.Render2D;
 import me.Padej_.soupapi.utils.TexturesManager;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
+import me.Padej_.soupapi.compat.MatrixStack;
+import net.minecraft.util.ResourceLocation;
 
 import java.awt.*;
 
@@ -19,31 +21,31 @@ public class Particle2D {
     public double hudOffsetX, hudOffsetY; // Смещение для слежения за HUD
     public double x, y, deltaX, deltaY, size, opacity;
     public Color color;
-    private Identifier texture;
+    private ResourceLocation texture;
 
-    private static final List<Identifier> AVAILABLE_TEXTURES = new ArrayList<>();
+    private static final List<ResourceLocation> AVAILABLE_TEXTURES = new ArrayList<>();
     private static final Random RANDOM = new Random();
 
     public static void updateAvailableTextures() {
         AVAILABLE_TEXTURES.clear();
 
         if (CONFIG.targetHudIncludeFirefly) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY_ALT);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY_ALT));
         }
         if (CONFIG.targetHudIncludeDollar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.DOLLAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.DOLLAR));
         }
         if (CONFIG.targetHudIncludeSnowflake) {
-            AVAILABLE_TEXTURES.add(TexturesManager.SNOWFLAKE);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.SNOWFLAKE));
         }
         if (CONFIG.targetHudIncludeHeart) {
-            AVAILABLE_TEXTURES.add(TexturesManager.HEART);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.HEART));
         }
         if (CONFIG.targetHudIncludeStar) {
-            AVAILABLE_TEXTURES.add(TexturesManager.STAR);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.STAR));
         }
         if (CONFIG.targetHudIncludeGlyphs) {
-            AVAILABLE_TEXTURES.add(TexturesManager.getRandomGlyphParticle());
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.getRandomGlyphParticle()));
         }
         if (!CONFIG.targetHudIncludeFirefly &&
                 !CONFIG.targetHudIncludeDollar &&
@@ -52,7 +54,7 @@ public class Particle2D {
                 !CONFIG.targetHudIncludeStar &&
                 !CONFIG.targetHudIncludeGlyphs
         ) {
-            AVAILABLE_TEXTURES.add(TexturesManager.FIREFLY);
+            AVAILABLE_TEXTURES.add(TexturesManager.themed(TexturesManager.FIREFLY));
         }
     }
 
@@ -77,7 +79,7 @@ public class Particle2D {
         matrixStack.scale(particleScale * depthFactor, particleScale * depthFactor, particleScale);
 
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, texture);
         RenderSystem.setShaderColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, (float) (opacity / 255f));
 
