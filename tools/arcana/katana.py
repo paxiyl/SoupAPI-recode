@@ -248,6 +248,10 @@ if __name__ == '__main__':
 NAME = 'Fractured-Eye Katana'
 # Read by the mod's weapon effects: which behaviours this weapon has.
 PROFILE = {
+    # Where the weapon sits in the hand out of the box. These models are authored large;
+    # at the sliders' own defaults they fill the screen. Size, distance, x, y, z, yaw,
+    # pitch, roll - the player's sliders still override it.
+    'placement': [45, 18, 10, -8, 0, 0, 0, 0],
     'profile': 'fractured_eye',
     'eyes': True,
     'summon': True,

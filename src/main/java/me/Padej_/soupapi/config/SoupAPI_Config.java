@@ -190,7 +190,7 @@ public class SoupAPI_Config implements ConfigData {
     public boolean smokeVolumetric = true;
     @ConfigEntry.Category("smoke")
     @ConfigEntry.Gui.Tooltip
-    public boolean smokeGroundShards = true;
+    public boolean smokeGroundShards = false;
 
     /**
      * TRAILS

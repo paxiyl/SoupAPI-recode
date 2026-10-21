@@ -138,6 +138,10 @@ def build():
 
 
 PROFILE = {
+    # Where the weapon sits in the hand out of the box. These models are authored large;
+    # at the sliders' own defaults they fill the screen. Size, distance, x, y, z, yaw,
+    # pitch, roll - the player's sliders still override it.
+    'placement': [45, 18, 10, -8, 0, 0, 0, 0],
     'profile': 'spectral_blade',
     'trail': [0.35, 0.9, 1.0],
     'trail2': [0.85, 0.95, 1.0],

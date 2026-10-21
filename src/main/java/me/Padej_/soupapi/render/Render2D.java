@@ -436,47 +436,55 @@ public class Render2D {
         x = x - blurRadius;
         y = y - blurRadius;
 
-        int w = Math.max(1, (int) width), h = Math.max(1, (int) height);
-        // A key the three inputs cannot collide on. The old one multiplied them together, so two
-        // differently shaped shadows could share a texture and one of them came out stretched.
-        long identifier = ((long) w << 40) | ((long) h << 16) | (blurRadius & 0xFFFF);
-        BlurredShadow shadow = shadowCache.get(identifier);
-        if (shadow == null) {
-            shadow = new BlurredShadow(blurMask(w, h, blurRadius));
-            shadowCache.put(identifier, shadow);
-        }
+        BlurredShadow shadow = mask(shadowCache, (int) width, (int) height, blurRadius);
         shadow.bind();
 
         setupRender();
         RenderSystem.setShaderColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() / 255f);
-        // The mask lives in the top-left of a power-of-two texture, so only that part is sampled.
-        renderTexture(matrices, x, y, width, height, 0, 0, w, h, shadow.width, shadow.height);
+        renderTexture(matrices, x, y, width, height, 0, 0, shadow.width, shadow.height, shadow.width, shadow.height);
         endRender();
     }
 
     /**
-     * The blurred rounded mask a soft shadow is drawn with, on a power-of-two canvas.
+     * The blurred mask for a shadow of about this size, built once and kept.
      *
-     * <p>gl4es - which is what PojavLauncher runs GL through - is only dependable with
-     * power-of-two textures, and these are built at whatever size the caller's rectangle happens to
-     * be. The mask is drawn into the top-left corner and the rest of the canvas is left
-     * transparent; callers sample only the part they filled.
+     * <p>Sizes are rounded up to {@value #MASK_STEP} pixels before they are looked up, which is the
+     * whole reason this is usable at all: the callers are the crosshair, the potion timers, the
+     * target HUD's health bar and the mouse-move dot, and every one of them changes width by a
+     * fraction of a pixel per frame. Keyed exactly, each frame would build a new image, blur it,
+     * encode it to PNG, decode it again and upload a new GL texture - none of which is ever freed.
+     * Rounded, a few dozen masks cover everything the mod draws. The mask is then stretched over
+     * whatever the caller actually asked for; nobody can see a pixel of difference in a blur.
      */
+    private static BlurredShadow mask(java.util.Map<Long, BlurredShadow> cache, int width, int height, int blurRadius) {
+        int w = Math.max(1, (width + MASK_STEP - 1) / MASK_STEP * MASK_STEP);
+        int h = Math.max(1, (height + MASK_STEP - 1) / MASK_STEP * MASK_STEP);
+        int r = Math.max(1, Math.min(blurRadius, Math.min(w, h) / 2));
+        long identifier = ((long) w << 40) | ((long) h << 16) | (r & 0xFFFF);
+        BlurredShadow shadow = cache.get(identifier);
+        if (shadow == null) {
+            // A bound in case something does find a way to ask for endless sizes: start again
+            // rather than hold on to thousands of textures.
+            if (cache.size() > MASK_LIMIT) cache.clear();
+            shadow = new BlurredShadow(blurMask(w, h, r));
+            cache.put(identifier, shadow);
+        }
+        return shadow;
+    }
+
+    /** Rounding applied to a shadow's size before it is looked up or built. */
+    private static final int MASK_STEP = 16;
+    /** How many masks are kept before the lot is thrown away and built again. */
+    private static final int MASK_LIMIT = 96;
+
+    /** The blurred rounded mask a soft shadow is drawn with. */
     private static BufferedImage blurMask(int w, int h, int blurRadius) {
-        int pw = pot(w), ph = pot(h);
-        BufferedImage original = new BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage original = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics g = original.getGraphics();
         g.setColor(new Color(-1));
         g.fillRect(blurRadius, blurRadius, Math.max(1, w - blurRadius * 2), Math.max(1, h - blurRadius * 2));
         g.dispose();
         return new GaussianFilter(blurRadius).filter(original, null);
-    }
-
-    /** The next power of two at or above {@code v}, capped at the size any driver will take. */
-    private static int pot(int v) {
-        int p = 1;
-        while (p < v && p < 4096) p <<= 1;
-        return p;
     }
 
     public static void drawGradientBlurredShadow1(MatrixStack matrices, float x, float y, float width, float height, int blurRadius, Color color1, Color color2, Color color3, Color color4) {
@@ -486,21 +494,15 @@ public class Render2D {
         x = x - blurRadius;
         y = y - blurRadius;
 
-        int w = Math.max(1, (int) width), h = Math.max(1, (int) height);
-        long identifier = ((long) w << 40) | ((long) h << 16) | (blurRadius & 0xFFFF);
-
-        BlurredShadow shadow = shadowCache1.get(identifier);
-        if (shadow == null) {
-            // Just the blurred mask. It used to be composited over an opaque black rectangle, which
-            // is invisible under the additive blend below and a solid black box under any other.
-            shadow = new BlurredShadow(blurMask(w, h, blurRadius));
-            shadowCache1.put(identifier, shadow);
-        }
+        // Just the blurred mask. It used to be composited over an opaque black rectangle, which is
+        // invisible under the additive blend below and a solid black box under any other.
+        BlurredShadow shadow = mask(shadowCache1, (int) width, (int) height, blurRadius);
 
         shadow.bind();
         setupRender();
         RenderSystem.blendFunc(BlendFactor.SrcFactor.SRC_ALPHA, BlendFactor.DstFactor.ONE);
-        renderGradientTexture(matrices, x, y, width, height, 0, 0, w, h, shadow.width, shadow.height, color1, color2, color3, color4);
+        renderGradientTexture(matrices, x, y, width, height, 0, 0, shadow.width, shadow.height,
+                shadow.width, shadow.height, color1, color2, color3, color4);
         endRender();
     }
 

@@ -61,7 +61,14 @@ public final class MeleeRenderer extends ConfigurableModule {
         EntityPlayerSP player = mc.thePlayer;
         if (player == null || mc.theWorld == null) return false;
 
-        GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
+        // The weapon has to sit in front of the world without being cut into by it. The usual way
+        // to get that is to clear the depth buffer before drawing it - but a clear part-way through
+        // a frame is exactly what gl4es, the GL translation layer PojavLauncher runs on, does not
+        // handle: the same thing in the HUD took the whole frame to black. Squeezing the weapon
+        // into the front tenth of the depth range does the same job with no clear at all, and
+        // keeps the weapon's own parts depth-sorted against each other, which disabling depth
+        // testing would not.
+        GL11.glDepthRange(0.0, 0.1);
         GlStateManager.matrixMode(GL11.GL_PROJECTION);
         GlStateManager.pushMatrix();
         GlStateManager.loadIdentity();
@@ -129,6 +136,7 @@ public final class MeleeRenderer extends ConfigurableModule {
             GlStateManager.enableCull();
             GlStateManager.color(1f, 1f, 1f, 1f);
             me.Padej_.soupapi.compat.RenderSystem.restoreDefaults();
+            GL11.glDepthRange(0.0, 1.0);
             GlStateManager.matrixMode(GL11.GL_PROJECTION);
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(GL11.GL_MODELVIEW);

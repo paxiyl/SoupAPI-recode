@@ -60,16 +60,40 @@ public final class GeoPose {
     }
 
     public float scaleX(int bone) {
-        return values[bone * 9 + 6];
+        return safeScale(values[bone * 9 + 6]);
     }
 
     public float scaleY(int bone) {
-        return values[bone * 9 + 7];
+        return safeScale(values[bone * 9 + 7]);
     }
 
     public float scaleZ(int bone) {
-        return values[bone * 9 + 8];
+        return safeScale(values[bone * 9 + 8]);
     }
+
+    /**
+     * A scale a matrix can survive.
+     *
+     * <p>Clips hide a part by scaling it to nearly nothing, and a smooth channel through such a key
+     * does not stop there: a Catmull-Rom curve between a near-zero key and a full-size one
+     * undershoots below zero on the way, and blending two clips can land on zero exactly. Either
+     * gives a bone a matrix with no inverse, and the NaNs that come out of one spread through every
+     * vertex drawn from that bone. On a desktop driver that is invisible geometry; on the GL
+     * translation layer PojavLauncher runs on, NaN vertices take the process down.
+     *
+     * <p>Clamping here rather than in the clips covers procedural scaling and clip blending too,
+     * and 0.02 of a part is as invisible as 0.
+     */
+    private static float safeScale(float v) {
+        if (Float.isNaN(v)) return 1f;
+        float a = Math.abs(v);
+        if (a < MIN_SCALE) return v < 0f ? -MIN_SCALE : MIN_SCALE;
+        if (a > MAX_SCALE) return v < 0f ? -MAX_SCALE : MAX_SCALE;
+        return v;
+    }
+
+    private static final float MIN_SCALE = 0.02f;
+    private static final float MAX_SCALE = 64f;
 
     /** Copies another pose of the same model into this one, for a trailing ghost copy. */
     public void copyFrom(GeoPose other) {

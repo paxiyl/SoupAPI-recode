@@ -146,10 +146,18 @@ public final class SmokeFx extends ConfigurableModule {
          * plate is turned to lie on the surface instead, so it spreads over it.
          */
         float settle(float pt) {
-            if (!overGround || kind != Kind.SMOKE) return 0f;
+            if (!overGround || kind != Kind.SMOKE || !CONFIG.smokeGroundShards) return 0f;
             double at = py + (y - py) * pt;
-            float above = (float) (at - groundY) - size(pt) * 0.25f;
-            return 1f - smooth(Math.min(1f, Math.max(0f, above / 1.1f)));
+            // Only a puff that has actually come to rest on the surface, and only once it is
+            // dissipating. The first try flattened anything within a block of the ground, which in
+            // practice is most smoke there is - it spawns at people's feet - and a flat plate seen
+            // from standing height is edge-on and all but invisible. That read as the smoke being
+            // gone.
+            float above = (float) (at - groundY);
+            if (above > 0.45f) return 0f;
+            float low = 1f - smooth(Math.min(1f, Math.max(0f, above / 0.45f)));
+            float old = smooth(Math.min(1f, Math.max(0f, (progress(pt) - 0.45f) / 0.3f)));
+            return low * old;
         }
 
         public P kind(Kind k) { this.kind = k; return this; }
@@ -344,7 +352,7 @@ public final class SmokeFx extends ConfigurableModule {
         p.px = p.x;
         p.py = p.y;
         p.pz = p.z;
-        if (p.kind == Kind.SMOKE) findGround(p);
+        if (p.kind == Kind.SMOKE && CONFIG.smokeGroundShards) findGround(p);
 
         if (p.turbulence > 0f && turbulence > 0f && p.kind != Kind.DECAL) {
             // A curl-like field: rotating sines in three planes give swirling, divergence-light flow
@@ -624,7 +632,7 @@ public final class SmokeFx extends ConfigurableModule {
                     float settled = p.settle(pt);
                     if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
                     smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, p.r, p.g, p.b,
-                            a * (1f - settled * 0.55f), settled);
+                            a * (1f - settled * 0.35f), settled);
                 }
                 tessellator.draw();
 

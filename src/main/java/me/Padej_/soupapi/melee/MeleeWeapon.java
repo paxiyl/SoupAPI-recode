@@ -131,6 +131,30 @@ public final class MeleeWeapon {
         return Math.max(0f, Math.min(1f, v));
     }
 
+    /**
+     * Where this weapon sits in the hand before the player moves it, or {@code null}.
+     *
+     * <p>Eight numbers in the pack's own display file: size, distance, the three offsets and the
+     * three turns - the same set the sliders hold. A model is authored at whatever size suited the
+     * person who built it, and the Arcana weapons in particular are drawn far too large at the
+     * sliders' defaults; this is a pack saying where its own weapon belongs. The player's sliders
+     * and any placement they save still win.
+     */
+    public int[] defaultPlacement() {
+        if (!profile.has("placement") || !profile.get("placement").isJsonArray()) return null;
+        com.google.gson.JsonArray a = profile.getAsJsonArray("placement");
+        if (a.size() < 8) return null;
+        int[] out = new int[8];
+        for (int i = 0; i < 8; i++) {
+            try {
+                out[i] = a.get(i).getAsInt();
+            } catch (RuntimeException malformed) {
+                return null;
+            }
+        }
+        return out;
+    }
+
     /** True when this weapon ships the finish, so picking it changes the textures. */
     public boolean hasFinish(String finish) {
         if (finish == null || finish.isEmpty() || !profile.has("finishes")) return false;

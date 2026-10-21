@@ -46,6 +46,21 @@ public final class MeleePlacement extends ConfigurableModule {
     private MeleePlacement() {
     }
 
+    /** True while every placement slider is still where it ships. */
+    private static boolean slidersAreDefault() {
+        SoupAPI_Config defaults = DEFAULTS;
+        return CONFIG.meleeSize == defaults.meleeSize
+                && CONFIG.meleeDistance == defaults.meleeDistance
+                && CONFIG.meleeOffsetX == defaults.meleeOffsetX
+                && CONFIG.meleeOffsetY == defaults.meleeOffsetY
+                && CONFIG.meleeOffsetZ == defaults.meleeOffsetZ
+                && CONFIG.meleeYaw == defaults.meleeYaw
+                && CONFIG.meleePitch == defaults.meleePitch
+                && CONFIG.meleeRoll == defaults.meleeRoll;
+    }
+
+    private static final SoupAPI_Config DEFAULTS = new SoupAPI_Config();
+
     /** The sliders as they stand. */
     public static Values current() {
         return new Values(CONFIG.meleeSize, CONFIG.meleeDistance, CONFIG.meleeOffsetX,
@@ -53,11 +68,20 @@ public final class MeleePlacement extends ConfigurableModule {
                 CONFIG.meleeRoll);
     }
 
-    /** What a weapon should be drawn with: its own saved placement, or the sliders. */
+    /** What a weapon should be drawn with: its own saved placement, its pack's, or the sliders. */
     public static Values of(MeleeWeapon weapon) {
         if (weapon == null) return current();
         String stored = find(weapon.id);
-        if (stored == null) return current();
+        if (stored == null) {
+            // Nothing saved for this weapon: the pack's own placement, if it ships one. Only while
+            // the sliders are untouched - the moment the player moves one, that is what they mean.
+            int[] packed = weapon.defaultPlacement();
+            if (packed != null && slidersAreDefault()) {
+                return new Values(packed[0], packed[1], packed[2], packed[3], packed[4],
+                        packed[5], packed[6], packed[7]);
+            }
+            return current();
+        }
         String[] parts = stored.split(",");
         if (parts.length < 8) return current();
         try {

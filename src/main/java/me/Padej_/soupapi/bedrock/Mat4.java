@@ -26,6 +26,15 @@ public final class Mat4 {
         return this;
     }
 
+    /** True when every element is a real number, so the matrix can safely reach the vertices. */
+    public boolean finite() {
+        for (int i = 0; i < 16; i++) {
+            float v = m[i];
+            if (Float.isNaN(v) || Float.isInfinite(v)) return false;
+        }
+        return true;
+    }
+
     /** this = this * other. */
     public Mat4 multiply(Mat4 other) {
         float[] a = m;

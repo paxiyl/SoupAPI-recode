@@ -161,6 +161,13 @@ public final class GeoModel {
             g.rotateZYX(b.rotX - pose.rotX(i), b.rotY - pose.rotY(i), b.rotZ + pose.rotZ(i));
             g.scale(pose.scaleX(i), pose.scaleY(i), pose.scaleZ(i));
             g.translate(-b.pivotX, -b.pivotY, -b.pivotZ);
+            // One bad number anywhere upstream - a clip, a blend, a procedural offset - would
+            // otherwise reach the vertices as NaN, and NaN geometry is not survivable on every
+            // driver this runs on. A bone that goes bad is pinned to its parent instead.
+            if (!g.finite()) {
+                if (b.parent != null) g.set(globals[b.parent.index]);
+                else g.identity();
+            }
         }
     }
 

@@ -74,7 +74,7 @@ public final class MeleePortal extends ConfigurableModule {
      */
     private static float time(MeleeState state) {
         me.Padej_.soupapi.bedrock.GeoClip clip = state.mainClip();
-        float t = time(state);
+        float t = state.mainTime();
         if (clip == null || clip.length <= 0.1f) return t;
         return t / clip.length * END;
     }
