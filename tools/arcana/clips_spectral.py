@@ -13,7 +13,7 @@ def ribbons(c, t, amp, phase, smooth=True):
                   (0, 0, amp * math.sin(phase - k * 0.7 + r * 1.3)), smooth)
 
 
-def build(rig):
+def _own(rig):
     out = []
     # The hold. This blade weighs nothing, so where the other two breathe it floats: the grip drifts
     # on a long figure of eight, the blade lags behind that drift instead of following it, and the
@@ -170,4 +170,26 @@ def build(rig):
     away.pose(0.6, {'swing': {'rot': (35, 12, -20), 'pos': (0, -9, 3)}})
     away.sound(0, SND + 'put_away')
     out.append(away)
+    return out
+
+
+def _extra(clip, name, t, phase):
+    """The ribbons trail everything the blade does, harder the faster it moves."""
+    if int(round(t * 20)) % 2:
+        return
+    if name == 'static_idle':
+        ribbons(clip, t, 11 + 4 * math.sin(math.tau * t / 6.0), math.tau * 2 * t / 6.0)
+        return
+    amp = {'melee': 30, 'inspect': 16, 'draw': 32, 'summon': 38, 'run': 16, 'flourish': 30}.get(name, 10)
+    if name == 'melee':
+        amp *= 0.4 + 0.6 * max(0.0, 1 - abs(phase - 0.35) * 2.5)
+    ribbons(clip, t, amp + 4 * math.sin(t * 1.5), t * 7.5)
+
+
+def build(rig):
+    from clips_common import build as common, summon, merge
+    base = common(rig, SND, extra=_extra, weight=0.95)
+    out = merge(base, _own(rig), keep=('flourish',))
+    out = [c for c in out if c.name != 'summon']
+    out.append(summon(rig, SND, 'forge', 2.2, extra=_extra))
     return out

@@ -145,6 +145,13 @@ def sets():
                                             delay(chime([784, 1175, 1568, 2349], 1.6), 0.2)),
                                thrust=mix(whoosh(0.3, 950, 3600, 0.32),
                                           delay(ring(1568, 0.7, 0.22, amp=0.2), 0.1))),
+        # The halo: a whir under every move, the ring humming as it turns.
+        'seraph_halo': dict(glassy, summon=portal(),
+                            swing_1=mix(whoosh(0.42, 650, 3400, 0.36), delay(ring(1760, 0.6, 0.2, amp=0.16), 0.08)),
+                            swing_2=mix(whoosh(0.4, 760, 3800, 0.36), delay(ring(2093, 0.55, 0.18, amp=0.15), 0.08)),
+                            flourish=mix(whoosh(0.3, 600, 2600, 0.3), delay(whoosh(0.3, 700, 3000, 0.3), 0.25),
+                                         delay(whoosh(0.3, 800, 3400, 0.3), 0.5),
+                                         delay(chime([1318, 1760, 2637], 1.4), 0.7))),
         # The lotus: softer, with the blades opening on a breath rather than a snap.
         'lotus_glaive': dict(glassy, summon=portal(),
                              draw=mix(whoosh(0.55, 250, 1500, 0.26),

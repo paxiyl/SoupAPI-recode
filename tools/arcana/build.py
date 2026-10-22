@@ -42,10 +42,10 @@ def weapons():
         pass
     # The newer weapons, which take their clips from `clips_common` and only write their own
     # moving parts: the scepter's rings and the lotus's blades.
-    for name in ('orrery', 'lotus'):
+    for name, clipname in (('orrery', 'orrery'), ('lotus', 'lotus'), ('chakram', 'chakram')):
         try:
             module = __import__(name)
-            clips = __import__('clips_' + name)
+            clips = __import__('clips_' + clipname)
             out.append((module, clips))
         except ImportError:
             pass

@@ -22,7 +22,7 @@ def spine(c, t, per, wave=0.0, phase=0.0, ribs=0.0, feathers=0.0, smooth=True):
         c.key('feather_%d' % k, 'rotation', t, (0, 0, feathers + wave * 1.5 * math.sin(phase * 1.3 - k)), smooth)
 
 
-def build(rig):
+def _own(rig):
     out = []
     # The hold. The claw is a thing that is alive, so its idle is not the blade's: the arm breathes
     # slowly while the crescent flexes against that breath on a shorter cycle, and every so often the
@@ -218,4 +218,49 @@ def build(rig):
     spine(away, 0.5, -14, ribs=10)
     away.sound(0, SND + 'put_away')
     out.append(away)
+    return out
+
+
+def _bump(x, at, width):
+    return max(0.0, 1 - abs(x - at) / width)
+
+
+def _extra(clip, name, t, phase):
+    """The claw is alive in every clip: its spine flexes through the hold, clenches on the strike
+    and opens after it, unfurls to be looked at and writhes before it snaps shut."""
+    if int(round(t * 20)) % 2:
+        return
+    if name == 'static_idle':
+        ph = math.tau * t / 6.0
+        grip = max(0.0, math.sin(ph - 1.2)) ** 6
+        spine(clip, t, -grip * 7.0, wave=2.4, phase=ph * 2, ribs=grip * 6.0, feathers=math.sin(ph) * 3.0)
+    elif name == 'melee':
+        clench = _bump(phase, 0.3, 0.14)
+        flare = _bump(phase, 0.5, 0.2)
+        spine(clip, t, -16 * clench + 8 * flare, wave=4 * flare, phase=t * 9,
+              ribs=12 * clench - 18 * flare, feathers=8 * clench - 14 * flare)
+    elif name == 'inspect':
+        open_ = max(0.0, min(1.0, (t - 1.0) / 0.6)) * (1 - max(0.0, min(1.0, (t - 2.8) / 0.5)))
+        writhe = max(0.0, min(1.0, (t - 5.2) / 0.6)) * (1 - max(0.0, min(1.0, (t - 7.2) / 0.3)))
+        snap = _bump(t, 7.35, 0.18)
+        spine(clip, t, 10 * open_ + 6 * writhe - 20 * snap, wave=12 * writhe + 2, phase=t * 4.5,
+              ribs=-22 * open_ - 16 * writhe + 14 * snap, feathers=-15 * open_ - 10 * writhe + 10 * snap)
+    elif name == 'draw':
+        spine(clip, t, 14 * (1 - phase) - 6 * _bump(phase, 0.55, 0.2), wave=5 * (1 - phase), phase=t * 8,
+              ribs=-20 * (1 - phase), feathers=-14 * (1 - phase))
+    elif name == 'summon':
+        unfurl = max(0.0, min(1.0, (phase - 0.36) / 0.2))
+        clench = _bump(phase, 0.62, 0.08)
+        spine(clip, t, 26 * (1 - unfurl) + 4 - 22 * clench, wave=7 * unfurl * (1 - phase), phase=t * 6,
+              ribs=-40 * (1 - unfurl) + 14 * clench, feathers=-26 * (1 - unfurl) + 10 * clench)
+    elif name == 'run':
+        spine(clip, t, 0, wave=3, phase=t * 9)
+
+
+def build(rig):
+    from clips_common import build as common, summon, merge
+    base = common(rig, SND, extra=_extra, weight=1.0)
+    out = merge(base, _own(rig), keep=('flourish', 'claw_open', 'claw_close'))
+    out = [c for c in out if c.name != 'summon']
+    out.append(summon(rig, SND, 'wing', 2.4, extra=_extra))
     return out

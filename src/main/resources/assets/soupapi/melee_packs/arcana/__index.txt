@@ -2,11 +2,13 @@ assets/arcana/animations/melee/fractured_eye_katana.animation.json
 assets/arcana/animations/melee/lotus_glaive.animation.json
 assets/arcana/animations/melee/orrery_scepter.animation.json
 assets/arcana/animations/melee/raven_claw.animation.json
+assets/arcana/animations/melee/seraph_halo.animation.json
 assets/arcana/animations/melee/spectral_blade.animation.json
 assets/arcana/display/melee/fractured_eye_katana.json
 assets/arcana/display/melee/lotus_glaive.json
 assets/arcana/display/melee/orrery_scepter.json
 assets/arcana/display/melee/raven_claw.json
+assets/arcana/display/melee/seraph_halo.json
 assets/arcana/display/melee/spectral_blade.json
 assets/arcana/geo_models/melee/fractured_eye_katana_geo.json
 assets/arcana/geo_models/melee/fractured_eye_katana_geo.mesh
@@ -16,6 +18,8 @@ assets/arcana/geo_models/melee/orrery_scepter_geo.json
 assets/arcana/geo_models/melee/orrery_scepter_geo.mesh
 assets/arcana/geo_models/melee/raven_claw_geo.json
 assets/arcana/geo_models/melee/raven_claw_geo.mesh
+assets/arcana/geo_models/melee/seraph_halo_geo.json
+assets/arcana/geo_models/melee/seraph_halo_geo.mesh
 assets/arcana/geo_models/melee/spectral_blade_geo.json
 assets/arcana/geo_models/melee/spectral_blade_geo.mesh
 assets/arcana/lang/en_us.json
@@ -59,6 +63,16 @@ assets/arcana/textures/melee/raven_claw_obsidian_s.png
 assets/arcana/textures/melee/raven_claw_s.png
 assets/arcana/textures/melee/raven_claw_spectral.png
 assets/arcana/textures/melee/raven_claw_spectral_s.png
+assets/arcana/textures/melee/seraph_halo.png
+assets/arcana/textures/melee/seraph_halo_dark_metal.png
+assets/arcana/textures/melee/seraph_halo_dark_metal_s.png
+assets/arcana/textures/melee/seraph_halo_molten.png
+assets/arcana/textures/melee/seraph_halo_molten_s.png
+assets/arcana/textures/melee/seraph_halo_obsidian.png
+assets/arcana/textures/melee/seraph_halo_obsidian_s.png
+assets/arcana/textures/melee/seraph_halo_s.png
+assets/arcana/textures/melee/seraph_halo_spectral.png
+assets/arcana/textures/melee/seraph_halo_spectral_s.png
 assets/arcana/textures/melee/spectral_blade.png
 assets/arcana/textures/melee/spectral_blade_dark_metal.png
 assets/arcana/textures/melee/spectral_blade_dark_metal_s.png
@@ -73,5 +87,6 @@ data/arcana/index/melee/fractured_eye_katana.json
 data/arcana/index/melee/lotus_glaive.json
 data/arcana/index/melee/orrery_scepter.json
 data/arcana/index/melee/raven_claw.json
+data/arcana/index/melee/seraph_halo.json
 data/arcana/index/melee/spectral_blade.json
 gunpack.meta.json

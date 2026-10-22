@@ -14,7 +14,7 @@ import numpy as np
 
 import mesh as M
 from geo import Material, Model
-from rig import Rig
+from rig import Rig, shrink
 
 ID = 'spectral_blade'
 NAME = 'Spectral Blade'
@@ -85,8 +85,9 @@ def build():
     ax, ay, aw, ah = _rect('arm')
     m.mats = {'arm': Material('arm', ax, ay, aw, ah, 1)}
     # Held point-up and angled across the view, the way a sword is carried at the ready.
-    rig = Rig(m, grip_eye=(0.38, -0.56, -0.80), blade_dir_eye=(-0.34, 0.86, -0.38),
-              face_normal_eye=(0.22, 0.16, 0.96), shoulder_eye=(0.36, -0.75, 0.32))
+    # Held like the knives: pointed forward and across, the flat of the blade toward you.
+    rig = Rig(m, grip_eye=(0.22, -0.42, -0.58), blade_dir_eye=(-0.58, 0.46, -0.67),
+              face_normal_eye=(0.25, 0.62, 0.74), shoulder_eye=(0.50, -1.10, -0.10))
     G = rig.G
     groups = {}
 
@@ -216,6 +217,8 @@ def build():
             parent = bone
             a = b
 
+    # Built at the size of the art, held at the size of a hand: see rig.shrink.
+    shrink(m, groups, rig, 0.48)
     for meshes in groups.values():
         for mesh in meshes:
             ATLAS.apply(mesh)
@@ -224,7 +227,6 @@ def build():
 
 PROFILE = {
     # Where the blade sits in the hand out of the box; the sliders still override it.
-    'placement': [36, 66, 22, -30, 0, 0, 0, 0],
     'profile': 'spectral_blade',
     'trail': [0.35, 0.9, 1.0],
     'trail2': [0.85, 0.95, 1.0],

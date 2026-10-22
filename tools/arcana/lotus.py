@@ -9,7 +9,7 @@ import math
 
 import mesh as M
 from geo import Material, Model
-from rig import Rig
+from rig import Rig, shrink
 
 ID = 'lotus_glaive'
 NAME = 'Nine-Veil Lotus'
@@ -72,8 +72,9 @@ def build():
     m = Model(TEX, TEX, seed=23)
     ax, ay, aw, ah = _rect('arm')
     m.mats = {'arm': Material('arm', ax, ay, aw, ah, 1)}
-    rig = Rig(m, grip_eye=(0.38, -0.58, -0.82), blade_dir_eye=(-0.30, 0.88, -0.37),
-              face_normal_eye=(0.20, 0.16, 0.97), shoulder_eye=(0.36, -0.75, 0.32))
+    rig = Rig(m, grip_eye=(0.24, -0.44, -0.56), blade_dir_eye=(-0.48, 0.74, -0.47),
+              face_normal_eye=(0.22, 0.26, 0.94), shoulder_eye=(0.50, -1.10, -0.10),
+              left_shoulder_eye=(-0.44, -1.10, -0.10), left_grip_local=(0, -3.9, 0))
     G = rig.G
     groups = {}
 
@@ -161,6 +162,8 @@ def build():
         mesh.translate(0, HEAD + 1.1, 0)
     part('heart_illuminated', *heart)
 
+    # Built at the size of the art, held at the size of a hand: see rig.shrink.
+    shrink(m, groups, rig, 0.42)
     for meshes in groups.values():
         for mesh in meshes:
             ATLAS.apply(mesh)
@@ -168,7 +171,6 @@ def build():
 
 
 PROFILE = {
-    'placement': [46, 40, 22, -26, 0, 0, 0, 0],
     'profile': 'lotus_glaive',
     'petals': PETALS,
     'summon': True,

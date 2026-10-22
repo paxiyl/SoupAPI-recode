@@ -74,7 +74,31 @@ public enum SkyStyle {
     /** Pastel pink-and-blue cloudscape, with eyes, doors and a stairway floating in it. */
     DREAMCORE,
     /** Violet and pink clouds, and a vast pale face in them that breathes and blinks. */
-    DREAM;
+    DREAM,
+
+    // ---- after the layers ------------------------------------------------------------------
+    /** White and gold: great halos turning overhead and shafts of light fanning down from them. */
+    HEAVEN_GATE,
+    /** A crimson sky and a vast red sun on the horizon, a black disc sliding across it. */
+    BLOOD_SUN,
+    /** Black sky, a red horizon, and a colossal crown of fire hanging overhead, shedding ash. */
+    HERESY_CROWN,
+    /** Black and terminal green: a wireframe floor, rings pulsing out, a beam sweeping round. */
+    CYBER_PULSE,
+    /** A slate sky churning in bands, sheets of rain and forks of lightning. */
+    TEMPEST,
+
+    // ---- and further out -------------------------------------------------------------------
+    /** A black hole low in the sky: a glowing accretion disc, a photon ring, the dark at the middle. */
+    BLACK_HOLE,
+    /** A spiral galaxy wheeling overhead, its arms thick with stars. */
+    GALAXY,
+    /** A great moon broken into pieces, the fragments slowly drifting apart round it. */
+    SHATTERED_MOON,
+    /** Giant neon rings hung at angles across the sky, turning, over a glowing horizon. */
+    NEON_HALO,
+    /** Gold haze over everything, a pale sun throwing long rays, sand streaming past. */
+    GOLDEN_HAZE;
 
     /**
      * True for the styles whose identity is their own colours (fire, blood, grey overcast); the
@@ -89,6 +113,41 @@ public enum SkyStyle {
             case SUNSET:
             case DREAMCORE:
             case DREAM:
+            case HEAVEN_GATE:
+            case BLOOD_SUN:
+            case HERESY_CROWN:
+            case CYBER_PULSE:
+            case TEMPEST:
+            case BLACK_HOLE:
+            case SHATTERED_MOON:
+            case GOLDEN_HAZE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * True for the skies that are a scene of their own - a sun on the horizon, a hole in the sky,
+     * a crown of fire - where vanilla's blocky cloud layer drifting across the front of it would
+     * just look pasted on.
+     */
+    public boolean hidesClouds() {
+        switch (this) {
+            case SHATTERED_GLASS:
+            case HEAVEN_GATE:
+            case BLOOD_SUN:
+            case HERESY_CROWN:
+            case CYBER_PULSE:
+            case TEMPEST:
+            case BLACK_HOLE:
+            case GALAXY:
+            case SHATTERED_MOON:
+            case NEON_HALO:
+            case GOLDEN_HAZE:
+            case VOID_ENERGY:
+            case DIMENSIONAL_RIFT:
+            case ECLIPSE:
                 return true;
             default:
                 return false;
@@ -108,6 +167,10 @@ public enum SkyStyle {
             case SHATTERED_GLASS:
             case VOID_ENERGY:
             case CYBERPUNK:
+            case BLACK_HOLE:
+            case GALAXY:
+            case SHATTERED_MOON:
+            case HERESY_CROWN:
                 return true;
             default:
                 return false;

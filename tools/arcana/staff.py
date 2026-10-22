@@ -16,18 +16,22 @@ import numpy as np
 
 import mesh as M
 from geo import Model
-from rig import Rig
+from rig import Rig, shrink
 
 ID = 'fractured_eye_katana'
 NAME = 'The Weeping Eye'
-TEX = 256
+TEX = 512
 
 # How many eyes ride the tendrils, plus the great eye in the head.
 TENDRILS = 14
 
 MATERIALS = ['steel', 'steel_dark', 'vein_red', 'vein_blue', 'sclera', 'iris',
-             'pupil', 'gem_red', 'blood', 'rune']
-EMISSIVE = {'iris', 'gem_red'}
+             'pupil', 'gem_red', 'blood', 'rune', 'gold', 'lid', 'fang',
+             'iris_cyan', 'iris_violet', 'iris_amber', 'iris_green']
+EMISSIVE = {'iris', 'gem_red', 'iris_cyan', 'iris_violet', 'iris_amber', 'iris_green'}
+# The tendril eyes are not all the same eye: each takes one of these, so the crown reads as a
+# crowd of different things looking at you rather than one eye repeated.
+TENDRIL_IRISES = ('iris', 'iris_cyan', 'iris_violet', 'iris_amber', 'iris_green')
 
 
 def _star_outline(points=4, outer=7.4, inner=2.6, waist=0.42):
@@ -83,6 +87,54 @@ def _tendril(parts, bones, index, root, direction, length, curl, mats, eye_mater
     return path[-1], M.norm(path[-1] - path[-4])
 
 
+def _lids(radius, material, lashes=False, look=(0, 0, 1), detail=1.0):
+    """An upper and a lower lid round an eyeball of `radius` looking along `look`.
+
+    Each lid is a cap of a slightly larger sphere, so between them they cover everything but an
+    almond across the front of the eye - which is what stops an eyeball reading as a ball with a
+    sticker on it. The great eye also gets a row of lashes along its upper lid.
+    """
+    r = radius * 1.07
+    out = []
+    for upper, reach in ((True, 58), (False, 62)):
+        rows = max(4, int(8 * detail))
+        profile = []
+        for i in range(rows + 1):
+            th = math.radians(reach * i / rows)
+            profile.append((math.sin(th) * r, math.cos(th) * r))
+        cap = M.lathe(profile, max(8, int(16 * detail)), material, closed_top=False).smooth()
+        if not upper:
+            cap.rotate(M.v3(1, 0, 0), 180)
+        # Tip the caps toward the front a little, so the almond opens toward the look direction.
+        cap.rotate(M.v3(1, 0, 0), -14 if upper else 14)
+        out.append(cap)
+        if upper and lashes:
+            th = math.radians(reach)
+            for k in range(9):
+                az = math.radians(-60 + 120 * k / 8)
+                base = M.v3(math.sin(th) * r * math.sin(az), math.cos(th) * r, math.sin(th) * r * math.cos(az))
+                base = _rot_x(base, -14)
+                out_dir = M.norm(base + M.v3(0, 0.6, 0.4))
+                lash = M.tube(M.catmull([base, base + out_dir * radius * 0.22,
+                                         base + out_dir * radius * 0.36 + M.v3(0, radius * 0.08, 0)], 6),
+                              [radius * 0.035, radius * 0.006], 4, 'steel_dark')
+                out.append(lash)
+    d = M.norm(np.asarray(look, dtype=float))
+    up = M.v3(0, 0, 1)
+    axis = np.cross(up, d)
+    if np.linalg.norm(axis) > 1e-6:
+        angle = math.degrees(math.acos(max(-1.0, min(1.0, float(np.dot(up, d))))))
+        for mesh in out:
+            mesh.rotate(axis, angle)
+    return out
+
+
+def _rot_x(p, degrees):
+    a = math.radians(degrees)
+    c, s_ = math.cos(a), math.sin(a)
+    return M.v3(p[0], p[1] * c - p[2] * s_, p[1] * s_ + p[2] * c)
+
+
 ATLAS = M.Atlas(TEX)
 ATLAS.pack(MATERIALS + ['arm'])
 
@@ -90,21 +142,21 @@ FINISHES = ['', 'obsidian', 'molten', 'spectral', 'dark_metal']
 
 # Each finish restates only what it changes; the rest is the weapon as drawn in the art.
 PALETTES = {
-    '':           {'steel': (0.46, 0.47, 0.52), 'dark': (0.16, 0.16, 0.19),
-                   'red': (0.42, 0.10, 0.12), 'blue': (0.16, 0.34, 0.44),
-                   'iris': (0.85, 0.12, 0.14), 'gem': (0.55, 0.05, 0.14)},
-    'obsidian':   {'steel': (0.20, 0.20, 0.24), 'dark': (0.07, 0.07, 0.09),
-                   'red': (0.30, 0.06, 0.10), 'blue': (0.10, 0.22, 0.32),
-                   'iris': (0.70, 0.10, 0.30), 'gem': (0.35, 0.04, 0.18)},
-    'molten':     {'steel': (0.38, 0.28, 0.20), 'dark': (0.14, 0.09, 0.07),
-                   'red': (0.62, 0.16, 0.05), 'blue': (0.40, 0.18, 0.05),
-                   'iris': (1.00, 0.45, 0.08), 'gem': (0.80, 0.22, 0.04)},
-    'spectral':   {'steel': (0.42, 0.52, 0.58), 'dark': (0.12, 0.18, 0.22),
-                   'red': (0.18, 0.42, 0.50), 'blue': (0.22, 0.58, 0.70),
-                   'iris': (0.35, 0.90, 1.00), 'gem': (0.20, 0.60, 0.75)},
-    'dark_metal': {'steel': (0.30, 0.31, 0.34), 'dark': (0.10, 0.10, 0.12),
-                   'red': (0.34, 0.10, 0.14), 'blue': (0.14, 0.24, 0.32),
-                   'iris': (0.72, 0.16, 0.20), 'gem': (0.42, 0.06, 0.14)},
+    '':           {'steel': (0.30, 0.30, 0.36), 'dark': (0.09, 0.08, 0.11), 'gold': (0.96, 0.72, 0.28),
+                   'red': (0.62, 0.06, 0.12), 'blue': (0.30, 0.10, 0.48),
+                   'iris': (1.00, 0.16, 0.10), 'gem': (0.85, 0.04, 0.16), 'lid': (0.55, 0.20, 0.24)},
+    'obsidian':   {'steel': (0.14, 0.13, 0.18), 'dark': (0.05, 0.04, 0.07), 'gold': (0.62, 0.42, 0.85),
+                   'red': (0.42, 0.04, 0.22), 'blue': (0.22, 0.06, 0.40),
+                   'iris': (0.85, 0.20, 1.00), 'gem': (0.55, 0.06, 0.70), 'lid': (0.30, 0.12, 0.30)},
+    'molten':     {'steel': (0.28, 0.18, 0.12), 'dark': (0.10, 0.05, 0.03), 'gold': (1.00, 0.62, 0.15),
+                   'red': (0.85, 0.22, 0.04), 'blue': (0.55, 0.12, 0.02),
+                   'iris': (1.00, 0.55, 0.08), 'gem': (1.00, 0.30, 0.04), 'lid': (0.55, 0.22, 0.10)},
+    'spectral':   {'steel': (0.48, 0.58, 0.66), 'dark': (0.12, 0.18, 0.24), 'gold': (0.75, 0.95, 1.00),
+                   'red': (0.16, 0.55, 0.70), 'blue': (0.32, 0.30, 0.85),
+                   'iris': (0.35, 0.95, 1.00), 'gem': (0.25, 0.75, 0.95), 'lid': (0.30, 0.42, 0.55)},
+    'dark_metal': {'steel': (0.22, 0.22, 0.25), 'dark': (0.06, 0.06, 0.07), 'gold': (0.70, 0.66, 0.58),
+                   'red': (0.50, 0.06, 0.08), 'blue': (0.20, 0.10, 0.26),
+                   'iris': (0.95, 0.12, 0.16), 'gem': (0.60, 0.04, 0.10), 'lid': (0.32, 0.14, 0.16)},
 }
 
 
@@ -114,16 +166,23 @@ def paint_atlas(finish):
     p = PALETTES.get(finish or '', PALETTES[''])
     c = paint.Canvas(TEX, TEX)
     t = pm.tile
-    t(c, ATLAS, 'steel', TEX, pm.metal, p['steel'], 3)
+    t(c, ATLAS, 'steel', TEX, pm.metal, p['steel'], 3, polish=0.75, scratches=0.35)
     t(c, ATLAS, 'steel_dark', TEX, pm.metal, p['dark'], 4, polish=0.3)
-    t(c, ATLAS, 'vein_red', TEX, pm.sinew, p['red'], 5, glow=0.08)
-    t(c, ATLAS, 'vein_blue', TEX, pm.sinew, p['blue'], 6, glow=0.08)
-    t(c, ATLAS, 'sclera', TEX, pm.flesh, (0.88, 0.80, 0.78), (0.55, 0.10, 0.12), 7)
-    t(c, ATLAS, 'iris', TEX, pm.iris, (1.0, 0.85, 0.7), p['iris'], 8)
+    t(c, ATLAS, 'gold', TEX, pm.metal, p['gold'], 13, polish=0.95, scratches=0.15, glow=0.12)
+    t(c, ATLAS, 'vein_red', TEX, pm.sinew, p['red'], 5, glow=0.28, wet=0.75)
+    t(c, ATLAS, 'vein_blue', TEX, pm.sinew, p['blue'], 6, glow=0.22, wet=0.7)
+    t(c, ATLAS, 'sclera', TEX, pm.flesh, (0.94, 0.88, 0.82), (0.75, 0.06, 0.10), 7)
+    t(c, ATLAS, 'lid', TEX, pm.sinew, p['lid'], 14, wet=0.55)
+    t(c, ATLAS, 'fang', TEX, pm.metal, (0.92, 0.88, 0.78), 15, polish=0.4, scratches=0.6)
+    t(c, ATLAS, 'iris', TEX, pm.iris, (1.0, 0.92, 0.55), p['iris'], 8)
+    t(c, ATLAS, 'iris_cyan', TEX, pm.iris, (0.9, 1.0, 1.0), (0.05, 0.75, 0.95), 16)
+    t(c, ATLAS, 'iris_violet', TEX, pm.iris, (1.0, 0.85, 1.0), (0.55, 0.12, 0.95), 17)
+    t(c, ATLAS, 'iris_amber', TEX, pm.iris, (1.0, 1.0, 0.75), (1.0, 0.55, 0.05), 18)
+    t(c, ATLAS, 'iris_green', TEX, pm.iris, (0.9, 1.0, 0.8), (0.2, 0.9, 0.35), 19)
     paint.flat(c, *_rect('pupil'), (0.03, 0.02, 0.03), seed=9)
     t(c, ATLAS, 'gem_red', TEX, pm.stone, p['gem'], 10)
     t(c, ATLAS, 'blood', TEX, pm.liquid, (0.33, 0.03, 0.05), 11)
-    t(c, ATLAS, 'rune', TEX, pm.runes, p['steel'], p['iris'], 12)
+    t(c, ATLAS, 'rune', TEX, pm.runes, p['dark'], p['gold'], 12, glow=0.8)
     paint.flat(c, *_rect('arm'), (0.55, 0.42, 0.34), seed=1)
     return c
 
@@ -139,9 +198,12 @@ def build():
     ax, ay, aw, ah = _rect('arm')
     m.mats = {'arm': Material('arm', ax, ay, aw, ah, 1)}
     # Held low and to the right, the head up and away: a staff is carried, not pointed.
-    rig = Rig(m, grip_eye=(0.34, -0.52, -0.70), blade_dir_eye=(-0.26, 0.92, -0.28),
-              face_normal_eye=(0.2, 0.18, 0.96), shoulder_eye=(0.36, -0.75, 0.32),
-              left_shoulder_eye=(-0.30, -0.80, 0.30), left_grip_local=(0, -5.5, 0))
+    # Held like the knives in the delta pack: the hand low and right but well inside the frame,
+    # the arm a long diagonal from the corner, the weapon carried across the body and pointed at
+    # what you are looking at. Two hands, the left lower on the shaft.
+    rig = Rig(m, grip_eye=(0.24, -0.44, -0.56), blade_dir_eye=(-0.50, 0.74, -0.45),
+              face_normal_eye=(0.22, 0.28, 0.93), shoulder_eye=(0.50, -1.10, -0.10),
+              left_shoulder_eye=(-0.44, -1.10, -0.10), left_grip_local=(0, -3.6, 0))
     G = rig.G
     groups = {}
 
@@ -195,6 +257,30 @@ def build():
         brow = M.tube(M.catmull([(side * 2.2, 2.4, 0.4), (side * 5.0, 2.0, 0.5),
                                  (side * 7.4, 0.4, 0.3)], 18), [0.52, 0.34, 0.05], 6, 'steel')
         head.append(brow.smooth())
+    # A gold rim chased round the whole star, and a filigree curl on each long point.
+    outline = _star_outline()
+    rim_path = [M.v3(x, y, 0.34) for (x, y) in outline] + [M.v3(outline[0][0], outline[0][1], 0.34)]
+    head.append(M.tube(M.catmull(rim_path, 96, closed=False), 0.13, 5, 'gold').smooth())
+    for i in range(4):
+        a = -math.pi / 2 + i / 4 * math.tau
+        reach = 7.4 * (1.35 if i % 2 == 0 else 1.0) * 0.62
+        curl = M.scroll(1.3, 1.2, 0.18, 0.17, 'gold', 22, plane=('x', 'y'))
+        curl.rotate(M.v3(0, 0, 1), math.degrees(a))
+        curl.translate(math.cos(a) * reach, math.sin(a) * reach, 0.42)
+        head.append(curl)
+    # Fangs round the socket, all pointing in at the eye.
+    for k in range(12):
+        a = k / 12 * math.tau
+        fang = M.lathe([(0.0, 0.0), (0.22, 0.05), (0.14, 0.5), (0.0, 0.85)], 7, 'fang', closed_bottom=True)
+        fang.rotate(M.v3(0, 0, 1), math.degrees(a) + 90)
+        fang.translate(math.cos(a) * 3.25, math.sin(a) * 3.25, 0.55)
+        head.append(fang.smooth())
+    # Blood strands hanging off the bottom of the plate.
+    for k, (dx, length) in enumerate(((-1.6, 4.2), (0.4, 5.6), (2.2, 3.4))):
+        strand = M.ribbon(M.catmull([M.v3(dx, -2.6, 0.2), M.v3(dx + 0.25, -2.6 - length * 0.5, 0.35),
+                                     M.v3(dx - 0.1, -2.6 - length, 0.3)], 12),
+                          0.32, 'blood', thickness=0.05, twist=0.3, taper=0.7)
+        head.append(strand)
     for mesh in head:
         mesh.translate(G[0], G[1] + 15.5, G[2])
     part('head', *head)
@@ -212,9 +298,10 @@ def build():
         veins.append(M.tube(M.catmull([start, mid, end], 10), [0.1, 0.07, 0.03], 5, 'vein_red').smooth())
     pupil = M.ellipsoid(0.22, 1.05, 0.16, 10, 8, 'pupil').smooth()
     pupil.translate(0, 0, 2.62 * 0.62 + 0.12)
-    for mesh in [ball] + veins:
+    lids = _lids(2.6, 'lid', lashes=True)
+    for mesh in [ball] + veins + lids:
         mesh.translate(G[0], G[1] + 15.5, G[2])
-    part('eye_0', ball, *veins)
+    part('eye_0', ball, *veins, *lids)
     for mesh in (iris, pupil):
         mesh.translate(G[0], G[1] + 15.5, G[2])
     part('eye_0_iris_illuminated', iris, pupil)
@@ -248,12 +335,33 @@ def build():
         m.bone(eye_bone, cluster, (centre[0], centre[1], centre[2]))
         m.bone(iris_bone, eye_bone, (centre[0], centre[1], centre[2]))
         r = 0.62 + 0.24 * (1 - abs(spread))
-        ball, iris = M.eyeball(r, 'sclera', 'iris', look=(facing[0], facing[1], facing[2] + 0.6), iris=0.6)
+        look = (facing[0], facing[1], facing[2] + 0.6)
+        ball, iris = M.eyeball(r, 'sclera', TENDRIL_IRISES[t % len(TENDRIL_IRISES)], look=look, iris=0.6)
+        lid = _lids(r, 'lid', lashes=False, look=look, detail=0.55)
         ball.translate(centre)
         iris.translate(centre)
-        part(eye_bone, ball)
+        for mesh in lid:
+            mesh.translate(centre)
+        part(eye_bone, ball, *lid)
         part(iris_bone, iris)
         eye_index += 1
+
+    # ---- three eyes in orbit about the head ----------------------------------------------------
+    for k in range(3):
+        bone = 'orbit_%d' % k
+        m.bone(bone, 'head', (G[0], G[1] + 15.5, G[2]))
+        a = k / 3 * math.tau + 0.4
+        radius = 6.4 + 0.6 * k
+        centre = M.v3(math.cos(a) * radius, math.sin(a) * radius, 1.6 + 0.4 * k)
+        iris_mat = ('iris_cyan', 'iris_violet', 'iris_amber')[k]
+        ball, iris = M.eyeball(0.85, 'sclera', iris_mat, look=(0, 0, 1), iris=0.62)
+        halo = M.torus(1.25, 0.08, 18, 5, 'gold')
+        halo.rotate(M.v3(1, 0, 0), 90)
+        pieces = [ball, iris, halo.smooth()] + _lids(0.85, 'lid', lashes=False, detail=0.55)
+        for mesh in pieces:
+            mesh.translate(centre)
+            mesh.translate(G[0], G[1] + 15.5, G[2])
+        part(bone, *pieces)
 
     # ---- blood ---------------------------------------------------------------------------------
     drops = []
@@ -264,6 +372,8 @@ def build():
         drops.append(drop.smooth())
     part('head', *drops)
 
+    # Built at the size of the art, held at the size of a hand: see rig.shrink.
+    shrink(m, groups, rig, 0.42)
     for meshes in groups.values():
         for mesh in meshes:
             ATLAS.apply(mesh)
@@ -280,7 +390,6 @@ if __name__ == '__main__':
 PROFILE = {
     # Where the staff sits in the hand before the player moves anything. It is a long weapon, so
     # it is pushed further away and down than a blade would be.
-    'placement': [40, 78, 26, -36, 0, 0, 0, 0],
     'profile': 'fractured_eye',
     'eyes': True,
     'summon': True,

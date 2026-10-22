@@ -15,7 +15,7 @@ import numpy as np
 
 import mesh as M
 from geo import Material, Model
-from rig import Rig
+from rig import Rig, shrink
 
 ID = 'raven_claw'
 NAME = 'Raven Claw'
@@ -95,8 +95,12 @@ def build():
     ax, ay, aw, ah = _rect('arm')
     m.mats = {'arm': Material('arm', ax, ay, aw, ah, 1)}
     # Carried claw-up and out to the right, the crescent's opening turned towards the target.
-    rig = Rig(m, grip_eye=(0.36, -0.54, -0.78), blade_dir_eye=(-0.24, 0.90, -0.36),
-              face_normal_eye=(0.18, 0.14, 0.97), shoulder_eye=(0.36, -0.75, 0.32))
+    # Held like the karambit in the delta pack: low in the fist with the hook rising out of it and
+    # reaching forward, its point toward the crosshair. The crescent is turned so you see it three
+    # quarters on - its curve still reads, but it points at what it is going to rake, not off to
+    # the side the way it did when it was held flat to the camera.
+    rig = Rig(m, grip_eye=(0.24, -0.42, -0.56), blade_dir_eye=(-0.46, 0.68, -0.57),
+              face_normal_eye=(0.55, 0.18, 0.82), shoulder_eye=(0.50, -1.10, -0.10))
     G = rig.G
     groups = {}
 
@@ -265,6 +269,8 @@ def build():
                   [0.34, 0.03], 6, 'edge').smooth()
     part('hook', hook, fork)
 
+    # Built at the size of the art, held at the size of a hand: see rig.shrink.
+    shrink(m, groups, rig, 0.5)
     for meshes in groups.values():
         for mesh in meshes:
             ATLAS.apply(mesh)
@@ -274,7 +280,6 @@ def build():
 PROFILE = {
     # Where the claw sits in the hand out of the box: far enough out that the crescent clears the
     # crosshair, low enough that the roses are not in the way. The sliders still override it.
-    'placement': [42, 66, 24, -30, 0, 0, 0, 0],
     'profile': 'raven_claw',
     'spine': SEGMENTS,
     'trail': [0.3, 0.95, 1.0],

@@ -1100,5 +1100,86 @@
         "stream": false
       }
     ]
+  },
+  "melee.seraph_halo.draw": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/draw",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.swing_1": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/swing_1",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.swing_2": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/swing_2",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.swing_3": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/swing_3",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.thrust": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/thrust",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.flourish": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/flourish",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.inspect": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/inspect",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.put_away": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/put_away",
+        "stream": false
+      }
+    ]
+  },
+  "melee.seraph_halo.summon": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/seraph_halo/summon",
+        "stream": false
+      }
+    ]
   }
 }

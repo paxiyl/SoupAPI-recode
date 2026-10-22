@@ -37,6 +37,8 @@ def _spin(clip, name, t, phase, scale=1.0, flare=0.0):
 
 
 def extra(clip, name, t, phase):
+    if int(round(t * 20)) % 2:
+        return
     if name == 'melee':
         # The rings race on the cut and the star flares with it.
         kick = max(0.0, 1.0 - abs(phase - 0.45) * 3.0)
@@ -54,4 +56,5 @@ def extra(clip, name, t, phase):
 
 
 def build(rig):
-    return common(rig, SND, extra, idle_length=6.0, weight=1.15)
+    from clips_common import summon
+    return common(rig, SND, extra, idle_length=6.0, weight=1.15) + [summon(rig, SND, 'bloom', 2.6, extra=extra)]

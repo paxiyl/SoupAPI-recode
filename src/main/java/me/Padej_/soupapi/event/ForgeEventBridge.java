@@ -223,6 +223,7 @@ public final class ForgeEventBridge {
         hud.begin(event.partialTicks, context);
 
         guard("BetterHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> me.Padej_.soupapi.render.BetterHudRenderer.render(context));
+        guard("CrosshairVanilla", me.Padej_.soupapi.modules.Crosshair::syncVanilla);
         guard("Crosshair", me.Padej_.soupapi.utils.Palette.Element.CROSSHAIR, () -> me.Padej_.soupapi.modules.Crosshair.render(context));
         guard("GradientColors", () -> me.Padej_.soupapi.render.GradientColors.tick());
         guard("PotionsHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> {

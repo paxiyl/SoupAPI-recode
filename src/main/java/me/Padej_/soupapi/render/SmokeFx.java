@@ -45,6 +45,17 @@ public final class SmokeFx extends ConfigurableModule {
 
     private static final ResourceLocation SMOKE_ATLAS = new ResourceLocation("soupapi", "textures/vfx/smoke_atlas.png");
     private static final ResourceLocation EDGE_ATLAS = new ResourceLocation("soupapi", "textures/vfx/smoke_edge_atlas.png");
+    /**
+     * The puffs: a ray-marched, self-shadowed billow, four shapes by sixteen ages, in an 8 x 8 grid
+     * (tools/textures/smoke_volume.py). Played forward over each puff's life, so smoke churns and
+     * thins as it rises instead of being one picture growing and fading.
+     */
+    private static final ResourceLocation VOLUME = new ResourceLocation("soupapi", "textures/vfx/smoke_volume.png");
+    /** Its sunlit shell alone, same layout, for the additive rim pass. */
+    private static final ResourceLocation VOLUME_EDGE = new ResourceLocation("soupapi", "textures/vfx/smoke_volume_edge.png");
+    private static final int FLIP_FRAMES = 16;
+    /** Which kind of smoke the current batch is drawing: the volume puffs, or the flat wisps. */
+    private static boolean volumePass = true;
     public static final ResourceLocation FX_ATLAS = new ResourceLocation("soupapi", "textures/vfx/fx_atlas.png");
     public static final ResourceLocation RUNE_RING_0 = new ResourceLocation("soupapi", "textures/vfx/rune_ring_0.png");
     public static final ResourceLocation RUNE_RING_1 = new ResourceLocation("soupapi", "textures/vfx/rune_ring_1.png");
@@ -621,20 +632,28 @@ public final class SmokeFx extends ConfigurableModule {
             if (sortedCount > 0) {
                 // Pass 1: the smoke itself, back to front, normal alpha blending.
                 GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                mc.getTextureManager().bindTexture(SMOKE_ATLAS);
-                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-                for (int i = 0; i < sortedCount; i++) {
-                    P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
-                    float a = p.opacity(pt) * p.alpha * opacity;
-                    if (a <= 0.004f) continue;
-                    // Fully settled smoke is left to the fragment pass, unless that is switched
-                    // off - in which case it still draws here, lying flat.
-                    float settled = p.settle(pt);
-                    if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
-                    smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, p.r, p.g, p.b,
-                            a * (1f - settled * 0.35f), settled);
+                // Two batches, one texture each: the volume puffs, then the flat wisps.
+                for (int pass = 0; pass < 2; pass++) {
+                    volumePass = pass == 0;
+                    mc.getTextureManager().bindTexture(volumePass ? VOLUME : SMOKE_ATLAS);
+                    buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+                    for (int i = 0; i < sortedCount; i++) {
+                        P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
+                        float a = p.opacity(pt) * p.alpha * opacity;
+                        if (a <= 0.004f) continue;
+                        // Fully settled smoke is left to the fragment pass, unless that is switched
+                        // off - in which case it still draws here, lying flat.
+                        float settled = p.settle(pt);
+                        if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
+                        // Settling smoke fades out into the shards drawn for it below rather
+                        // than being squashed flat: a volume sprite pressed into a plane reads
+                        // as a dark lens hanging in the air.
+                        smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, p.r, p.g, p.b,
+                                a * (1f - settled), 0f);
+                    }
+                    tessellator.draw();
                 }
-                tessellator.draw();
+                volumePass = true;
 
                 // Pass 1b: what has settled, as flat fragments lying on the surface.
                 if (CONFIG.smokeGroundShards) {
@@ -659,19 +678,23 @@ public final class SmokeFx extends ConfigurableModule {
                 // Pass 2: the rim light, additive, in the accent colour.
                 if (edges) {
                     GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-                    mc.getTextureManager().bindTexture(EDGE_ATLAS);
-                    buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-                    for (int i = 0; i < sortedCount; i++) {
-                        P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
-                        float a = p.opacity(pt) * p.edge * glow * opacity * 0.6f;
-                        if (a <= 0.004f) continue;
-                        float settled = p.settle(pt);
-                        if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
-                        float[] ac = accent(p);
-                        smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, ac[0], ac[1], ac[2],
-                                Math.min(1f, a) * (1f - settled), settled);
+                    for (int pass = 0; pass < 2; pass++) {
+                        volumePass = pass == 0;
+                        mc.getTextureManager().bindTexture(volumePass ? VOLUME_EDGE : EDGE_ATLAS);
+                        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+                        for (int i = 0; i < sortedCount; i++) {
+                            P p = POOL.get((int) (sortKeys[i] & 0xFFFFFFFFL));
+                            float a = p.opacity(pt) * p.edge * glow * opacity * 0.6f;
+                            if (a <= 0.004f) continue;
+                            float settled = p.settle(pt);
+                            if (settled > 0.985f && CONFIG.smokeGroundShards) continue;
+                            float[] ac = accent(p);
+                            smokeQuad(buffer, p, pt, cx, cy, cz, right, up, look, ac[0], ac[1], ac[2],
+                                    Math.min(1f, a) * (1f - settled), 0f);
+                        }
+                        tessellator.draw();
                     }
-                    tessellator.draw();
+                    volumePass = true;
                 }
             }
 
@@ -805,21 +828,32 @@ public final class SmokeFx extends ConfigurableModule {
         double x = p.px + (p.x - p.px) * pt - cx;
         double y = p.py + (p.y - p.py) * pt - cy;
         double z = p.pz + (p.z - p.pz) * pt - cz;
+        boolean wisp = p.kind == Kind.WISP;
+        // Everything is drawn from the volume flipbook now; the flat streak sprite read as exactly
+        // the "2D smoke" it was. The second batch is left in place but has nothing to draw.
+        if (!volumePass) return;
         float half = p.size(pt) * 0.5f;
         float u0, v0, u1, v1;
         float[] ax = SCRATCH_A, ay = SCRATCH_B;
-        boolean wisp = p.kind == Kind.WISP;
+        int frame = flipFrame(p, pt);
         if (wisp) {
-            // Wisps lie along their own motion, projected onto the view plane.
-            int w = p.variant & 1;
-            u0 = w * 0.25f; u1 = u0 + 0.25f; v0 = 0.5f; v1 = 0.75f;
-            if (!motionAxes(p, look, right, up, half * p.stretch, half * 0.45f, ax, ay)) {
-                rotated(right, up, p.rot, half * p.stretch, half * 0.45f, ax, ay);
+            // Wisps are thinner, older billows drawn out a little along their own motion - a
+            // streamer of the same smoke, not a brush stroke.
+            half *= 1.2f;
+            float stretch = Math.min(1.7f, Math.max(1f, p.stretch * 0.6f));
+            float[] uv = flipUV(p.variant & 3, Math.min(FLIP_FRAMES - 1, frame + 4));
+            u0 = uv[0]; v0 = uv[1]; u1 = uv[2]; v1 = uv[3];
+            if (!motionAxes(p, look, right, up, half * stretch, half * 0.8f, ax, ay)) {
+                rotated(right, up, 14f * (float) Math.sin(p.seed * 3.1f), half * stretch, half * 0.8f, ax, ay);
             }
         } else {
-            int v = p.variant & 3;
-            u0 = v * 0.25f; u1 = u0 + 0.25f; v0 = 0f; v1 = 0.5f;
-            rotated(right, up, p.rot + (float) Math.sin(p.seed + p.age * 0.02f) * 6f, half, half, ax, ay);
+            // The volume sprite carries its own light - sunlit on top - so it only rocks a little
+            // rather than spinning, or the light would end up underneath. It also sits inside its
+            // cell with a margin, so it is drawn larger to cover the same ground.
+            half *= 1.38f;
+            float[] uv = flipUV(p.variant & 3, frame);
+            u0 = uv[0]; v0 = uv[1]; u1 = uv[2]; v1 = uv[3];
+            rotated(right, up, 14f * (float) Math.sin(p.seed * 3.1f + p.age * 0.03f), half, half, ax, ay);
         }
         if (settled > 0.002f) flatten(ax, ay, settled, half);
 
@@ -847,13 +881,14 @@ public final class SmokeFx extends ConfigurableModule {
             // Lit from above: a blob sitting high in the cluster catches the light, one slung
             // under it sits in the shadow of the rest. This is what reads as depth.
             float lit = 1f + lobe[1] * 0.42f - 0.06f * i;
-            int cell = wisp ? 0 : ((p.variant + i * 3) & 3);
-            float cu0 = cell * 0.25f, cu1 = cu0 + 0.25f;
-            rotated(right, up, p.rot + i * 47f + (float) Math.sin(p.seed + p.age * 0.02f) * 6f,
+            // Each lobe is a different billow, a frame or two older or younger than the core, so
+            // the cluster churns as a whole rather than as copies.
+            float[] uv = flipUV((p.variant + i) & 3, Math.max(0, Math.min(FLIP_FRAMES - 1, frame + (i % 3) - 1)));
+            rotated(right, up, (i % 2 == 0 ? 1f : -1f) * i * 9f + 14f * (float) Math.sin(p.seed * 3.1f + p.age * 0.03f),
                     half * scale, half * scale, SCRATCH_C, SCRATCH_D);
             if (settled > 0.002f) flatten(SCRATCH_C, SCRATCH_D, settled, half * scale);
             shadedQuad(buffer, x + ox, y + oy, z + oz, SCRATCH_C, SCRATCH_D,
-                    cu0, v0, cu1, v1, r * lit, g * lit, b * lit, each, p);
+                    uv[0], uv[1], uv[2], uv[3], r * lit, g * lit, b * lit, each, p);
         }
     }
 
@@ -871,6 +906,25 @@ public final class SmokeFx extends ConfigurableModule {
             {0.16f, -0.44f, 0.50f},
             {-0.28f, 0.48f, -0.46f},
     };
+
+    /** Which of the sixteen ages to show: the puff's own life, played straight through. */
+    private static int flipFrame(P p, float pt) {
+        float life = Math.max(1f, p.life);
+        float f = (p.age + pt) / life;
+        return Math.max(0, Math.min(FLIP_FRAMES - 1, (int) (f * FLIP_FRAMES)));
+    }
+
+    private static final float[] FLIP_UV = new float[4];
+
+    /** UVs of one cell of the volume flipbook: shape s occupies rows 2s and 2s+1. */
+    private static float[] flipUV(int shape, int frame) {
+        int row = shape * 2 + frame / 8, col = frame % 8;
+        FLIP_UV[0] = col / 8f;
+        FLIP_UV[1] = row / 8f;
+        FLIP_UV[2] = (col + 1) / 8f;
+        FLIP_UV[3] = (row + 1) / 8f;
+        return FLIP_UV;
+    }
 
     /** How many slices a puff is drawn as; one on the lowest setting, so nothing is slower. */
     private static int volumeSlices() {
@@ -913,7 +967,9 @@ public final class SmokeFx extends ConfigurableModule {
             lx /= len;
             ly /= len;
         }
-        float strength = p.kind == Kind.SMOKE ? 0.45f : 0.25f;
+        // The volume sprites carry their own light now; this only adds a little side-to-side
+        // variation on top, where it used to have to fake all of it.
+        float strength = p.kind == Kind.WISP ? 0.25f : 0.12f;
         float c00 = 1f + (-lx - ly) * strength;
         float c10 = 1f + (lx - ly) * strength;
         float c11 = 1f + (lx + ly) * strength;

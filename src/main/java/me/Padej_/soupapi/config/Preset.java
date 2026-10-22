@@ -409,7 +409,7 @@ public enum Preset {
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLASS;
                 break;
             case LAYER_LUST:
-                look(c, SkyStyle.CYBERPUNK, Ambience.NEON_RAIN, KillEffects.Style.PORTAL);
+                look(c, SkyStyle.NEON_HALO, Ambience.NEON_RAIN, KillEffects.Style.PORTAL);
                 weapon(c);
                 c.rgbMode = Palette.RgbMode.FLOW;
                 c.crosshairStyle = Crosshair.Style.CIRCULAR;
@@ -422,7 +422,7 @@ public enum Preset {
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
                 break;
             case LAYER_WRATH:
-                look(c, SkyStyle.STORM_FRONT, Ambience.RAIN, KillEffects.Style.LIGHTNING);
+                look(c, SkyStyle.TEMPEST, Ambience.RAIN, KillEffects.Style.LIGHTNING);
                 weapon(c);
                 c.landingImpactEnabled = true;
                 c.landingImpactStyle = LandingImpact.Style.SHOCKWAVE;
@@ -430,13 +430,13 @@ public enum Preset {
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.FLOATING;
                 break;
             case LAYER_GREED:
-                look(c, SkyStyle.SPEED_LINES, Ambience.SANDSTORM, KillEffects.Style.RUNIC_CROWN);
+                look(c, SkyStyle.GOLDEN_HAZE, Ambience.SANDSTORM, KillEffects.Style.RUNIC_CROWN);
                 katana(c, MeleeFinish.MOLTEN);
                 c.crosshairStyle = Crosshair.Style.RUNE;
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
                 break;
             case LAYER_HERESY:
-                look(c, SkyStyle.INFERNAL, Ambience.EMBERS, KillEffects.Style.FLAME_PILLAR);
+                look(c, SkyStyle.HERESY_CROWN, Ambience.EMBERS, KillEffects.Style.FLAME_PILLAR);
                 katana(c, MeleeFinish.MOLTEN);
                 c.landingImpactEnabled = true;
                 c.landingImpactStyle = LandingImpact.Style.CRACK;
@@ -444,14 +444,14 @@ public enum Preset {
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
                 break;
             case LAYER_VIOLENCE:
-                look(c, SkyStyle.EMBER_SKY, Ambience.BLOOD_RAIN, KillEffects.Style.MOLTEN_ERUPTION);
+                look(c, SkyStyle.BLOOD_SUN, Ambience.BLOOD_RAIN, KillEffects.Style.MOLTEN_ERUPTION);
                 claw(c, MeleeFinish.DARK_METAL);
                 c.rgbMode = Palette.RgbMode.PULSE;
                 c.crosshairStyle = Crosshair.Style.WEAPON;
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.NEON;
                 break;
             case LAYER_CYBER_GRIND:
-                look(c, SkyStyle.GRID, Ambience.DIGITAL_SNOW, KillEffects.Style.EXPLOSION);
+                look(c, SkyStyle.CYBER_PULSE, Ambience.DIGITAL_SNOW, KillEffects.Style.EXPLOSION);
                 weapon(c);
                 c.meleeOutline = true;
                 c.crosshairStyle = Crosshair.Style.FOUR_SEGMENT;
@@ -459,7 +459,7 @@ public enum Preset {
                 c.skySpeed = 180;
                 break;
             case LAYER_PRIME_SANCTUM:
-                look(c, SkyStyle.RIPPLE, Ambience.GOLD_DUST, KillEffects.Style.SOUL_CONSTELLATION);
+                look(c, SkyStyle.HEAVEN_GATE, Ambience.GOLD_DUST, KillEffects.Style.SOUL_CONSTELLATION);
                 blade(c, MeleeFinish.DEFAULT);
                 c.meleeRunes = true;
                 c.haloEnabled = true;

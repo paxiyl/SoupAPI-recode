@@ -19,8 +19,8 @@ EYES = 17
 def hand_off(c, t0, t1, t2, t3):
     """The left hand drops away between t1 and t2, returning by t3."""
     c.pose(t0, {'lefthand_pos': {'pos': (0, 0, 0)}})
-    c.pose(t1, {'lefthand_pos': {'pos': (0, -22, 6)}})
-    c.pose(t2, {'lefthand_pos': {'pos': (0, -22, 6)}})
+    c.pose(t1, {'lefthand_pos': {'pos': (0, -6, 3)}})
+    c.pose(t2, {'lefthand_pos': {'pos': (0, -6, 3)}})
     c.pose(t3, {'lefthand_pos': {'pos': (0, 0, 0)}})
 
 
@@ -52,7 +52,7 @@ def portal_offset(rig, p_eye, swing_rot, swing_pos):
     return (-t[0], t[1], t[2])
 
 
-def build(rig):
+def _own(rig):
     out = []
 
     # The hold. Two cycles of different lengths are laid over each other - a slow breath at the
@@ -234,4 +234,48 @@ def build(rig):
     away.pose(0.7, {'swing': {'rot': (60, 20, -30), 'pos': (0, -10, 4)}})
     away.sound(0, SND + 'put_away')
     out.append(away)
+    return out
+
+
+STAFF_EYES = 15
+
+
+def _extra(clip, name, t, phase):
+    """The staff's living parts over every clip: the eyes never stop looking about, and the great
+    eye widens on a strike and when the staff is held up to be looked at."""
+    if int(round(t * 20)) % 2:
+        return
+    amount = 0.45 if name in ('inspect', 'melee', 'summon') else 0.28
+    for k in range(STAFF_EYES):
+        off = (amount * math.sin(t * 3.1 + k * 1.7) * (0.6 + 0.4 * math.sin(t * 0.7 + k)),
+               amount * 0.6 * math.sin(t * 2.3 + k * 2.9), 0)
+        clip.key('eye_%d_iris_illuminated' % k, 'position', t, off)
+    wide = 1.0
+    if name == 'melee':
+        wide += 0.3 * max(0.0, 1 - abs(phase - 0.3) * 5)
+    elif name == 'inspect':
+        wide += 0.2 * max(0.0, 1 - abs(phase - 0.65) * 4)
+    elif name == 'summon':
+        wide += 0.45 * max(0.0, 1 - abs(phase - 0.5) * 4)
+    clip.key('eye_0', 'scale', t, (wide, wide * (0.9 + 0.1 * wide), 1.0))
+    # Three small eyes circle the head: one turn per hold loop so the loop is seamless, faster
+    # through a strike, and flung wide when the staff is summoned.
+    rate = 360.0 / 6.0
+    for k in range(3):
+        if name == 'static_idle':
+            turn = 360.0 * t / 6.0 * (1 if k % 2 == 0 else -1) + k * 120
+        else:
+            speed = rate * (2.6 if name == 'melee' else 1.0)
+            turn = speed * t * (1 if k % 2 == 0 else -1) + k * 120
+        clip.key('orbit_%d' % k, 'rotation', t, (0, 0, turn))
+        swell = 1.0 + (0.5 * max(0.0, 1 - abs(phase - 0.5) * 4) if name == 'summon' else 0.0)
+        clip.key('orbit_%d' % k, 'scale', t, (swell, swell, swell))
+
+
+def build(rig):
+    from clips_common import build as common, summon, merge
+    base = common(rig, SND, extra=_extra, weight=1.15)
+    out = merge(base, _own(rig), keep=('flourish', 'melee_5'))
+    out = [c for c in out if c.name != 'summon']
+    out.append(summon(rig, SND, 'eye', 2.6, extra=_extra))
     return out

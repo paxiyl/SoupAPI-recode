@@ -44,7 +44,7 @@ class Clip:
         return out
 
 
-def arc(clip, keys, bones=('swing', 'weapon')):
+def arc(clip, keys, bones=('swing', 'wrist')):
     """Lays a list of `(t, rot_a, rot_b, pos_a)` keys onto two bones and the first bone's position.
 
     Written out this way because every attack in the pack has the same five beats: rest, the wind-up
@@ -58,6 +58,65 @@ def arc(clip, keys, bones=('swing', 'weapon')):
         pos = key[3] if len(key) > 3 else (0, 0, 0)
         clip.pose(t, {bones[0]: {'rot': a, 'pos': pos}, bones[1]: {'rot': b}})
     return clip
+
+
+# ---- dense keys ----------------------------------------------------------------------------
+#
+# The knives in the delta pack are keyed at about twenty-four keys a second: every bone has a curve
+# rather than a handful of poses, which is where their weight comes from - nothing arrives at a pose
+# and stops, everything is always slightly on its way somewhere. Writing that many keys by hand is
+# what a mocap rig is for; here a clip is a function of time instead, and `sample` lays it down.
+
+def sample(clip, t0, t1, fn, rate=20.0):
+    """Keys `fn(t)` - a {bone: {'rot'|'pos'|'scale': (x, y, z)}} - from t0 to t1 at `rate` per second."""
+    n = max(1, int(round((t1 - t0) * rate)))
+    for i in range(n + 1):
+        t = t0 + (t1 - t0) * i / n
+        clip.pose(t, fn(t))
+    return clip
+
+
+def clamp01(x):
+    return 0.0 if x < 0 else (1.0 if x > 1 else x)
+
+
+def smooth(x):
+    x = clamp01(x)
+    return x * x * (3 - 2 * x)
+
+
+def ease_out(x):
+    x = clamp01(x)
+    return 1 - (1 - x) ** 3
+
+
+def ease_in(x):
+    x = clamp01(x)
+    return x ** 3
+
+
+def window(t, a, b):
+    """0 before a, eased to 1 by b."""
+    return smooth((t - a) / max(1e-6, b - a))
+
+
+def spring(x, freq=2.2, damp=4.5):
+    """0 -> 1 with an overshoot that rings down: a catch, a settle, a weapon coming to rest."""
+    import math
+    x = clamp01(x)
+    return 1 - math.exp(-damp * x) * math.cos(freq * math.pi * x) if x < 1 else 1.0
+
+
+def mix(a, b, f):
+    return tuple(a[i] + (b[i] - a[i]) * f for i in range(len(a)))
+
+
+def add(*vs):
+    return tuple(sum(v[i] for v in vs) for i in range(len(vs[0])))
+
+
+def scale(v, k):
+    return tuple(x * k for x in v)
 
 
 def bundle(clips):

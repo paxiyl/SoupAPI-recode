@@ -570,6 +570,104 @@ public final class SkyRenderer extends IRenderHandler {
                 scale(0.6f + 0.4f * I);
                 break;
             }
+            case HEAVEN_GATE: {
+                // Pale blue at the horizon to white-gold overhead, with a glow pooled at the zenith.
+                // Deep blue at the horizon to burning gold overhead, the gate's light pooled there.
+                float h = (float) Math.pow(up, 0.7);
+                out[0] = 0.18f + 0.78f * h;
+                out[1] = 0.32f + 0.48f * h;
+                out[2] = 0.66f - 0.30f * h;
+                add(1f, 0.85f, 0.55f, gauss(1.57f - el, 0.38f) * 0.5f * I);
+                float n = fbm(x * 1.6f + t * 0.02f, y * 2.2f, z * 1.6f);
+                lerpTo(1f, 0.98f, 0.94f, smooth(0.5f, 0.8f, n) * smooth(0.05f, 0.4f, y) * 0.45f);
+                break;
+            }
+            case BLOOD_SUN: {
+                // Crimson overhead, burning orange low down, the haze thickest toward the sun.
+                float h = (float) Math.pow(up, 0.55);
+                out[0] = 0.95f - 0.55f * h;
+                out[1] = 0.32f - 0.28f * h;
+                out[2] = 0.10f - 0.06f * h;
+                float toward = Math.max(0f, dot(x, y, z, BSX, BSY, BSZ));
+                add(1f, 0.45f, 0.12f, (float) Math.pow(toward, 6) * 0.9f * I);
+                float n = fbm(x * 2.4f + t * 0.05f, y * 5f, z * 2.4f);
+                add(0.4f, 0.05f, 0.02f, smooth(0.5f, 0.85f, n) * smooth(0.25f, -0.05f, y) * 0.5f * I);
+                break;
+            }
+            case HERESY_CROWN: {
+                // Near black, a red glow welling up from the horizon, and the crown's light above.
+                out[0] = 0.04f + 0.40f * smooth(0.35f, -0.05f, y);
+                out[1] = 0.01f + 0.06f * smooth(0.35f, -0.05f, y);
+                out[2] = 0.02f;
+                add(1f, 0.35f, 0.08f, gauss(1.57f - el - 0.32f, 0.18f) * 0.35f * I);
+                float n = fbm(x * 2.2f + t * 0.04f, y * 2.2f - t * 0.06f, z * 2.2f);
+                add(0.35f, 0.06f, 0.02f, smooth(0.55f, 0.9f, n) * 0.4f * I);
+                break;
+            }
+            case CYBER_PULSE: {
+                out[0] = 0.0f;
+                out[1] = 0.012f;
+                out[2] = 0.008f;
+                add(0.1f, 1f, 0.35f, gauss(y, 0.05f) * 0.55f * I);
+                add(0.05f, 0.4f, 0.15f, gauss(y, 0.22f) * 0.18f * I);
+                break;
+            }
+            case TEMPEST: {
+                // Slate churning in long bands, lit from inside now and then.
+                float n = fbm(x * 1.8f + t * 0.12f, y * 4.5f, z * 1.8f - t * 0.08f);
+                float n2 = fbm(x * 3.6f - t * 0.2f, y * 7f + 3f, z * 3.6f);
+                float g = 0.10f + 0.20f * smooth(0.3f, 0.8f, n) + 0.06f * n2;
+                out[0] = g * 0.92f;
+                out[1] = g;
+                out[2] = g * 1.12f;
+                float flash = (float) Math.pow(Math.max(0f, MathHelper.sin(t * 0.9f) * MathHelper.sin(t * 2.3f + 1f)), 18);
+                add(0.75f, 0.82f, 1f, flash * smooth(0.4f, 0.9f, n) * 1.2f * I);
+                break;
+            }
+            case BLACK_HOLE: {
+                gradient(new float[]{0.02f, 0.012f, 0.03f}, new float[]{0.005f, 0.004f, 0.012f}, up);
+                float toward = Math.max(0f, dot(x, y, z, BHX, BHY, BHZ));
+                // The glow of the disc spilling into the sky round it.
+                add(1f, 0.55f, 0.2f, (float) Math.pow(toward, 14) * 0.45f * I);
+                float n = fbm(x * 2f + t * 0.01f, y * 2f, z * 2f);
+                add(0.25f, 0.12f, 0.35f, smooth(0.55f, 0.9f, n) * 0.25f * I);
+                break;
+            }
+            case GALAXY: {
+                gradient(dark, mix3(dark, main, 0.08f), up);
+                float n = fbm(x * 2.5f + t * 0.01f, y * 2.5f, z * 2.5f);
+                add(alt, smooth(0.55f, 0.95f, n) * 0.22f * I);
+                add(main, gauss(1.57f - el, 0.5f) * 0.18f * I);
+                break;
+            }
+            case SHATTERED_MOON: {
+                float h = (float) Math.pow(up, 0.7);
+                out[0] = 0.07f - 0.04f * h;
+                out[1] = 0.09f - 0.05f * h;
+                out[2] = 0.20f - 0.10f * h;
+                float toward = Math.max(0f, dot(x, y, z, SMX, SMY, SMZ));
+                add(0.75f, 0.8f, 0.95f, (float) Math.pow(toward, 10) * 0.35f * I);
+                break;
+            }
+            case NEON_HALO: {
+                float h = (float) Math.pow(up, 0.6);
+                gradient(mix3(main, dark, 0.55f), mix3(dark, alt, 0.12f), h);
+                add(main, gauss(y, 0.08f) * 0.9f * I);
+                add(alt, gauss(y - 0.12f, 0.1f) * 0.35f * I);
+                break;
+            }
+            case GOLDEN_HAZE: {
+                float h = (float) Math.pow(up, 0.5);
+                out[0] = 1.0f - 0.25f * h;
+                out[1] = 0.72f - 0.22f * h;
+                out[2] = 0.36f - 0.12f * h;
+                float toward = Math.max(0f, dot(x, y, z, GSX, GSY, GSZ));
+                add(1f, 0.95f, 0.75f, (float) Math.pow(toward, 8) * 0.6f * I);
+                float n = fbm(x * 3f + t * 0.15f, y * 6f, z * 3f - t * 0.1f);
+                add(0.35f, 0.22f, 0.08f, smooth(0.5f, 0.85f, n) * smooth(0.3f, 0f, y) * 0.5f * I);
+                scale(0.75f + 0.25f * I);
+                break;
+            }
             default:
                 out[0] = main[0];
                 out[1] = main[1];
@@ -586,6 +684,14 @@ public final class SkyRenderer extends IRenderHandler {
 
     /** The eclipse sits high in the south-east, fixed. */
     private static final float ECX = 0.45f, ECY = 0.62f, ECZ = -0.64f;
+    /** Where the blood sun sits: low, ahead. */
+    private static final float BSX = 0.20f, BSY = 0.16f, BSZ = -0.97f;
+    /** The black hole: a third of the way up, off to one side. */
+    private static final float BHX = -0.55f, BHY = 0.42f, BHZ = -0.72f;
+    /** The shattered moon. */
+    private static final float SMX = 0.52f, SMY = 0.55f, SMZ = -0.65f;
+    /** The golden haze's sun. */
+    private static final float GSX = -0.30f, GSY = 0.26f, GSZ = -0.92f;
 
     private void gradient(float[] low, float[] high, float f) {
         f = clamp(f);
@@ -809,6 +915,40 @@ public final class SkyRenderer extends IRenderHandler {
                 break;
             case CIRCUIT_SKY:
                 circuitTraces(mc, tessellator, buffer, I);
+                break;
+            case HEAVEN_GATE:
+                heavenGate(mc, tessellator, buffer, I);
+                break;
+            case BLOOD_SUN:
+                bloodSun(mc, tessellator, buffer, I);
+                break;
+            case HERESY_CROWN:
+                fireCrown(mc, tessellator, buffer, I);
+                risingEmbers(mc, tessellator, buffer, I * 0.8f);
+                break;
+            case CYBER_PULSE:
+                cyberPulse(tessellator, buffer, I);
+                break;
+            case TEMPEST:
+                cloudBanks(tessellator, buffer, I * 0.45f, 4);
+                lightning(tessellator, buffer, I);
+                rain(tessellator, buffer, I);
+                break;
+            case BLACK_HOLE:
+                blackHole(mc, tessellator, buffer, I);
+                break;
+            case GALAXY:
+                galaxy(mc, tessellator, buffer, I);
+                break;
+            case SHATTERED_MOON:
+                shatteredMoon(mc, tessellator, buffer, I);
+                break;
+            case NEON_HALO:
+                neonHalos(tessellator, buffer, I);
+                break;
+            case GOLDEN_HAZE:
+                goldenSun(mc, tessellator, buffer, I);
+                speedStreaks(tessellator, buffer, I * 0.6f);
                 break;
             default:
                 break;
@@ -1775,6 +1915,386 @@ public final class SkyRenderer extends IRenderHandler {
         }
         tessellator.draw();
     }
+
+    // ---- the newer skies --------------------------------------------------------------------------
+
+    /**
+     * A ring hung in the sky with its own tilt, rather than facing the viewer: a halo, an
+     * accretion disc, a neon hoop. Centred `dist` out along (dx, dy, dz), lying in the plane of
+     * (ux, uy, uz) and (vx, vy, vz), drawn as quads between an inner and an outer radius. Each
+     * segment's alpha goes through `shade`, which is how a ring flickers, dashes or fades round.
+     */
+    private interface RingShade {
+        float at(float angle);
+    }
+
+    private static void ring3d(WorldRenderer buffer, float cx, float cy, float cz,
+                               float ux, float uy, float uz, float vx, float vy, float vz,
+                               float radius, float width, float[] col, float a, int segments, RingShade shade) {
+        float r0 = radius - width * 0.5f, r1 = radius + width * 0.5f;
+        for (int i = 0; i < segments; i++) {
+            float a0 = (float) (Math.PI * 2 * i / segments), a1 = (float) (Math.PI * 2 * (i + 1) / segments);
+            float k = shade == null ? 1f : shade.at((a0 + a1) * 0.5f);
+            if (k <= 0.003f) continue;
+            float al = clamp(a * k);
+            float c0 = MathHelper.cos(a0), s0 = MathHelper.sin(a0), c1 = MathHelper.cos(a1), s1 = MathHelper.sin(a1);
+            buffer.pos(cx + (ux * c0 + vx * s0) * r0, cy + (uy * c0 + vy * s0) * r0, cz + (uz * c0 + vz * s0) * r0).color(col[0], col[1], col[2], al).endVertex();
+            buffer.pos(cx + (ux * c1 + vx * s1) * r0, cy + (uy * c1 + vy * s1) * r0, cz + (uz * c1 + vz * s1) * r0).color(col[0], col[1], col[2], al).endVertex();
+            buffer.pos(cx + (ux * c1 + vx * s1) * r1, cy + (uy * c1 + vy * s1) * r1, cz + (uz * c1 + vz * s1) * r1).color(col[0], col[1], col[2], al).endVertex();
+            buffer.pos(cx + (ux * c0 + vx * s0) * r1, cy + (uy * c0 + vy * s0) * r1, cz + (uz * c0 + vz * s0) * r1).color(col[0], col[1], col[2], al).endVertex();
+        }
+    }
+
+    /** A unit direction's position on the dome, `dist` out. */
+    private static float[] onDome(float x, float y, float z, float dist) {
+        float len = (float) Math.sqrt(x * x + y * y + z * z);
+        return new float[]{x / len * dist, y / len * dist, z / len * dist};
+    }
+
+    private static final float[] GOLD = {1f, 0.84f, 0.45f};
+    private static final float[] PALE_GOLD = {1f, 0.95f, 0.8f};
+    private static final float[] EMBER = {1f, 0.42f, 0.08f};
+    private static final float[] BLOOD = {0.85f, 0.04f, 0.04f};
+    private static final float[] TERM_GREEN = {0.15f, 1f, 0.4f};
+    private static final float[] RAIN = {0.7f, 0.78f, 0.9f};
+
+    /** Halos turning overhead, one inside another, and shafts of light fanning down off them. */
+    private void heavenGate(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        // The shafts: long tapering bands from the zenith toward the horizon, slowly wheeling.
+        int shafts = 28;
+        for (int i = 0; i < shafts; i++) {
+            float az = i * 6.283f / shafts + t * 0.02f + RAND[i] * 0.08f;
+            float flick = 0.45f + 0.55f * (0.5f + 0.5f * MathHelper.sin(t * 0.6f + i * 1.7f));
+            float low = 0.15f + RAND[i + 40] * 0.25f;
+            for (int k = 0; k < 6; k++) {
+                float e0 = 1.5f - (1.5f - low) * k / 6f, e1 = 1.5f - (1.5f - low) * (k + 1) / 6f;
+                float fade = 1f - k / 6f;
+                bandAE(buffer, az, e0, az, e1, 0.03f + 0.09f * k / 6f, PALE_GOLD, 0.16f * flick * fade * I);
+            }
+        }
+        // The halos: four rings at the top of the sky, each turning, each broken into arcs.
+        for (int ring = 0; ring < 4; ring++) {
+            final int rr = ring;
+            float el = 1.45f - ring * 0.085f;
+            float spin = t * (ring % 2 == 0 ? 0.12f : -0.09f);
+            int steps = 64;
+            for (int sIdx = 0; sIdx < steps; sIdx++) {
+                float a0 = sIdx * 6.283f / steps + spin, a1 = (sIdx + 1) * 6.283f / steps + spin;
+                float dash = (sIdx % (6 + rr)) < 4 + rr ? 1f : 0.15f;
+                bandAE(buffer, a0, el, a1, el, 0.035f + 0.012f * rr, rr == 1 ? PALE_GOLD : GOLD,
+                        (0.75f - rr * 0.12f) * dash * I);
+            }
+        }
+        tessellator.draw();
+        // The gate itself: a white burn at the very top.
+        GlStateManager.enableTexture2D();
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float pulse = 0.85f + 0.15f * MathHelper.sin(t * 0.7f);
+        billboard(buffer, 0.001f, 1f, 0.0f, R * 0.95f, 9f * pulse, t * 2f, 0f, 0f, 1f, 1f, 1f, 0.92f, 0.7f, 0.8f * I);
+        billboard(buffer, 0.001f, 1f, 0.0f, R * 0.95f, 3.4f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 1f, 1f * I);
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+    }
+
+    /** A vast red sun on the horizon with a black disc crossing it, and its corona flaring. */
+    private void bloodSun(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.enableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float breathe = 0.9f + 0.1f * MathHelper.sin(t * 0.5f);
+        billboard(buffer, BSX, BSY, BSZ, R * 0.95f, 24f * breathe, 0f, 0f, 0f, 1f, 1f, 1f, 0.25f, 0.05f, 0.75f * I);
+        billboard(buffer, BSX, BSY, BSZ, R * 0.95f, 12f, 0f, 0f, 0f, 1f, 1f, 1f, 0.45f, 0.12f, 0.9f * I);
+        billboard(buffer, BSX, BSY, BSZ, R * 0.95f, 8.2f, 0f, 0f, 0f, 1f, 1f, 1f, 0.75f, 0.45f, 1f * I);
+        tessellator.draw();
+        // Corona streamers off the rim.
+        mc.getTextureManager().bindTexture(SmokeFx.FX_ATLAS);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        for (int i = 0; i < 18; i++) {
+            float rot = i * 20f + t * 3f + RAND[i] * 15f;
+            float len = 11f + RAND[i + 30] * 6f + 1.5f * MathHelper.sin(t * 1.3f + i);
+            billboardStretched(buffer, BSX, BSY, BSZ, R * 0.95f, len, 0.8f, rot, 0.5f, 0f, 0.75f, 0.25f,
+                    1f, 0.2f, 0.05f, 0.55f * I);
+        }
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+        // The black disc, drifting across the face of the sun on a long cycle.
+        float slide = MathHelper.sin(t * 0.05f) * 0.06f;
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        disc(tessellator, buffer, BSX + slide, BSY + 0.01f, BSZ, R * 0.94f, 3.2f, 0.03f, 0.0f, 0.0f, 0.97f);
+        // A thin bleeding ring where the disc meets the light.
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        float[] c = onDome(BSX + slide, BSY + 0.01f, BSZ, R * 0.935f);
+        float[] u = new float[3], v = new float[3];
+        SmokeFx.basis(BSX, BSY, BSZ, u, v);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        ring3d(buffer, c[0], c[1], c[2], u[0], u[1], u[2], v[0], v[1], v[2], 3.3f, 0.22f, BLOOD, 0.9f * I, 48,
+                ang -> 0.6f + 0.4f * MathHelper.sin(ang * 7f + t * 2f));
+        tessellator.draw();
+    }
+
+    /** A crown of fire hanging overhead: a ring of flames, a ring of embers, points of fire. */
+    private void fireCrown(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.enableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        mc.getTextureManager().bindTexture(SmokeFx.FX_ATLAS);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float el = 1.18f;
+        int flames = 72;
+        float turn = t * 0.05f;
+        for (int i = 0; i < flames; i++) {
+            float az = i * 6.283f / flames + turn;
+            float flick = 0.6f + 0.4f * MathHelper.sin(t * 6f + i * 2.3f) * MathHelper.sin(t * 3.7f + i);
+            float x = MathHelper.cos(az) * MathHelper.cos(el), y = MathHelper.sin(el), z = MathHelper.sin(az) * MathHelper.cos(el);
+            // Each flame is a glow sprite stretched upward and tipped out from the crown.
+            billboardStretched(buffer, x, y, z, R * 0.94f, 1.1f, 2.6f * flick, (float) Math.toDegrees(-az) + 90f,
+                    0.25f, 0f, 0.5f, 0.25f, 1f, 0.38f + 0.2f * flick, 0.06f, 0.75f * I);
+            billboard(buffer, x, y, z, R * 0.94f, 0.7f, t * 50f + i * 30f, 0f, 0f, 0.25f, 0.25f, 1f, 0.8f, 0.4f, 0.65f * flick * I);
+        }
+        // The crown's points: eight spires of fire rising off the ring.
+        for (int i = 0; i < 8; i++) {
+            float az = i * 6.283f / 8 + turn;
+            float lift = 0.85f + 0.15f * MathHelper.sin(t * 2f + i);
+            for (int k = 0; k < 5; k++) {
+                float e = el + 0.04f + k * 0.035f * lift;
+                float x = MathHelper.cos(az) * MathHelper.cos(e), y = MathHelper.sin(e), z = MathHelper.sin(az) * MathHelper.cos(e);
+                billboard(buffer, x, y, z, R * 0.94f, 1.6f - k * 0.25f, t * 40f + k * 50f, 0.25f, 0f, 0.5f, 0.25f,
+                        1f, 0.55f + k * 0.08f, 0.15f, (0.8f - k * 0.12f) * I);
+            }
+        }
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+    }
+
+    /** The terminal: a wireframe floor, rings pulsing out from overhead, and a sweeping beam. */
+    private void cyberPulse(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        // The floor: meridians converging and rings receding toward the horizon, scrolling in.
+        for (int i = 0; i < 48; i++) {
+            float az = i * 6.283f / 48;
+            bandAE(buffer, az, 0.0f, az, 0.24f, 0.012f, TERM_GREEN, 0.35f * I);
+        }
+        float scroll = (t * 0.25f) % 1f;
+        for (int k = 0; k < 8; k++) {
+            float el = 0.24f * (float) Math.pow((k + 1 - scroll) / 8f, 1.8f);
+            int steps = 64;
+            for (int sIdx = 0; sIdx < steps; sIdx++) {
+                float a0 = sIdx * 6.283f / steps, a1 = (sIdx + 1) * 6.283f / steps;
+                bandAE(buffer, a0, el, a1, el, 0.012f, TERM_GREEN, 0.45f * (1f - el * 2f) * I);
+            }
+        }
+        // Pulses from the zenith, white then green.
+        for (int ring = 0; ring < 4; ring++) {
+            float life = ((t * 0.3f) + ring / 4f) % 1f;
+            float el = 1.57f - life * 1.3f;
+            float a = (1f - life) * smooth(0f, 0.05f, life) * I;
+            int steps = 72;
+            for (int sIdx = 0; sIdx < steps; sIdx++) {
+                float a0 = sIdx * 6.283f / steps, a1 = (sIdx + 1) * 6.283f / steps;
+                bandAE(buffer, a0, el, a1, el, 0.02f, ring % 2 == 0 ? WHITE : TERM_GREEN, 0.85f * a);
+            }
+        }
+        // The beam: a vertical bar of light sweeping round the horizon.
+        float sweep = t * 0.45f;
+        for (int k = 0; k < 10; k++) {
+            float e0 = k * 0.12f, e1 = (k + 1) * 0.12f;
+            bandAE(buffer, sweep, e0, sweep, e1, 0.10f, TERM_GREEN, 0.5f * (1f - k / 10f) * I);
+            bandAE(buffer, sweep - 0.05f, e0, sweep - 0.05f, e1, 0.03f, WHITE, 0.55f * (1f - k / 10f) * I);
+        }
+        tessellator.draw();
+    }
+
+    /** Sheets of rain: long pale streaks falling slantwise across the whole sky. */
+    private void rain(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 160; i++) {
+            float az = RAND[i & 511] * 6.283f;
+            float life = (t * (0.9f + RAND[(i + 160) & 511] * 0.6f) + RAND[(i + 320) & 511]) % 1f;
+            float head = 1.4f - life * 1.45f;
+            float len = 0.10f + RAND[(i + 80) & 511] * 0.12f;
+            bandAE(buffer, az, head, az + 0.05f, head + len, 0.012f, RAIN, 0.28f * I);
+        }
+        tessellator.draw();
+    }
+
+    /** A black hole: the accretion disc tilted across it, the photon ring, the dark in the middle. */
+    private void blackHole(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        float[] c = onDome(BHX, BHY, BHZ, R * 0.92f);
+        float[] u = new float[3], v = new float[3];
+        SmokeFx.basis(BHX, BHY, BHZ, u, v);
+        // The disc lies nearly edge-on: its plane is tipped most of the way toward the viewer.
+        float tilt = 0.28f;
+        float[] w = {u[0], u[1], u[2]};
+        float[] dir = onDome(BHX, BHY, BHZ, 1f);
+        float[] dv = {v[0] * tilt + dir[0] * (1 - tilt), v[1] * tilt + dir[1] * (1 - tilt), v[2] * tilt + dir[2] * (1 - tilt)};
+        float dl = (float) Math.sqrt(dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]);
+        dv[0] /= dl; dv[1] /= dl; dv[2] /= dl;
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        GlStateManager.enableTexture2D();
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        billboard(buffer, BHX, BHY, BHZ, R * 0.93f, 16f, 0f, 0f, 0f, 1f, 1f, 1f, 0.5f, 0.2f, 0.45f * I);
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        // Hot white at the inner edge, orange, then a dull red outer rim; each band streams round,
+        // brighter on the side turning toward you.
+        float spin = t * 0.6f;
+        float[][] cols = {{1f, 0.95f, 0.85f}, {1f, 0.72f, 0.35f}, {1f, 0.45f, 0.12f}, {0.75f, 0.18f, 0.06f}};
+        for (int b = 0; b < 4; b++) {
+            final int bb = b;
+            ring3d(buffer, c[0], c[1], c[2], w[0], w[1], w[2], dv[0], dv[1], dv[2], 2.6f + b * 0.7f, 0.75f,
+                    cols[b], (0.85f - b * 0.15f) * I, 96,
+                    ang -> (0.55f + 0.45f * MathHelper.cos(ang)) * (0.7f + 0.3f * MathHelper.sin(ang * (9 + bb * 3) - spin * (4 - bb))));
+        }
+        tessellator.draw();
+        // The dark, over the middle of the disc.
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        disc(tessellator, buffer, BHX, BHY, BHZ, R * 0.91f, 2.0f, 0f, 0f, 0f, 1f);
+        // The photon ring, face on, and the back of the disc lensed up over the top.
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        float[] c2 = onDome(BHX, BHY, BHZ, R * 0.905f);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        ring3d(buffer, c2[0], c2[1], c2[2], u[0], u[1], u[2], v[0], v[1], v[2], 2.05f, 0.12f, PALE_GOLD, 1f * I, 72, null);
+        ring3d(buffer, c2[0], c2[1], c2[2], u[0], u[1], u[2], v[0], v[1], v[2], 2.5f, 0.55f, EMBER, 0.55f * I, 72,
+                ang -> Math.max(0f, MathHelper.sin(ang)));
+        tessellator.draw();
+    }
+
+    /** A spiral galaxy overhead: two arms of stars wound out from a bright core. */
+    private void galaxy(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.enableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        mc.getTextureManager().bindTexture(SmokeFx.FX_ATLAS);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float spin = t * 0.03f;
+        for (int arm = 0; arm < 2; arm++) {
+            for (int i = 0; i < 160; i++) {
+                float f = i / 160f;
+                float jitterA = (RAND[(i * 3 + arm * 7) & 511] - 0.5f) * 0.5f * (0.3f + f);
+                float jitterR = (RAND[(i * 5 + arm * 11) & 511] - 0.5f) * 0.12f * (0.3f + f);
+                float theta = arm * 3.1416f + f * 7.0f + spin + jitterA;
+                float rad = 0.05f + f * 0.85f + jitterR;           // angular distance from the zenith
+                float el = 1.5708f - rad;
+                float x = MathHelper.cos(theta) * MathHelper.cos(el), y = MathHelper.sin(el), z = MathHelper.sin(theta) * MathHelper.cos(el);
+                float[] col = RAND[(i + arm * 40) & 511] > 0.7f ? alt : main;
+                float size = (0.5f + RAND[(i * 7) & 511] * 0.9f) * (1.4f - f);
+                float tw = 0.6f + 0.4f * MathHelper.sin(t * 2f + i);
+                billboard(buffer, x, y, z, R * 0.94f, size, 0f, 0.25f, 0f, 0.5f, 0.25f, col[0], col[1], col[2],
+                        (0.75f - f * 0.45f) * tw * I);
+            }
+        }
+        // The core.
+        billboard(buffer, 0.001f, 1f, 0f, R * 0.94f, 5.5f, 0f, 0.25f, 0f, 0.5f, 0.25f, 1f, 0.95f, 0.85f, 0.9f * I);
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+    }
+
+    /** A great moon broken apart, the pieces drifting round where it was. */
+    private void shatteredMoon(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.enableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        billboard(buffer, SMX, SMY, SMZ, R * 0.95f, 14f, 0f, 0f, 0f, 1f, 1f, 0.6f, 0.7f, 1f, 0.35f * I);
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+        // The pieces: wedges of the disc, each pushed out from the centre and slowly turning round it.
+        float[] u = new float[3], v = new float[3];
+        SmokeFx.basis(SMX, SMY, SMZ, u, v);
+        float[] c = onDome(SMX, SMY, SMZ, R * 0.93f);
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        int pieces = 9;
+        float radius = 3.4f;
+        for (int pIdx = 0; pIdx < pieces; pIdx++) {
+            float a0 = pIdx * 6.283f / pieces + RAND[pIdx] * 0.2f, a1 = (pIdx + 1) * 6.283f / pieces + RAND[pIdx + 1] * 0.2f;
+            float mid = (a0 + a1) * 0.5f;
+            float drift = 0.45f + 0.75f * RAND[pIdx + 20] + 0.25f * MathHelper.sin(t * 0.2f + pIdx);
+            float turn = t * 0.01f * (pIdx % 2 == 0 ? 1 : -1);
+            float ox = MathHelper.cos(mid + turn) * drift, oy = MathHelper.sin(mid + turn) * drift;
+            float shade = 0.75f + 0.25f * RAND[pIdx + 30];
+            float[] p0 = {ox, oy};
+            int seg = 6;
+            for (int k = 0; k < seg; k++) {
+                float b0 = a0 + (a1 - a0) * k / seg + turn, b1 = a0 + (a1 - a0) * (k + 1) / seg + turn;
+                float rim0 = radius * (0.92f + 0.08f * RAND[(pIdx * 7 + k) & 511]);
+                float rim1 = radius * (0.92f + 0.08f * RAND[(pIdx * 7 + k + 1) & 511]);
+                // Lit from one side, so each piece has a bright face and a shadowed edge.
+                float lit0 = 0.75f + 0.25f * MathHelper.cos(b0 - 0.8f), lit1 = 0.75f + 0.25f * MathHelper.cos(b1 - 0.8f);
+                moonVertex(buffer, c, u, v, p0[0], p0[1], 0.95f * shade, 0.95f * shade, 0.98f * shade);
+                moonVertex(buffer, c, u, v, p0[0] + MathHelper.cos(b0) * rim0, p0[1] + MathHelper.sin(b0) * rim0,
+                        0.82f * shade * lit0, 0.84f * shade * lit0, 0.92f * shade * lit0);
+                moonVertex(buffer, c, u, v, p0[0] + MathHelper.cos(b1) * rim1, p0[1] + MathHelper.sin(b1) * rim1,
+                        0.82f * shade * lit1, 0.84f * shade * lit1, 0.92f * shade * lit1);
+            }
+        }
+        tessellator.draw();
+        // The debris: small chips strung round the break, in a tilted ring.
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        float[] tv = {v[0] * 0.35f + u[0] * 0.1f, v[1] * 0.35f + u[1] * 0.1f, v[2] * 0.35f + u[2] * 0.1f};
+        ring3d(buffer, c[0], c[1], c[2], u[0], u[1], u[2], tv[0], tv[1], tv[2], radius * 1.9f, 0.18f,
+                PALE_GOLD, 0.6f * I, 120, ang -> RAND[((int) (ang * 40f + t * 3f)) & 511] > 0.55f ? 1f : 0f);
+        tessellator.draw();
+    }
+
+    private static void moonVertex(WorldRenderer buffer, float[] c, float[] u, float[] v, float a, float b,
+                                   float r, float g, float bl) {
+        buffer.pos(c[0] + u[0] * a + v[0] * b, c[1] + u[1] * a + v[1] * b, c[2] + u[2] * a + v[2] * b)
+                .color(r, g, bl, 1f).endVertex();
+    }
+
+    /** Giant neon hoops hung across the sky at angles, each turning slowly on its own axis. */
+    private void neonHalos(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        float[][] centres = {{0.1f, 0.55f, -0.83f}, {-0.75f, 0.35f, -0.55f}, {0.7f, 0.42f, 0.55f}};
+        float[] sizes = {6.5f, 4.2f, 5.0f};
+        for (int i = 0; i < 3; i++) {
+            float[] c = onDome(centres[i][0], centres[i][1], centres[i][2], R * 0.9f);
+            float[] u = new float[3], v = new float[3];
+            SmokeFx.basis(centres[i][0], centres[i][1], centres[i][2], u, v);
+            // Turn the hoop about its own vertical by a slowly changing angle.
+            float ang = t * (0.15f + 0.05f * i) + i;
+            float cs = MathHelper.cos(ang), sn = MathHelper.sin(ang);
+            float[] d = onDome(centres[i][0], centres[i][1], centres[i][2], 1f);
+            float[] uu = {u[0] * cs + d[0] * sn, u[1] * cs + d[1] * sn, u[2] * cs + d[2] * sn};
+            float[] col = i == 1 ? alt : main;
+            ring3d(buffer, c[0], c[1], c[2], uu[0], uu[1], uu[2], v[0], v[1], v[2], sizes[i], 0.9f, col, 0.25f * I, 96, null);
+            ring3d(buffer, c[0], c[1], c[2], uu[0], uu[1], uu[2], v[0], v[1], v[2], sizes[i], 0.22f, col, 0.95f * I, 96,
+                    a -> 0.75f + 0.25f * MathHelper.sin(a * 3f + t * 2f));
+            ring3d(buffer, c[0], c[1], c[2], uu[0], uu[1], uu[2], v[0], v[1], v[2], sizes[i], 0.07f, WHITE, 0.9f * I, 96, null);
+        }
+        tessellator.draw();
+    }
+
+    /** A pale sun in the gold haze, throwing long rays that turn slowly. */
+    private void goldenSun(Minecraft mc, Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.enableTexture2D();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        mc.getTextureManager().bindTexture(SmokeFx.GLOW);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        billboard(buffer, GSX, GSY, GSZ, R * 0.95f, 18f, 0f, 0f, 0f, 1f, 1f, 1f, 0.8f, 0.45f, 0.55f * I);
+        billboard(buffer, GSX, GSY, GSZ, R * 0.95f, 5.5f, 0f, 0f, 0f, 1f, 1f, 1f, 0.98f, 0.9f, 1f * I);
+        tessellator.draw();
+        mc.getTextureManager().bindTexture(SmokeFx.FX_ATLAS);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        for (int i = 0; i < 22; i++) {
+            float rot = i * 360f / 22f + t * 1.5f;
+            float len = 18f + RAND[i + 5] * 10f + 2f * MathHelper.sin(t * 0.7f + i);
+            billboardStretched(buffer, GSX, GSY, GSZ, R * 0.95f, len, 1.1f, rot, 0.25f, 0f, 0.5f, 0.25f,
+                    1f, 0.9f, 0.6f, 0.22f * I);
+        }
+        tessellator.draw();
+        GlStateManager.disableTexture2D();
+    }
+
 
     private static void bandAE(WorldRenderer buffer, float az0, float el0, float az1, float el1, float width,
                                float[] col, float a) {

@@ -1,0 +1,1 @@
+{"model":"arcana:melee/seraph_halo_geo","animation":"arcana:melee/seraph_halo","texture":"arcana:melee/seraph_halo","slot_texture":"arcana:melee/slot/seraph_halo","soupapi":{"profile":"seraph_halo","summon":true,"summon_style":"wing","trail":[1,0.82,0.4],"trail2":[0.4,0.85,1],"feathers":true,"emissive":[0.5,0.85,1],"finishes":["obsidian","molten","spectral","dark_metal"]}}

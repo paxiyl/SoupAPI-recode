@@ -31,6 +31,8 @@ def _flower(clip, t, open_amount, spin=0.0):
 
 
 def extra(clip, name, t, phase):
+    if int(round(t * 20)) % 2:
+        return
     if name == 'melee':
         # Thrown open through the cut, shut behind it.
         swell = max(0.0, math.sin(min(1.0, phase * 1.35) * math.pi))
@@ -52,4 +54,5 @@ def extra(clip, name, t, phase):
 
 
 def build(rig):
-    return common(rig, SND, extra, idle_length=6.2, weight=1.2)
+    from clips_common import summon
+    return common(rig, SND, extra, idle_length=6.2, weight=1.2) + [summon(rig, SND, 'bloom', 2.6, extra=extra)]

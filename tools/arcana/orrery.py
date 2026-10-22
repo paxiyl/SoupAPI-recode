@@ -13,7 +13,7 @@ import math
 
 import mesh as M
 from geo import Material, Model
-from rig import Rig
+from rig import Rig, shrink
 
 ID = 'orrery_scepter'
 NAME = 'The Hour Unwound'
@@ -73,8 +73,9 @@ def build():
     m = Model(TEX, TEX, seed=19)
     ax, ay, aw, ah = _rect('arm')
     m.mats = {'arm': Material('arm', ax, ay, aw, ah, 1)}
-    rig = Rig(m, grip_eye=(0.38, -0.56, -0.80), blade_dir_eye=(-0.30, 0.88, -0.36),
-              face_normal_eye=(0.20, 0.16, 0.97), shoulder_eye=(0.36, -0.75, 0.32))
+    rig = Rig(m, grip_eye=(0.24, -0.44, -0.56), blade_dir_eye=(-0.46, 0.76, -0.46),
+              face_normal_eye=(0.22, 0.26, 0.94), shoulder_eye=(0.50, -1.10, -0.10),
+              left_shoulder_eye=(-0.44, -1.10, -0.10), left_grip_local=(0, -3.8, 0))
     G = rig.G
     groups = {}
 
@@ -196,6 +197,8 @@ def build():
         plate.translate(math.cos(a) * r, HEAD + math.sin(a * 2) * 1.6, math.sin(a) * r * 0.35 + 1.1)
         part(bone, plate.smooth())
 
+    # Built at the size of the art, held at the size of a hand: see rig.shrink.
+    shrink(m, groups, rig, 0.45)
     for meshes in groups.values():
         for mesh in meshes:
             ATLAS.apply(mesh)
@@ -203,7 +206,6 @@ def build():
 
 
 PROFILE = {
-    'placement': [46, 40, 22, -26, 0, 0, 0, 0],
     'profile': 'orrery_scepter',
     'rings': 3,
     'runes': RUNES,

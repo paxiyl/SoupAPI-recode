@@ -187,6 +187,45 @@ def solve_rest(pivot, want_dir, want_normal, local_dir=(0, 1, 0), local_normal=(
     return [float(((v + 180) % 360) - 180) for v in best], best_e
 
 
+def solve_rest_under(parent_rest, want_dir, want_normal, local_dir=(0, 1, 0), local_normal=(0, 0, 1)):
+    """As `solve_rest`, for a bone whose parent is already turned by `parent_rest`.
+
+    The arms hang off the weapon now (the knives' arrangement: hand and weapon share a parent), so
+    an arm's rest is not in eye space any more but in the weapon's own, and has to be found through
+    the weapon's rest rotation."""
+    want_dir = np.array(want_dir, float); want_dir /= np.linalg.norm(want_dir)
+    want_normal = np.array(want_normal, float); want_normal /= np.linalg.norm(want_normal)
+    ld = to_java(local_dir)[:3]
+    ln = to_java(local_normal)[:3]
+    P = bone_local((0, 0, 0), parent_rest)[:3, :3]
+
+    def err(r):
+        m = P @ bone_local((0, 0, 0), r)[:3, :3]
+        d = m @ ld
+        n = m @ ln
+        return np.sum((d - want_dir) ** 2) * 4 + np.sum((n - want_normal) ** 2)
+
+    best, best_e = None, 1e9
+    rng = np.random.default_rng(5)
+    for _ in range(300):
+        r = rng.uniform(-180, 180, 3)
+        step = 40.0
+        e = err(r)
+        while step > 0.01:
+            improved = False
+            for i in range(3):
+                for sgn in (-1, 1):
+                    t = r.copy(); t[i] += sgn * step
+                    et = err(t)
+                    if et < e:
+                        r, e, improved = t, et, True
+            if not improved:
+                step *= 0.5
+        if e < best_e:
+            best, best_e = r, e
+    return [float(((v + 180) % 360) - 180) for v in best], best_e
+
+
 def write_json(path, data):
     def rnd(v):
         if isinstance(v, float):

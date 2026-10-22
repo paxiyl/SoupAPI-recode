@@ -75,7 +75,7 @@ public class AnimatedSky extends ConfigurableModule {
             }
             // Shattered Glass is a pane the sky is seen through; clouds drifting in front of it
             // read as holes in it, so that style hides them whatever the option says.
-            boolean hideClouds = active() && (CONFIG.skyHideClouds || style() == SkyStyle.SHATTERED_GLASS);
+            boolean hideClouds = active() && (CONFIG.skyHideClouds || style().hidesClouds());
             if (hideClouds && provider.getCloudRenderer() != NO_CLOUDS) {
                 previousClouds = provider.getCloudRenderer();
                 provider.setCloudRenderer(NO_CLOUDS);
