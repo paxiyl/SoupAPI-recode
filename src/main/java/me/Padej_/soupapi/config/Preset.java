@@ -83,7 +83,32 @@ public enum Preset {
     /** For weak devices and phones: the cheapest settings that still look like the mod. */
     LOW_END_PERFORMANCE,
     /** Pastel dreamcore sky, magic dust, soft pink, the spectral blade. */
-    DREAMSCAPE;
+    DREAMSCAPE,
+
+    // ---- the layers ------------------------------------------------------------------------
+    // One preset a floor, after the game that names them. Each is its theme plus the sky,
+    // ambience, kill effect, crosshair and hotbar that go with it.
+
+    /** White marble and a blue machine: cold, clean, almost nothing on the screen. */
+    LAYER_PRELUDE,
+    /** Still water over white stone, light coming up through it. */
+    LAYER_LIMBO,
+    /** Pink neon standing in black water. */
+    LAYER_LUST,
+    /** Flesh and bone, dull and close. */
+    LAYER_GLUTTONY,
+    /** A grey sea under a grey storm. */
+    LAYER_WRATH,
+    /** Gold on sand, the heat coming off it. */
+    LAYER_GREED,
+    /** Black stone and gold fire. */
+    LAYER_HERESY,
+    /** Blood on sand under a burnt sky. */
+    LAYER_VIOLENCE,
+    /** Black, green and a grid: the terminal. */
+    LAYER_CYBER_GRIND,
+    /** White and gold, lit like a chapel. */
+    LAYER_PRIME_SANCTUM;
 
     /**
      * Writes this preset over the config.
@@ -223,6 +248,16 @@ public enum Preset {
             case CINEMATIC_SHOWCASE: return Theme.NEON_TOKYO;
             case LOW_END_PERFORMANCE: return Theme.MIDNIGHT;
             case DREAMSCAPE: return Theme.CANDY;
+            case LAYER_PRELUDE: return Theme.PRELUDE;
+            case LAYER_LIMBO: return Theme.LIMBO;
+            case LAYER_LUST: return Theme.LUST;
+            case LAYER_GLUTTONY: return Theme.GLUTTONY;
+            case LAYER_WRATH: return Theme.WRATH;
+            case LAYER_GREED: return Theme.GREED;
+            case LAYER_HERESY: return Theme.HERESY;
+            case LAYER_VIOLENCE: return Theme.VIOLENCE;
+            case LAYER_CYBER_GRIND: return Theme.CYBER_GRIND;
+            case LAYER_PRIME_SANCTUM: return Theme.PRIME_SANCTUM;
             default: return null;
         }
     }
@@ -359,6 +394,78 @@ public enum Preset {
                 c.crosshairStyle = Crosshair.Style.CIRCULAR;
                 c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.FLOATING;
                 break;
+            case LAYER_PRELUDE:
+                look(c, SkyStyle.SILK, Ambience.DUST, KillEffects.Style.RINGS);
+                blade(c, MeleeFinish.SPECTRAL);
+                c.crosshairStyle = Crosshair.Style.FOUR_SEGMENT;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLASS;
+                c.skySpeed = 40;
+                c.ambienceEnabled = false;          // the opening is meant to be empty
+                break;
+            case LAYER_LIMBO:
+                look(c, SkyStyle.OCEAN_DEPTH, Ambience.BUBBLES, KillEffects.Style.SOUL_BURST);
+                blade(c, MeleeFinish.SPECTRAL);
+                c.crosshairStyle = Crosshair.Style.CIRCULAR;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLASS;
+                break;
+            case LAYER_LUST:
+                look(c, SkyStyle.CYBERPUNK, Ambience.NEON_RAIN, KillEffects.Style.PORTAL);
+                weapon(c);
+                c.rgbMode = Palette.RgbMode.FLOW;
+                c.crosshairStyle = Crosshair.Style.CIRCULAR;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.NEON;
+                break;
+            case LAYER_GLUTTONY:
+                look(c, SkyStyle.BLEEDING_CLOUDS, Ambience.ASH, KillEffects.Style.SOUL_SIPHON);
+                claw(c, MeleeFinish.DARK_METAL);
+                c.crosshairStyle = Crosshair.Style.WEAPON;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
+                break;
+            case LAYER_WRATH:
+                look(c, SkyStyle.STORM_FRONT, Ambience.RAIN, KillEffects.Style.LIGHTNING);
+                weapon(c);
+                c.landingImpactEnabled = true;
+                c.landingImpactStyle = LandingImpact.Style.SHOCKWAVE;
+                c.crosshairStyle = Crosshair.Style.FOUR_SEGMENT;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.FLOATING;
+                break;
+            case LAYER_GREED:
+                look(c, SkyStyle.SPEED_LINES, Ambience.SANDSTORM, KillEffects.Style.RUNIC_CROWN);
+                katana(c, MeleeFinish.MOLTEN);
+                c.crosshairStyle = Crosshair.Style.RUNE;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
+                break;
+            case LAYER_HERESY:
+                look(c, SkyStyle.INFERNAL, Ambience.EMBERS, KillEffects.Style.FLAME_PILLAR);
+                katana(c, MeleeFinish.MOLTEN);
+                c.landingImpactEnabled = true;
+                c.landingImpactStyle = LandingImpact.Style.CRACK;
+                c.crosshairStyle = Crosshair.Style.WEAPON;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLOW;
+                break;
+            case LAYER_VIOLENCE:
+                look(c, SkyStyle.EMBER_SKY, Ambience.BLOOD_RAIN, KillEffects.Style.MOLTEN_ERUPTION);
+                claw(c, MeleeFinish.DARK_METAL);
+                c.rgbMode = Palette.RgbMode.PULSE;
+                c.crosshairStyle = Crosshair.Style.WEAPON;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.NEON;
+                break;
+            case LAYER_CYBER_GRIND:
+                look(c, SkyStyle.GRID, Ambience.DIGITAL_SNOW, KillEffects.Style.EXPLOSION);
+                weapon(c);
+                c.meleeOutline = true;
+                c.crosshairStyle = Crosshair.Style.FOUR_SEGMENT;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.NEON;
+                c.skySpeed = 180;
+                break;
+            case LAYER_PRIME_SANCTUM:
+                look(c, SkyStyle.RIPPLE, Ambience.GOLD_DUST, KillEffects.Style.SOUL_CONSTELLATION);
+                blade(c, MeleeFinish.DEFAULT);
+                c.meleeRunes = true;
+                c.haloEnabled = true;
+                c.crosshairStyle = Crosshair.Style.RUNE;
+                c.hudBetterHotbarStyle = BetterHudStyles.HotbarStyle.GLASS;
+                break;
             default:
                 break;
         }
@@ -385,6 +492,21 @@ public enum Preset {
         weapon(c);
         c.meleeFinish = finish;
         c.meleeSummonEnabled = true;
+    }
+
+    /** The claw, its feathers and its summon, in a finish. */
+    private static void claw(SoupAPI_Config c, MeleeFinish finish) {
+        weapon(c);
+        c.meleeFinish = finish;
+        c.meleeSummonEnabled = true;
+    }
+
+    /** The spectral blade, its ribbons and its summon, in a finish. */
+    private static void blade(SoupAPI_Config c, MeleeFinish finish) {
+        weapon(c);
+        c.meleeFinish = finish;
+        c.meleeSummonEnabled = true;
+        c.meleeGlow = true;
     }
 
     /** The things worth having in a fight, and nothing that covers the screen. */

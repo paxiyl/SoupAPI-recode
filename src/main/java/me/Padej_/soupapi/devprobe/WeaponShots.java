@@ -18,9 +18,11 @@ public final class WeaponShots {
     private WeaponShots() {
     }
 
-    private static final String[] IDS = System.getProperty("soupapi.sweep") != null
+    private static final String[] IDS = System.getProperty("soupapi.smoke") != null
+            ? new String[]{"smoke"}
+            : (System.getProperty("soupapi.sweep") != null
             ? new String[]{System.getProperty("soupapi.sweep")}
-            : new String[]{"fractured_eye_katana", "raven_claw", "spectral_blade"};
+            : new String[]{"fractured_eye_katana", "raven_claw", "spectral_blade"});
 
     /** size, distance, offsetX, offsetY — one placement per shot, when sweeping. */
     private static final int[][] PLACEMENTS = {
@@ -33,13 +35,16 @@ public final class WeaponShots {
     /** Summon mode: shoot the whole arrival, a frame every few ticks. */
     private static final boolean SUMMON = System.getProperty("soupapi.summon") != null;
     private static final int SUMMON_SHOTS = 8;
+    /** Smoke mode: stand still, pour smoke out in front, and walk the camera round it. */
+    private static final boolean SMOKE = System.getProperty("soupapi.smoke") != null;
+    private static final int SMOKE_SHOTS = 6;
     /** pitch, yaw — the camera per shot when not sweeping. */
     private static final float[][] VIEWS = {
             {0, 0, 0, 0, 0, 0},
             {-20, 0, 0, 0, 0, 0},
     };
     private static int shots() {
-        return SWEEP ? PLACEMENTS.length : (SUMMON ? SUMMON_SHOTS : VIEWS.length);
+        return SWEEP ? PLACEMENTS.length : (SUMMON ? SUMMON_SHOTS : (SMOKE ? SMOKE_SHOTS : VIEWS.length));
     }
     private static int ticks, phase, index, step, wait;
     private static net.minecraft.client.gui.GuiScreen wanted;
@@ -47,6 +52,15 @@ public final class WeaponShots {
     public static void frame(Minecraft mc) {
         if (System.getProperty("soupapi.weapons") == null || ticks < 40) return;
         hold(mc);
+    }
+
+    /** Smoke mode only: a steady plume a couple of blocks in front of the player. */
+    private static void pour(Minecraft mc) {
+        if (!SMOKE || mc.thePlayer == null || phase < 3) return;
+        double x = mc.thePlayer.posX, y = mc.thePlayer.posY, z = mc.thePlayer.posZ;
+        if (ticks % 4 == 0) {
+            me.Padej_.soupapi.render.SmokeFx.abyssal(x + 1.6, y + 0.4, z, 1.4f, 5);
+        }
     }
 
     private static void hold(Minecraft mc) {
@@ -64,6 +78,7 @@ public final class WeaponShots {
         ticks++;
         if (ticks < 40) return;
         hold(mc);
+        pour(mc);
         switch (phase) {
             case 0:
                 log("launching a flat world");
@@ -89,6 +104,8 @@ public final class WeaponShots {
                 }
                 SoupAPI_Config c = SoupAPI.configHolder.get();
                 c.meleeEnabled = true;
+                c.smokeEnabled = SMOKE;
+                c.meleeEnabled = !SMOKE;
                 c.meleeSummonEnabled = SUMMON;
                 c.meleeSummonOnEquip = SUMMON;
                 c.meleeWeapon = IDS[index];
@@ -102,11 +119,17 @@ public final class WeaponShots {
                 mc.gameSettings.hideGUI = false;   // the hand hook bails on hideGUI, so the weapon would vanish
                 log("equipping " + IDS[index]);
                 step = 0;
-                wait = 400;
+                wait = SMOKE ? 60 : 400;
                 phase = 4;
                 return;
             }
             case 4: {
+                if (SMOKE) {
+                    if (wait-- > 0) return;
+                    wait = 0;
+                    phase = 3;
+                    return;
+                }
                 if (Melee.active() == null) {
                     if (wait-- > 0) return;
                     log("gave up waiting for " + IDS[index]);
@@ -114,14 +137,21 @@ public final class WeaponShots {
                     phase = 2;
                     return;
                 }
-                wait = SUMMON ? 0 : 60;
+                wait = SUMMON ? 0 : (SMOKE ? 50 : 60);
                 phase = 3;
                 return;
             }
             case 3: {
                 if (wait-- > 0) return;
                 String name;
-                if (SUMMON) {
+                if (SMOKE) {
+                    float yaw = step * 60f;
+                    mc.thePlayer.rotationYaw = yaw;
+                    mc.thePlayer.prevRotationYaw = yaw;
+                    mc.thePlayer.rotationPitch = 8f;
+                    mc.thePlayer.prevRotationPitch = 8f;
+                    name = IDS[index] + "-smoke" + step;
+                } else if (SUMMON) {
                     name = IDS[index] + "-t" + step;
                 } else if (SWEEP) {
                     int[] p = PLACEMENTS[Math.min(step, PLACEMENTS.length - 1)];
@@ -148,7 +178,7 @@ public final class WeaponShots {
                 }
                 if (step < shots() - 1) {
                     step++;
-                    wait = SUMMON ? 5 : (SWEEP ? 3 : 4);
+                    wait = SUMMON ? 5 : (SMOKE ? 8 : (SWEEP ? 3 : 4));
                     return;
                 }
                 index++;

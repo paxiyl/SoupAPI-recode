@@ -823,34 +823,62 @@ public final class SmokeFx extends ConfigurableModule {
         }
         if (settled > 0.002f) flatten(ax, ay, settled, half);
 
-        int slices = wisp ? 1 : volumeSlices();
-        if (slices <= 1) {
+        int lobes = wisp ? 1 : volumeSlices();
+        if (lobes <= 1) {
             shadedQuad(buffer, x, y, z, ax, ay, u0, v0, u1, v1, r, g, b, a, p);
             return;
         }
-        // The slices are spread along an axis of the puff's own, not the camera's, so the shape
-        // they make together is the same from every side.
-        float sx = MathHelper.cos(p.seed * 1.7f), sz = MathHelper.sin(p.seed * 1.7f);
-        float sy = MathHelper.cos(p.seed * 2.9f) * 0.6f;
-        float spread = half * 0.5f;
-        float each = a / (float) Math.sqrt(slices);
-        for (int i = 0; i < slices; i++) {
-            float f = slices == 1 ? 0f : (i / (float) (slices - 1) - 0.5f) * 2f;
-            float scale = 1f - Math.abs(f) * 0.22f;
-            SCRATCH_C[0] = ax[0] * scale; SCRATCH_C[1] = ax[1] * scale; SCRATCH_C[2] = ax[2] * scale;
-            SCRATCH_D[0] = ay[0] * scale; SCRATCH_D[1] = ay[1] * scale; SCRATCH_D[2] = ay[2] * scale;
-            shadedQuad(buffer, x + sx * spread * f, y + sy * spread * f, z + sz * spread * f,
-                    SCRATCH_C, SCRATCH_D, u0, v0, u1, v1, r, g, b, each * (1f - Math.abs(f) * 0.25f), p);
+        // A puff is a handful of smaller blobs sitting on a fixed cluster of points, not one plate
+        // and not several copies of it: copies share a silhouette exactly and so still read as a
+        // decal however many there are. Each blob takes a different cell of the atlas, a different
+        // turn and a different size, and the cluster is turned by the particle's own seed, so the
+        // outline is lumpy, is lumpy differently for every puff, and changes as you walk round it.
+        float yaw = p.seed * 2.3f;
+        float cosY = MathHelper.cos(yaw), sinY = MathHelper.sin(yaw);
+        float spread = half * 0.78f;
+        // Each blob's opacity, so that the stack of them comes out at the puff's own: 1-(1-e)^n = a.
+        float each = 1f - (float) Math.pow(1f - Math.min(0.985f, a), 1.0 / lobes);
+        for (int i = 0; i < lobes; i++) {
+            float[] lobe = LOBES[i];
+            float ox = (lobe[0] * cosY - lobe[2] * sinY) * spread;
+            float oz = (lobe[0] * sinY + lobe[2] * cosY) * spread;
+            float oy = lobe[1] * spread;
+            float scale = 1f - 0.17f * i;
+            // Lit from above: a blob sitting high in the cluster catches the light, one slung
+            // under it sits in the shadow of the rest. This is what reads as depth.
+            float lit = 1f + lobe[1] * 0.42f - 0.06f * i;
+            int cell = wisp ? 0 : ((p.variant + i * 3) & 3);
+            float cu0 = cell * 0.25f, cu1 = cu0 + 0.25f;
+            rotated(right, up, p.rot + i * 47f + (float) Math.sin(p.seed + p.age * 0.02f) * 6f,
+                    half * scale, half * scale, SCRATCH_C, SCRATCH_D);
+            if (settled > 0.002f) flatten(SCRATCH_C, SCRATCH_D, settled, half * scale);
+            shadedQuad(buffer, x + ox, y + oy, z + oz, SCRATCH_C, SCRATCH_D,
+                    cu0, v0, cu1, v1, r * lit, g * lit, b * lit, each, p);
         }
     }
+
+    /**
+     * Where the blobs of one puff sit, in units of the puff's own radius.
+     *
+     * <p>A core with four around it, deliberately off-centre and at different heights: a symmetric
+     * arrangement reads as a pattern rather than as a cloud. The first entry is the core, so a
+     * lower quality setting that draws fewer of them still draws the middle one.
+     */
+    private static final float[][] LOBES = {
+            {0.00f, 0.00f, 0.00f},
+            {0.62f, 0.26f, -0.30f},
+            {-0.54f, 0.10f, 0.42f},
+            {0.16f, -0.44f, 0.50f},
+            {-0.28f, 0.48f, -0.46f},
+    };
 
     /** How many slices a puff is drawn as; one on the lowest setting, so nothing is slower. */
     private static int volumeSlices() {
         if (!CONFIG.smokeVolumetric) return 1;
         switch (quality()) {
             case LOW: return 1;
-            case MEDIUM: return 2;
-            default: return 3;
+            case MEDIUM: return 3;
+            default: return LOBES.length;
         }
     }
 

@@ -729,6 +729,7 @@ public final class SkyRenderer extends IRenderHandler {
                 break;
             case CODE_FALL:
                 glyphRain(mc, tessellator, buffer, I, 34, main);
+                glitchTears(tessellator, buffer, I * 0.6f);
                 break;
             case CYBERPUNK:
                 stripedSun(tessellator, buffer, I);
@@ -768,6 +769,40 @@ public final class SkyRenderer extends IRenderHandler {
                 break;
             case HEX_GRID:
                 hexLattice(tessellator, buffer, I);
+                break;
+            case GRID:
+                // A grid on its own is a grid. What makes this sky is what is sitting in it.
+                stripedSun(tessellator, buffer, I);
+                speedStreaks(tessellator, buffer, I * 0.55f);
+                break;
+            case BANDS:
+            case SILK:
+            case SUNSET:
+                cloudBanks(tessellator, buffer, I, style == SkyStyle.SILK ? 5 : 4);
+                break;
+            case NEBULA:
+                cloudBanks(tessellator, buffer, I * 0.7f, 3);
+                break;
+            case OCEAN_DEPTH:
+                lightShafts(tessellator, buffer, I);
+                break;
+            case VORTEX:
+                spiralArms(tessellator, buffer, I);
+                break;
+            case RIPPLE:
+                expandingRings(tessellator, buffer, I);
+                break;
+            case SCANLINES:
+                glitchTears(tessellator, buffer, I);
+                break;
+            case LATTICE:
+                glassShards(mc, tessellator, buffer, I, 30, true);
+                break;
+            case PLASMA:
+                voidPulses(mc, tessellator, buffer, I * 0.8f);
+                break;
+            case LAVA_FLOW:
+                risingEmbers(mc, tessellator, buffer, I * 0.8f);
                 break;
             case SPEED_LINES:
                 speedStreaks(tessellator, buffer, I);
@@ -1575,6 +1610,170 @@ public final class SkyRenderer extends IRenderHandler {
         }
         tessellator.draw();
         GlStateManager.disableTexture2D();
+    }
+
+    /**
+     * Strata of cloud, drifting.
+     *
+     * <p>What a banded sky was missing is that bands are flat: the same stripe all the way round,
+     * moving as one, which reads as wallpaper. These are rings of cloud at different heights, each
+     * drifting at its own speed, each with its own lumpy edge from the noise table, and each
+     * fading out top and bottom — so they overlap, part, and let the sky through between them.
+     */
+    private void cloudBanks(Tessellator tessellator, WorldRenderer buffer, float I, int layers) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        int steps = 64;
+        for (int layer = 0; layer < layers; layer++) {
+            float seed = layer * 97f;
+            float height = 0.12f + layer * (1.05f / layers);
+            float drift = t * (0.05f + 0.05f * layer) * (layer % 2 == 0 ? 1f : -1f);
+            float thickness = 0.14f + 0.07f * RAND[(layer * 31) & 511];
+            float[] col = layer % 3 == 1 ? alt : main;
+            for (int s = 0; s < steps; s++) {
+                float a0 = s / (float) steps * 6.283f + drift;
+                float a1 = (s + 1) / (float) steps * 6.283f + drift;
+                // A lumpy underside and a lumpier top: three octaves off the shared noise table.
+                float lo0 = height + ridge(a0, seed) * thickness;
+                float lo1 = height + ridge(a1, seed) * thickness;
+                float hi0 = lo0 + thickness * (0.7f + 0.6f * ridge(a0 * 1.7f, seed + 11f));
+                float hi1 = lo1 + thickness * (0.7f + 0.6f * ridge(a1 * 1.7f, seed + 11f));
+                float lit0 = 0.35f + 0.65f * ridge(a0 * 0.8f, seed + 23f);
+                float lit1 = 0.35f + 0.65f * ridge(a1 * 0.8f, seed + 23f);
+                // Dense at the bottom where it is in its own shadow, open at the top.
+                curtainVertex(buffer, a0, lo0, col, 0.0f);
+                curtainVertex(buffer, a1, lo1, col, 0.0f);
+                curtainVertex(buffer, a1, (lo1 + hi1) * 0.5f, col, 0.42f * lit1 * I);
+                curtainVertex(buffer, a0, (lo0 + hi0) * 0.5f, col, 0.42f * lit0 * I);
+
+                curtainVertex(buffer, a0, (lo0 + hi0) * 0.5f, col, 0.42f * lit0 * I);
+                curtainVertex(buffer, a1, (lo1 + hi1) * 0.5f, col, 0.42f * lit1 * I);
+                curtainVertex(buffer, a1, hi1, col, 0f);
+                curtainVertex(buffer, a0, hi0, col, 0f);
+            }
+        }
+        tessellator.draw();
+    }
+
+    /** A smooth, repeatable 0..1 wobble around the sky, from the shared noise table. */
+    private static float ridge(float angle, float seed) {
+        float a = angle + seed;
+        return 0.5f + 0.5f * (MathHelper.sin(a * 1.3f) * 0.5f + MathHelper.sin(a * 2.7f + 1.7f) * 0.3f
+                + MathHelper.sin(a * 5.1f - 0.9f) * 0.2f);
+    }
+
+    /** Shafts of light coming down through water: long, narrow, swaying, brightest overhead. */
+    private void lightShafts(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 26; i++) {
+            float base = RAND[(i * 7) & 511] * 6.283f;
+            float sway = MathHelper.sin(t * 0.4f + i) * 0.14f;
+            float az = base + sway;
+            float top = 1.45f;
+            float bottom = 0.08f + RAND[(i * 7 + 1) & 511] * 0.25f;
+            float width = 0.05f + RAND[(i * 7 + 2) & 511] * 0.10f;
+            float shimmer = 0.45f + 0.55f * (0.5f + 0.5f * MathHelper.sin(t * 1.1f + i * 2.3f));
+            float[] col = i % 4 == 0 ? alt : main;
+            // Drawn in pieces so it can fade along its length rather than ending at a line.
+            int pieces = 7;
+            for (int k = 0; k < pieces; k++) {
+                float e0 = bottom + (top - bottom) * k / pieces;
+                float e1 = bottom + (top - bottom) * (k + 1) / pieces;
+                float f0 = (float) k / pieces, f1 = (k + 1f) / pieces;
+                bandAE(buffer, az + sway * f0, e0, az + sway * f1, e1,
+                        width * (0.5f + f0), col, 0.30f * shimmer * f0 * I);
+            }
+        }
+        tessellator.draw();
+    }
+
+    /** The vortex's arms: logarithmic spirals wound out from the zenith, turning. */
+    private void spiralArms(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        int arms = 5;
+        for (int arm = 0; arm < arms; arm++) {
+            float phase = arm / (float) arms * 6.283f - t * 0.55f;
+            float[] col = arm % 2 == 0 ? main : alt;
+            int steps = 40;
+            float paz = phase, pel = 1.55f;
+            for (int k = 1; k <= steps; k++) {
+                float f = k / (float) steps;
+                // Elevation falls to the horizon while the angle runs on: a spiral on the dome.
+                float el = 1.55f * (1f - f);
+                float az = phase + f * 7.5f;
+                float fade = smooth(0f, 0.12f, f) * (1f - smooth(0.78f, 1f, f));
+                float pulse = 0.55f + 0.45f * MathHelper.sin(f * 14f - t * 3f + arm);
+                bandAE(buffer, paz, pel, az, el, 0.05f + 0.10f * f, col, fade * pulse * 0.9f * I);
+                paz = az;
+                pel = el;
+            }
+        }
+        // The eye of it.
+        for (int ring = 0; ring < 3; ring++) {
+            float el = 1.56f - ring * 0.035f;
+            float a = (0.8f - ring * 0.2f) * (0.6f + 0.4f * MathHelper.sin(t * 2.4f - ring)) * I;
+            int steps = 24;
+            for (int s = 0; s < steps; s++) {
+                float a0 = s / (float) steps * 6.283f, a1 = (s + 1) / (float) steps * 6.283f;
+                bandAE(buffer, a0, el, a1, el, 0.03f, WHITE, a);
+            }
+        }
+        tessellator.draw();
+    }
+
+    /** Rings spreading from directly overhead, each one born, widening and fading in turn. */
+    private void expandingRings(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        int rings = 7;
+        int steps = 48;
+        for (int ring = 0; ring < rings; ring++) {
+            float life = ((t * 0.22f) + ring / (float) rings) % 1f;
+            float el = 1.57f * (1f - life);
+            float a = smooth(0f, 0.1f, life) * (1f - smooth(0.7f, 1f, life)) * I;
+            float[] col = ring % 2 == 0 ? main : alt;
+            float wobble = 0.03f * (1f - life);
+            for (int s = 0; s < steps; s++) {
+                float a0 = s / (float) steps * 6.283f, a1 = (s + 1) / (float) steps * 6.283f;
+                float e0 = el + MathHelper.sin(a0 * 6f + t) * wobble;
+                float e1 = el + MathHelper.sin(a1 * 6f + t) * wobble;
+                bandAE(buffer, a0, e0, a1, e1, 0.035f + 0.05f * life, col, a * 0.9f);
+            }
+        }
+        tessellator.draw();
+    }
+
+    /**
+     * Glitch tears: slabs of the sky knocked sideways for a moment.
+     *
+     * <p>Scanlines on their own are stripes. What makes a picture look broken rather than striped
+     * is a band of it jumping out of place and snapping back, so this draws short-lived horizontal
+     * slabs displaced in azimuth, in a colour that does not quite match the sky.
+     */
+    private void glitchTears(Tessellator tessellator, WorldRenderer buffer, float I) {
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 18; i++) {
+            // Each tear lives for a slice of its own cycle, so they fire at different moments.
+            float cycle = (t * (0.35f + RAND[(i * 11) & 511] * 0.5f) + RAND[(i * 11 + 1) & 511] * 5f) % 3f;
+            if (cycle > 0.4f) continue;
+            float a = (1f - cycle / 0.4f) * I;
+            float el = 0.05f + RAND[(i * 11 + 2) & 511] * 1.3f;
+            float height = 0.02f + RAND[(i * 11 + 3) & 511] * 0.05f;
+            float shift = (RAND[(i * 11 + 4) & 511] - 0.5f) * 0.9f;
+            float[] col = i % 3 == 0 ? alt : (i % 3 == 1 ? main : WHITE);
+            int steps = 20;
+            for (int s = 0; s < steps; s++) {
+                float a0 = s / (float) steps * 6.283f + shift;
+                float a1 = (s + 1) / (float) steps * 6.283f + shift;
+                float cut = RAND[(i * 31 + s) & 511];
+                if (cut < 0.35f) continue;              // the tear is broken up, not continuous
+                bandAE(buffer, a0, el, a1, el, height, col, a * 0.8f);
+            }
+        }
+        tessellator.draw();
     }
 
     private static void bandAE(WorldRenderer buffer, float az0, float el0, float az1, float el1, float width,

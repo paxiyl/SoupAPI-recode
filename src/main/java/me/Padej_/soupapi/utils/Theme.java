@@ -192,7 +192,63 @@ public enum Theme {
 
     THUNDER(0xffe600, 0x4a8fff, 0xffffff, 0x14203b, 0x070b16, 0xeef4ff, ParticleSprite.SYMBOL, Symbol.BOLT, Ambience.THUNDERBUGS,
             JumpCircles.JumCircleStyle.SHATTER, HitBubbles.Style.SHATTER, Trails.Style.PULSE,
-            PlayerEffects.Style.SPARKS, Halo.Style.GYROSCOPE);
+            PlayerEffects.Style.SPARKS, Halo.Style.GYROSCOPE),
+
+    // ---- the layers ----------------------------------------------------------------------
+    // Ten themes that take a floor of hell each, after the game that names them: the cold blue
+    // and white of the opening, down through water, flesh, storm, gold and fire, to the black
+    // and green of the terminal at the end of it. They are only colours and shapes - nothing of
+    // that game is used here - but they are the palettes that make the mod feel like it.
+
+    /** White marble and a blue machine: cold, clean, almost no colour at all. */
+    PRELUDE(0x2f9bff, 0xffffff, 0xb6c9dd, 0x35485c, 0x0b1017, 0xeaf2ff, ParticleSprite.SYMBOL, Symbol.QUAD, Ambience.DUST,
+            JumpCircles.JumCircleStyle.HEXAGON, HitBubbles.Style.HEXAGON, Trails.Style.SOLID,
+            PlayerEffects.Style.BEAM, Halo.Style.RING),
+
+    /** Still blue water over white stone, lit from below. */
+    LIMBO(0x7fd4ff, 0xffffff, 0x2f74b8, 0x0a2440, 0x04101c, 0xeaf6ff, ParticleSprite.SYMBOL, Symbol.WAVE, Ambience.BUBBLES,
+            JumpCircles.JumCircleStyle.CIRCLE_BOLD, HitBubbles.Style.CIRCLE, Trails.Style.RIBBON,
+            PlayerEffects.Style.BUBBLES, Halo.Style.AURA),
+
+    /** Hot pink neon standing in black water. */
+    LUST(0xff2f9b, 0x2fd8ff, 0xffb3e0, 0x3b0a2b, 0x150514, 0xffe6f6, ParticleSprite.SYMBOL, Symbol.BLOSSOM, Ambience.NEON_RAIN,
+            JumpCircles.JumCircleStyle.MAGIC, HitBubbles.Style.MAGIC, Trails.Style.NEON,
+            PlayerEffects.Style.MAGIC_CIRCLE, Halo.Style.GYROSCOPE),
+
+    /** Flesh and bone: dull red, old ivory, nothing bright. */
+    GLUTTONY(0xb33a3a, 0xe8c9a0, 0x5a1414, 0x2b0d0a, 0x0f0504, 0xf0d9c0, ParticleSprite.SYMBOL, Symbol.FANG, Ambience.ASH,
+            JumpCircles.JumCircleStyle.RUNE, HitBubbles.Style.RUNE, Trails.Style.FADED,
+            PlayerEffects.Style.EMBERS, Halo.Style.SPIKES),
+
+    /** A grey sea under a grey storm, and one white break in it. */
+    WRATH(0x4a7fa8, 0xd9e8f0, 0x11283a, 0x16334d, 0x060e16, 0xdfeaf2, ParticleSprite.SYMBOL, Symbol.BOLT, Ambience.RAIN,
+            JumpCircles.JumCircleStyle.SHATTER, HitBubbles.Style.SHATTER, Trails.Style.PULSE,
+            PlayerEffects.Style.SPARKS, Halo.Style.DOUBLE_RING),
+
+    /** Gold on sand, with the heat coming off it. */
+    GREED(0xffc44a, 0xe88f2f, 0xfff0c9, 0x6b4a14, 0x191205, 0xfff2d6, ParticleSprite.SYMBOL, Symbol.CROWN, Ambience.SANDSTORM,
+            JumpCircles.JumCircleStyle.RUNE, HitBubbles.Style.RUNE, Trails.Style.SOLID,
+            PlayerEffects.Style.CROWN, Halo.Style.RUNE_DISC),
+
+    /** Black stone and gold fire, and the weight of what is above it. */
+    HERESY(0xff6b1f, 0xffd447, 0x2a0a00, 0x3b1400, 0x090200, 0xffddb0, ParticleSprite.FIREFLY, null, Ambience.EMBERS,
+            JumpCircles.JumCircleStyle.RUNE, HitBubbles.Style.RUNE, Trails.Style.NEON,
+            PlayerEffects.Style.FLAME, Halo.Style.ECLIPSE),
+
+    /** Blood on sand under a burnt sky. */
+    VIOLENCE(0xff2a2a, 0xe8b96b, 0x6b0a0a, 0x2b1408, 0x110504, 0xffd6c0, ParticleSprite.SYMBOL, Symbol.FANG, Ambience.BLOOD_RAIN,
+            JumpCircles.JumCircleStyle.SHATTER, HitBubbles.Style.SHATTER, Trails.Style.NEON,
+            PlayerEffects.Style.SPARKS, Halo.Style.SPIKES),
+
+    /** Black, white and terminal green: a grid with nothing on it but you. */
+    CYBER_GRIND(0xffffff, 0x00ff41, 0x9a9a9a, 0x101010, 0x000000, 0xffffff, ParticleSprite.SYMBOL, Symbol.QUAD, Ambience.DIGITAL_SNOW,
+            JumpCircles.JumCircleStyle.HEXAGON, HitBubbles.Style.HEXAGON, Trails.Style.DOTTED,
+            PlayerEffects.Style.PULSE_SPHERE, Halo.Style.GYROSCOPE),
+
+    /** The ceremonial one: white and gold, lit like a chapel. */
+    PRIME_SANCTUM(0xfff0c9, 0xffd447, 0xffffff, 0x8a6300, 0x13100a, 0xfff8e6, ParticleSprite.STAR, null, Ambience.GOLD_DUST,
+            JumpCircles.JumCircleStyle.SOUP, HitBubbles.Style.CIRCLE_BOLD, Trails.Style.GRADIENT,
+            PlayerEffects.Style.CROWN, Halo.Style.SOULS);
 
     private final int c1;
     private final int c2;

@@ -272,20 +272,44 @@ public final class MeleeRenderer extends ConfigurableModule {
             pulse = 0.65f + 0.35f * MathUtility.sin((System.currentTimeMillis() % 100000L) / 1000f * speed * 3.2f);
         }
         float alpha = CONFIG.meleeGlowStrength / 100f * pulse;
+        // A swing is when the thing should look dangerous, so the glow leans into it.
+        if (Melee.state().attacking()) alpha *= 1.45f;
 
         GlStateManager.depthMask(false);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
         GlStateManager.disableLighting();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-        GlStateManager.color(colour.getRed() / 255f, colour.getGreen() / 255f, colour.getBlue() / 255f, alpha);
         client().getTextureManager().bindTexture(mask);
-        model.drawPosed(view);
+
+        float r = colour.getRed() / 255f, g = colour.getGreen() / 255f, b = colour.getBlue() / 255f;
+        // Three passes, each a little larger and a lot fainter than the last. One flat additive
+        // pass over the mask only tints the lit parts; what makes something look like it is giving
+        // off light is the light spilling past its own outline, and the cheapest honest way to get
+        // that without a shader is to redraw the model swollen about its own centre. The scaling is
+        // about the view anchor, so the halo grows out of the weapon rather than sliding off it.
+        for (int pass = HALO.length - 1; pass >= 0; pass--) {
+            float swell = HALO[pass];
+            float weight = pass == 0 ? 1f : 0.30f / pass;
+            GlStateManager.color(r, g, b, alpha * weight);
+            if (swell == 1f) {
+                model.drawPosed(view);
+            } else {
+                GlStateManager.pushMatrix();
+                GlStateManager.scale(swell, swell, swell);
+                model.drawPosed(view);
+                GlStateManager.popMatrix();
+            }
+        }
+
         GlStateManager.enableLighting();
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
+
+    /** How much each glow pass swells the model: the weapon itself, then two haloes around it. */
+    private static final float[] HALO = {1f, 1.035f, 1.085f};
 
     /** The colour the glow uses: the theme's palette, or the weapon's own fixed colour. */
     static Color glowColour() {
