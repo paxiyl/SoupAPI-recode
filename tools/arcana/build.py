@@ -23,9 +23,11 @@ NS = 'arcana'
 
 
 def weapons():
-    import katana
+    # The katana's shape was replaced by the staff from the concept art; it keeps the same id,
+    # sounds and clips, so a saved config and the animation work both carry over.
+    import staff
     import clips_katana
-    out = [(katana, clips_katana)]
+    out = [(staff, clips_katana)]
     try:
         import raven
         import clips_raven
@@ -54,7 +56,7 @@ def main():
     sounds_index = {}
     for module, clips in weapons():
         wid = module.ID
-        model, rig, _ = module.build()
+        model, rig, mesh_groups = module.build()
         emit('assets/%s/geo_models/melee/%s_geo.json' % (NS, wid),
              lambda p: write_json(p, model.to_json('geometry.%s' % wid)))
         for finish in module.FINISHES:
@@ -63,6 +65,16 @@ def main():
             emit('assets/%s/textures/melee/%s%s.png' % (NS, wid, suffix), lambda p: canvas.save(p))
             emit('assets/%s/textures/melee/%s%s_s.png' % (NS, wid, suffix),
                  lambda p: canvas.save(p + '.tmp.png', p) or os.remove(p + '.tmp.png'))
+        # Triangle geometry, where the weapon is built from meshes rather than boxes.
+        if isinstance(mesh_groups, dict) and mesh_groups:
+            from mesh import write_mesh
+            rel = 'assets/%s/geo_models/melee/%s_geo.mesh' % (NS, wid)
+            path = PACK / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            count = write_mesh(str(path), mesh_groups)
+            files.append(rel)
+            print('  %s: %d triangles' % (wid, count))
+
         from anim import bundle
         clip_list = clips.build(rig)
         emit('assets/%s/animations/melee/%s.animation.json' % (NS, wid),

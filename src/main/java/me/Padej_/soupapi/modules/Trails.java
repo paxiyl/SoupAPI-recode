@@ -5,7 +5,7 @@ import me.Padej_.soupapi.compat.ShaderKey;
 import me.Padej_.soupapi.compat.RenderSystem;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.render.GradientColors;
 import me.Padej_.soupapi.utils.EntityUtils;
 import me.Padej_.soupapi.event.WorldRenderContext;
 import me.Padej_.soupapi.compat.BufferBuilder;
@@ -391,10 +391,10 @@ public class Trails extends ConfigurableModule {
 
     public static Color getAnimatedColor(float x, float y) {
 
-        Color c1 = TargetHudRenderer.topLeft;
-        Color c2 = TargetHudRenderer.topRight;
-        Color c3 = TargetHudRenderer.bottomRight;
-        Color c4 = TargetHudRenderer.bottomLeft;
+        Color c1 = GradientColors.topLeft;
+        Color c2 = GradientColors.topRight;
+        Color c3 = GradientColors.bottomRight;
+        Color c4 = GradientColors.bottomLeft;
 
         Color top = lerpColor(c1, c2, x);
         Color bottom = lerpColor(c4, c3, x);

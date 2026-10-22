@@ -14,6 +14,8 @@ public final class GeoBone {
     public final float rotX, rotY, rotZ;
     public final List<GeoCube> cubes = new ArrayList<GeoCube>();
     public final List<GeoBone> children = new ArrayList<GeoBone>();
+    /** Triangles attached to this bone, when the pack ships a mesh for it. */
+    public GeoMesh.Group mesh;
 
     GeoBone parent;
     /** Set when the caller wants this bone's geometry left out; children still draw. */

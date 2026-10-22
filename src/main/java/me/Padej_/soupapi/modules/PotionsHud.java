@@ -3,7 +3,7 @@ package me.Padej_.soupapi.modules;
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.font.FontRenderers;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.render.GradientColors;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
@@ -99,7 +99,7 @@ public class PotionsHud extends ConfigurableModule {
 
             // Заголовок
             MatrixStack matrices = context.getMatrices();
-            Render2D.drawGradientBlurredShadow1(matrices, x - 2.5f, headerY, currentWidth, headerHeight, 5, TargetHudRenderer.bottomLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.topRight, TargetHudRenderer.topLeft);
+            Render2D.drawGradientBlurredShadow1(matrices, x - 2.5f, headerY, currentWidth, headerHeight, 5, GradientColors.bottomLeft, GradientColors.bottomRight, GradientColors.topRight, GradientColors.topLeft);
             Render2D.drawRound(matrices, x - 3f, headerY, currentWidth, headerHeight, radius, Palette.getBackColor());
 
             String title = "Potions";
@@ -110,7 +110,7 @@ public class PotionsHud extends ConfigurableModule {
             );
 
             // Фон под эффекты
-            Render2D.drawGradientBlurredShadow1(matrices, x - 2.5f, y + 1, currentWidth, currentHeight, 5, TargetHudRenderer.bottomLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.topRight, TargetHudRenderer.topLeft);
+            Render2D.drawGradientBlurredShadow1(matrices, x - 2.5f, y + 1, currentWidth, currentHeight, 5, GradientColors.bottomLeft, GradientColors.bottomRight, GradientColors.topRight, GradientColors.topLeft);
             Render2D.drawRound(matrices, x - 3f, y + 0.5f, currentWidth, currentHeight, radius, Palette.getBackColor());
 
             matrices.push();

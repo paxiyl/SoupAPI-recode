@@ -243,7 +243,7 @@ public class Render3D extends ConfigurableModule {
 
         Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
-        Color shaderColor = TargetHudRenderer.bottomLeft;
+        Color shaderColor = GradientColors.bottomLeft;
         RenderSystem.setShaderColor(
                 shaderColor.getRed() / 255f,
                 shaderColor.getGreen() / 255f,
@@ -325,7 +325,7 @@ public class Render3D extends ConfigurableModule {
 
         Mat4 baseMatrix = matrices.peek().getPositionMatrix();
 
-        Color shaderColor = TargetHudRenderer.bottomRight;
+        Color shaderColor = GradientColors.bottomRight;
         RenderSystem.setShaderColor(
                 shaderColor.getRed() / 255f,
                 shaderColor.getGreen() / 255f,

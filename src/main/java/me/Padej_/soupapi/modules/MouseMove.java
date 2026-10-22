@@ -2,7 +2,7 @@ package me.Padej_.soupapi.modules;
 
 import me.Padej_.soupapi.config.ConfigurableModule;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.render.GradientColors;
 import me.Padej_.soupapi.utils.MouseUtils;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.compat.DrawContext;
@@ -15,10 +15,10 @@ public class MouseMove extends ConfigurableModule {
     public static void render(DrawContext context) {
         if (!CONFIG.mouseMoveEnabled) return;
 
-        Color color1 = TargetHudRenderer.bottomLeft;
-        Color color2 = TargetHudRenderer.bottomRight;
-        Color color3 = TargetHudRenderer.topRight;
-        Color color4 = TargetHudRenderer.topLeft;
+        Color color1 = GradientColors.bottomLeft;
+        Color color2 = GradientColors.bottomRight;
+        Color color3 = GradientColors.topRight;
+        Color color4 = GradientColors.topLeft;
 
         int centerX = CONFIG.mouseMoveX + 20;
         int centerY = CONFIG.mouseMoveY + 20;

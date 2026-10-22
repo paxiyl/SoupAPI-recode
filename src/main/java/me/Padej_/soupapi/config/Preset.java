@@ -389,7 +389,6 @@ public enum Preset {
 
     /** The things worth having in a fight, and nothing that covers the screen. */
     private static void combat(SoupAPI_Config config) {
-        config.targetHudEnabled = true;
         config.hitBubblesEnabled = true;
         config.hitBubblesStyle = HitBubbles.Style.CIRCLE_BOLD;
         config.hitEffectsEnabled = true;

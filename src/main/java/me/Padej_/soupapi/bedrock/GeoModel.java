@@ -271,25 +271,54 @@ public final class GeoModel {
         return parent != null && hiddenWithAncestors(parent);
     }
 
+    /**
+     * Binds a pack's triangle geometry to the bones of the same name.
+     *
+     * <p>Called before the first draw, so a weapon can be boxes, triangles or both: a bone takes
+     * its mesh group and keeps its cubes, and they compile into the same display list.
+     */
+    public void attach(GeoMesh mesh) {
+        if (mesh == null) return;
+        for (GeoBone bone : bones) {
+            GeoMesh.Group group = mesh.group(bone.name);
+            if (group != null) bone.mesh = group;
+        }
+        compiled = false;
+    }
+
     private void compile() {
         compiled = true;
         for (GeoBone bone : bones) {
-            if (bone.cubes.isEmpty()) continue;
+            if (bone.cubes.isEmpty() && bone.mesh == null) continue;
             int list = GLAllocation.generate();
             if (list == 0) continue;
             GL11.glNewList(list, GL11.GL_COMPILE);
-            GL11.glBegin(GL11.GL_QUADS);
-            for (GeoCube cube : bone.cubes) {
-                for (float[] q : cube.quads) {
-                    for (int i = 0; i < 4; i++) {
-                        int o = i * 8;
-                        GL11.glNormal3f(q[o + 5], q[o + 6], q[o + 7]);
-                        GL11.glTexCoord2f(q[o + 3], q[o + 4]);
-                        GL11.glVertex3f(q[o], q[o + 1], q[o + 2]);
+            if (!bone.cubes.isEmpty()) {
+                GL11.glBegin(GL11.GL_QUADS);
+                for (GeoCube cube : bone.cubes) {
+                    for (float[] q : cube.quads) {
+                        for (int i = 0; i < 4; i++) {
+                            int o = i * 8;
+                            GL11.glNormal3f(q[o + 5], q[o + 6], q[o + 7]);
+                            GL11.glTexCoord2f(q[o + 3], q[o + 4]);
+                            GL11.glVertex3f(q[o], q[o + 1], q[o + 2]);
+                        }
                     }
                 }
+                GL11.glEnd();
             }
-            GL11.glEnd();
+            if (bone.mesh != null) {
+                float[] v = bone.mesh.vertices;
+                int[] idx = bone.mesh.indices;
+                GL11.glBegin(GL11.GL_TRIANGLES);
+                for (int i = 0; i < idx.length; i++) {
+                    int o = idx[i] * 8;
+                    GL11.glNormal3f(v[o + 5], v[o + 6], v[o + 7]);
+                    GL11.glTexCoord2f(v[o + 3], v[o + 4]);
+                    GL11.glVertex3f(v[o], v[o + 1], v[o + 2]);
+                }
+                GL11.glEnd();
+            }
             GL11.glEndList();
             bone.displayList = list;
         }
@@ -338,6 +367,16 @@ public final class GeoModel {
                     }
                 }
             }
+            if (bone.mesh != null) {
+                float[] v = bone.mesh.vertices;
+                for (int o = 0; o < v.length; o += 8) {
+                    g.transform(v[o], v[o + 1], v[o + 2], out);
+                    for (int k = 0; k < 3; k++) {
+                        if (out[k] < box[k]) box[k] = out[k];
+                        if (out[k] > box[k + 3]) box[k + 3] = out[k];
+                    }
+                }
+            }
         }
         if (box[0] > box[3]) return null;
         return box;
@@ -362,6 +401,18 @@ public final class GeoModel {
                             bestDistance = d;
                             best = new float[]{out[0], out[1], out[2]};
                         }
+                    }
+                }
+            }
+            if (bone.mesh != null) {
+                float[] v = bone.mesh.vertices;
+                for (int o = 0; o < v.length; o += 8) {
+                    g.transform(v[o], v[o + 1], v[o + 2], out);
+                    float dx = out[0] - from[0], dy = out[1] - from[1], dz = out[2] - from[2];
+                    float d = dx * dx + dy * dy + dz * dz;
+                    if (d > bestDistance) {
+                        bestDistance = d;
+                        best = new float[]{out[0], out[1], out[2]};
                     }
                 }
             }

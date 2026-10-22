@@ -6,7 +6,7 @@ import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.render.GradientColors;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.TexturesManager;
 import me.Padej_.soupapi.event.WorldRenderContext;
@@ -28,7 +28,7 @@ public class FireFly extends DefaultAmbientParticle {
 
     public FireFly(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
         super(posX, posY, posZ, motionX, motionY, motionZ);
-        this.color = CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : TargetHudRenderer.bottomLeft;
+        this.color = CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : GradientColors.bottomLeft;
     }
 
     @Override

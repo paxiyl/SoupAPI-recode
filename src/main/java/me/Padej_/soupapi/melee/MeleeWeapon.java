@@ -219,6 +219,7 @@ public final class MeleeWeapon {
                 return false;
             }
             GeoModel parsedModel = GeoModel.parse(modelJson);
+            attachMesh(parsedModel);
             GeoAnimations parsedAnimations = GeoAnimations.parse(animationJson);
             GeoPose parsedPose = parsedModel.newPose();
             this.fit = measure(parsedModel, parsedAnimations, parsedPose);
@@ -230,6 +231,36 @@ public final class MeleeWeapon {
             me.Padej_.soupapi.compat.SoupLog.warn("[SoupAPI] could not load the melee weapon " + id, t);
             failed = true;
             return false;
+        }
+    }
+
+    /**
+     * Binds the pack's triangle geometry, where it ships any.
+     *
+     * <p>The mesh sits next to the geometry file as {@code <model>.mesh} and is optional: a pack
+     * with only boxes loads exactly as before, and a pack with both gets its bones' triangles as
+     * well. Failing to read one is not fatal - the weapon still draws whatever boxes it has.
+     */
+    private void attachMesh(GeoModel target) {
+        String path = modelPath == null ? null : modelPath.replaceAll("\\.json$", "") + ".mesh";
+        if (path == null) return;
+        java.io.InputStream stream = null;
+        try {
+            stream = pack.open(path);
+            if (stream == null) return;
+            me.Padej_.soupapi.bedrock.GeoMesh mesh = me.Padej_.soupapi.bedrock.GeoMesh.read(stream);
+            target.attach(mesh);
+            me.Padej_.soupapi.compat.SoupLog.info("[SoupAPI] " + id + ": " + mesh.triangles()
+                    + " triangles over " + mesh.size() + " bones");
+        } catch (Throwable t) {
+            me.Padej_.soupapi.compat.SoupLog.warn("[SoupAPI] could not read the mesh for " + id, t);
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (java.io.IOException ignored) {
+                }
+            }
         }
     }
 

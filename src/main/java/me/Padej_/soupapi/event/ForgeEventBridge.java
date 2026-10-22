@@ -17,7 +17,6 @@ import me.Padej_.soupapi.modules.JumpCircles;
 import me.Padej_.soupapi.modules.JumpParticles;
 import me.Padej_.soupapi.modules.MouseMove;
 import me.Padej_.soupapi.modules.RPC;
-import me.Padej_.soupapi.modules.TargetHud;
 import me.Padej_.soupapi.modules.TargetRender;
 import me.Padej_.soupapi.modules.TotemPopParticles;
 import me.Padej_.soupapi.modules.Trails;
@@ -141,7 +140,6 @@ public final class ForgeEventBridge {
         guard("FxParticles.tick", me.Padej_.soupapi.utils.Palette.Element.PARTICLES, me.Padej_.soupapi.render.FxParticles::tick);
         guard("SmokeFx.tick", me.Padej_.soupapi.utils.Palette.Element.PARTICLES, me.Padej_.soupapi.render.SmokeFx::tick);
         guard("JumpCircles.tick", me.Padej_.soupapi.utils.Palette.Element.PARTICLES, JumpCircles::onTick);
-        guard("TargetHud.tick", me.Padej_.soupapi.utils.Palette.Element.HUD, TargetHud::onTick);
         guard("RPC.tick", RPC::onTick);
         guard("Translator.tick", Translator::onTick);
         guard("AnimatedSky.tick", me.Padej_.soupapi.utils.Palette.Element.SKY, me.Padej_.soupapi.modules.AnimatedSky::onTick);
@@ -156,6 +154,7 @@ public final class ForgeEventBridge {
         guard("WorldAmbience.tick", me.Padej_.soupapi.utils.Palette.Element.AMBIENCE, me.Padej_.soupapi.modules.WorldAmbience::onTick);
 
         guard("settingsShortcut", () -> SoupSettingsShortcut.tick(mc));
+        guard("devWeapons", () -> me.Padej_.soupapi.devprobe.WeaponShots.tick(mc));
         guard("endClientTick", () -> SoupEvents.fireEndClientTick(mc));
     }
 
@@ -170,7 +169,6 @@ public final class ForgeEventBridge {
         Entity cameraEntity = mc.getRenderViewEntity() != null
                 ? mc.getRenderViewEntity() : mc.thePlayer;
         Cameras.update(cameraEntity, tickDelta);
-        captureWorldSpaceMatrices();
 
         WorldRenderContext context = SoupEvents.worldContext();
         context.begin(cameraEntity, tickDelta);
@@ -214,17 +212,6 @@ public final class ForgeEventBridge {
      * world positions onto the screen. Read here, inside the world pass, so the matrices are the
      * ones actually in effect for this frame.
      */
-    private static void captureWorldSpaceMatrices() {
-        me.Padej_.soupapi.compat.Camera camera = Cameras.get();
-        MatrixStack matrixStack = new MatrixStack();
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
-
-        TargetHud.lastProjMat.set(RenderSystem.getProjectionMatrix());
-        TargetHud.lastModMat.set(RenderSystem.getModelViewMatrix());
-        TargetHud.lastWorldSpaceMatrix.set(matrixStack.peek().getPositionMatrix());
-    }
-
     // ---- HUD -------------------------------------------------------------------------------
 
     @SubscribeEvent
@@ -236,9 +223,10 @@ public final class ForgeEventBridge {
         SoupEvents.HudRenderContext hud = SoupEvents.hudContext();
         hud.begin(event.partialTicks, context);
 
+        guard("devWeaponsFrame", () -> me.Padej_.soupapi.devprobe.WeaponShots.frame(Minecraft.getMinecraft()));
         guard("BetterHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> me.Padej_.soupapi.render.BetterHudRenderer.render(context));
         guard("Crosshair", me.Padej_.soupapi.utils.Palette.Element.CROSSHAIR, () -> me.Padej_.soupapi.modules.Crosshair.render(context));
-        guard("TargetHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> TargetHud.render(context, hud.tickCounter()));
+        guard("GradientColors", () -> me.Padej_.soupapi.render.GradientColors.tick());
         guard("PotionsHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> {
             if (me.Padej_.soupapi.config.ConfigurableModule.CONFIG.hudBetterPotionsHudEnabled) {
                 me.Padej_.soupapi.modules.PotionsHud.render(context);

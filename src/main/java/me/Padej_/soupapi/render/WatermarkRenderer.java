@@ -42,8 +42,8 @@ public class WatermarkRenderer {
         if (CONFIG.mctiersEnabled) width += 18;
         y += 16;
 
-//        Render2D.drawGradientBlurredShadow1(context.getMatrices(), x + 1, y + 1, width, height, 5, TargetHudRenderer.bottomLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.topRight, TargetHudRenderer.topLeft);
-//        Render2D.renderRoundedGradientRect(context.getMatrices(), TargetHudRenderer.topLeft, TargetHudRenderer.topLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.bottomLeft, x + 0.5f, y + 0.5f, width, height, 4);
+//        Render2D.drawGradientBlurredShadow1(context.getMatrices(), x + 1, y + 1, width, height, 5, GradientColors.bottomLeft, GradientColors.bottomRight, GradientColors.topRight, GradientColors.topLeft);
+//        Render2D.renderRoundedGradientRect(context.getMatrices(), GradientColors.topLeft, GradientColors.topLeft, GradientColors.bottomRight, GradientColors.bottomLeft, x + 0.5f, y + 0.5f, width, height, 4);
         Render2D.drawRound(context.getMatrices(), x + 0.5f, y + 0.5f, width, height, 2, Palette.getBackColor());
     }
 
@@ -62,7 +62,7 @@ public class WatermarkRenderer {
         context.drawTexture(TexturesManager.getMC_TiersGameModeTexture(), 0, 0, 0, 0, 40, 40, 1268, 1153, 1268, 1153);
         stack.pop();
 
-        Render2D.renderRoundedGradientRect(stack, TargetHudRenderer.topLeft, TargetHudRenderer.topLeft, TargetHudRenderer.bottomRight, TargetHudRenderer.bottomRight, x + 36 + textWidth, y - 4.5f, 1, 13.5f, 0);
+        Render2D.renderRoundedGradientRect(stack, GradientColors.topLeft, GradientColors.topLeft, GradientColors.bottomRight, GradientColors.bottomRight, x + 36 + textWidth, y - 4.5f, 1, 13.5f, 0);
     }
 
     private static void renderHead(DrawContext context, float x, float y) {

@@ -7,6 +7,7 @@ import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.utils.Weather;
 import me.Padej_.soupapi.config.annotation.Config;
 import me.Padej_.soupapi.config.annotation.ConfigEntry;
+import me.Padej_.soupapi.screen.ConfigHudPositionsScreen;
 
 @Config(name = "soupapi")
 public class SoupAPI_Config implements ConfigData {
@@ -16,7 +17,7 @@ public class SoupAPI_Config implements ConfigData {
      **/
     @ConfigEntry.Category("main")
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-    public TargetHud.Config configPos_BUTTON = TargetHud.Config.CONFIG_POS;
+    public ConfigHudPositionsScreen.Config configPos_BUTTON = ConfigHudPositionsScreen.Config.CONFIG_POS;
     @ConfigEntry.Category("main")
     public boolean translatorBruhEnabled = false;
 
@@ -668,51 +669,6 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.Category("target_render")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 60)
     public int targetRenderTopkaSpeed = 30;
-
-    /**
-     * TARGET HUD
-     **/
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudEnabled = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudFollow = false;
-    @ConfigEntry.Category("target_hud")
-    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-    public TargetHud.Style targetHudStyle = TargetHud.Style.ARES;
-    @ConfigEntry.Category("target_hud")
-    @ConfigEntry.BoundedDiscrete(min = 1, max = 30)
-    public int targetHudRenderTime = 5;
-
-    @ConfigEntry.Gui.PrefixText // Particles
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudParticles = true;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeFirefly = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeDollar = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeSnowflake = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeHeart = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeStar = false;
-    @ConfigEntry.Category("target_hud")
-    public boolean targetHudIncludeGlyphs = false;
-    @ConfigEntry.Category("target_hud")
-    @ConfigEntry.BoundedDiscrete(min = 50, max = 120)
-    public int targetHudParticleScale = 100;
-
-    @ConfigEntry.Gui.PrefixText // Position
-    @ConfigEntry.Category("target_hud")
-    public int targetHudOffsetX = -25;
-    @ConfigEntry.Category("target_hud")
-    public int targetHudOffsetY = -80;
-    @ConfigEntry.Category("target_hud")
-    @ConfigEntry.BoundedDiscrete(min = -50, max = 50)
-    public int targetHudEntityOffsetX = 20;
-    @ConfigEntry.Category("target_hud")
-    @ConfigEntry.BoundedDiscrete(min = -50, max = 50)
-    public int targetHudEntityOffsetY = 0;
 
     /**
      * HUD

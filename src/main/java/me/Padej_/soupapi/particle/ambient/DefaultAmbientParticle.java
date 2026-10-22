@@ -6,7 +6,7 @@ import me.Padej_.soupapi.compat.Cameras;
 
 import me.Padej_.soupapi.modules.AmbientParticle;
 import me.Padej_.soupapi.render.Render2D;
-import me.Padej_.soupapi.render.TargetHudRenderer;
+import me.Padej_.soupapi.render.GradientColors;
 import me.Padej_.soupapi.utils.MathUtility;
 import me.Padej_.soupapi.utils.Palette;
 import me.Padej_.soupapi.event.WorldRenderContext;
@@ -34,7 +34,7 @@ public class DefaultAmbientParticle {
 
     public DefaultAmbientParticle(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
         this.texture = AVAILABLE_TEXTURES.get(new Random().nextInt(AVAILABLE_TEXTURES.size()));
-        this.color = ConfigurableModule.CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : TargetHudRenderer.topLeft;
+        this.color = ConfigurableModule.CONFIG.ambientParticlesRandomColor ? Palette.getRandomColor() : GradientColors.topLeft;
         this.posX = posX;
         this.posY = posY;
         this.posZ = posZ;
@@ -76,7 +76,7 @@ public class DefaultAmbientParticle {
 
     public void render(WorldRenderContext context) {
         Camera camera = Cameras.get();
-        Color color = TargetHudRenderer.topLeft;
+        Color color = GradientColors.topLeft;
         Vec3 pos = interpolatePos(context, prevPosX, prevPosY, prevPosZ, posX, posY, posZ);
 
         MatrixStack matrices = new MatrixStack();

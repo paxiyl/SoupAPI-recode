@@ -21,7 +21,12 @@ import java.util.List;
 import static me.Padej_.soupapi.config.ConfigurableModule.CONFIG;
 
 public class ConfigHudPositionsScreen extends SoupScreen {
-    private final Frame targetHudFrame;
+
+    /** The one value of the main page's "configure HUD positions" button. */
+    public enum Config {
+        CONFIG_POS
+    }
+
     private final Frame potionsHudFrame;
     private final Frame watermarkFrame;
     private final Frame mouseMoveFrame;
@@ -30,13 +35,6 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         super(Texts.literal("SoupAPI config screen"));
         int centerX = Windows.scaledWidth() / 2;
         int centerY = Windows.scaledHeight() / 2;
-        targetHudFrame = new Frame(
-                centerX + CONFIG.targetHudOffsetX,
-                centerY - CONFIG.targetHudOffsetY,
-                50, 30,
-                "Target HUD",
-                0xAA00FF55
-        );
         potionsHudFrame = new Frame(
                 CONFIG.hudBetterPotionsHudX,
                 CONFIG.hudBetterPotionsHudY,
@@ -63,8 +61,7 @@ public class ConfigHudPositionsScreen extends SoupScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        boolean hovering = targetHudFrame.isMouseOverDragArea(mouseX, mouseY)
-                || potionsHudFrame.isMouseOverDragArea(mouseX, mouseY)
+        boolean hovering = potionsHudFrame.isMouseOverDragArea(mouseX, mouseY)
                 || watermarkFrame.isMouseOverDragArea(mouseX, mouseY)
                 || mouseMoveFrame.isMouseOverDragArea(mouseX, mouseY);
 
@@ -74,12 +71,10 @@ public class ConfigHudPositionsScreen extends SoupScreen {
             CursorUtils.setDefaultCursor();
         }
 
-        targetHudFrame.render(context);
         potionsHudFrame.render(context);
         watermarkFrame.render(context);
         mouseMoveFrame.render(context);
 
-        renderSnapGuides(context, targetHudFrame);
         renderSnapGuides(context, potionsHudFrame);
         renderSnapGuides(context, watermarkFrame);
         renderSnapGuides(context, mouseMoveFrame);
@@ -88,10 +83,6 @@ public class ConfigHudPositionsScreen extends SoupScreen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            if (targetHudFrame.isMouseOverDragArea(mouseX, mouseY)) {
-                targetHudFrame.startDragging(mouseX, mouseY);
-                return true;
-            }
             if (potionsHudFrame.isMouseOverDragArea(mouseX, mouseY)) {
                 potionsHudFrame.startDragging(mouseX, mouseY);
                 return true;
@@ -111,15 +102,6 @@ public class ConfigHudPositionsScreen extends SoupScreen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (button == 0) {
-            if (targetHudFrame.isDragging()) {
-                Point snapped = applySnappingOffsets(targetHudFrame, mouseX, mouseY);
-                targetHudFrame.setPosition(snapped.x, snapped.y);
-                int centerX = Windows.scaledWidth() / 2;
-                int centerY = Windows.scaledHeight() / 2;
-                CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
-                CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
-                return true;
-            }
             if (potionsHudFrame.isDragging()) {
                 Point snapped = applySnappingOffsets(potionsHudFrame, mouseX, mouseY);
                 potionsHudFrame.setPosition(snapped.x, snapped.y);
@@ -148,7 +130,6 @@ public class ConfigHudPositionsScreen extends SoupScreen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            targetHudFrame.stopDragging();
             potionsHudFrame.stopDragging();
             watermarkFrame.stopDragging();
             mouseMoveFrame.stopDragging();
@@ -158,10 +139,6 @@ public class ConfigHudPositionsScreen extends SoupScreen {
 
     @Override
     public void close() {
-        int centerX = Windows.scaledWidth() / 2;
-        int centerY = Windows.scaledHeight() / 2;
-        CONFIG.targetHudOffsetX = targetHudFrame.getOffsetX(centerX);
-        CONFIG.targetHudOffsetY = -targetHudFrame.getOffsetY(centerY);
         CONFIG.hudBetterPotionsHudX = potionsHudFrame.getOffsetX(0);
         CONFIG.hudBetterPotionsHudY = potionsHudFrame.getOffsetY(0);
         CONFIG.waterMarkX = watermarkFrame.getOffsetX(0);
@@ -198,7 +175,7 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         }
 
         // Привязка к другим рамкам (по центрам)
-        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(potionsHudFrame, watermarkFrame, mouseMoveFrame)) {
             if (other == movingFrame) continue;
 
             int otherCenterX = other.x + other.width / 2;
@@ -254,7 +231,7 @@ public class ConfigHudPositionsScreen extends SoupScreen {
         }
 
         // Привязка к другим рамкам
-        for (Frame other : java.util.Arrays.asList(targetHudFrame, potionsHudFrame, watermarkFrame)) {
+        for (Frame other : java.util.Arrays.asList(potionsHudFrame, watermarkFrame, mouseMoveFrame)) {
             if (other == frame) continue;
 
             int otherCenterX = other.x + other.width / 2;
