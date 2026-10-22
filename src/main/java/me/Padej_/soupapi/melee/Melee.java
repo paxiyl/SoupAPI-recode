@@ -217,7 +217,7 @@ public final class Melee extends ConfigurableModule {
             STATE.equip();
             return;
         }
-        MeleePortal.begin();
+        MeleeSummon.begin();
         STATE.summon();
     }
 

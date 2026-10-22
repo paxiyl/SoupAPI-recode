@@ -268,6 +268,61 @@ def portal_core(n):
     return rgb, alpha
 
 
+def great_eye(n=256):
+    """A lidded eye, for the Weeping Eye's summon: sclera, a fibrous iris, a slit pupil.
+
+    Drawn as greyscale-on-black for the additive pass, with the lids as hard darkness rather than
+    transparency, so the eye can be opened by scaling the quad and still read as a closing lid.
+    """
+    x, y, r, th = grid(n)
+    out = np.zeros_like(r)
+
+    # The almond: two circular arcs meeting at the corners.
+    lid = np.clip(1.0 - (np.abs(y) / (0.42 * np.sqrt(np.maximum(1e-4, 1.0 - (x / 0.95) ** 2)))) ** 2.2, 0, 1)
+    lid *= (np.abs(x) < 0.95)
+    sclera = smoothstep(0.0, 0.25, lid) * 0.55
+
+    # Veins crawling in from the corners.
+    veins = periodic_noise(n, 2.8, 77)
+    vein_lines = np.exp(-((veins - 0.5) ** 2) / 0.0009) * np.clip((np.abs(x) - 0.25) * 2.2, 0, 1)
+    sclera = np.clip(sclera + vein_lines * lid * 0.5, 0, 1)
+
+    # The iris: fibres running out from the pupil, bright, with a dark limbal ring.
+    ir = np.sqrt(x ** 2 + (y / 0.98) ** 2)
+    fibres = 0.5 + 0.5 * np.sin(th * 44 + periodic_noise(n, 2.0, 91) * 9)
+    iris = np.clip(1 - (ir / 0.34) ** 3, 0, 1) * (0.45 + 0.55 * fibres)
+    iris *= smoothstep(0.36, 0.30, ir)
+    limbal = np.exp(-((ir - 0.33) ** 2) / 0.0007) * 0.8
+    pupil = smoothstep(0.16, 0.06, np.sqrt((x / 0.42) ** 2 + y ** 2))
+
+    out = np.clip(sclera + iris * 1.15 - limbal, 0, 1)
+    out = np.clip(out * (1 - pupil), 0, 1)
+    out += np.exp(-(((x - 0.12) ** 2 + (y - 0.14) ** 2)) / 0.004) * 0.9     # the catchlight
+    out *= smoothstep(0.02, 0.18, lid)
+    return np.clip(blur(out, n / 256.0), 0, 1)
+
+
+def crow(w=128, h=128):
+    """A crow in silhouette, wings up: the shape the claw's summon scatters."""
+    img = Image.new('L', (w, h), 0)
+    d = ImageDraw.Draw(img)
+    cx, cy = w / 2, h / 2
+    d.ellipse([cx - w * 0.07, cy - h * 0.16, cx + w * 0.07, cy + h * 0.20], fill=255)   # body
+    d.ellipse([cx - w * 0.06, cy - h * 0.30, cx + w * 0.06, cy - h * 0.14], fill=255)   # head
+    d.polygon([(cx + w * 0.05, cy - h * 0.26), (cx + w * 0.20, cy - h * 0.22),
+               (cx + w * 0.05, cy - h * 0.19)], fill=255)                               # beak
+    for side in (1, -1):
+        d.polygon([(cx + side * w * 0.05, cy - h * 0.10),
+                   (cx + side * w * 0.44, cy - h * 0.40),
+                   (cx + side * w * 0.40, cy - h * 0.16),
+                   (cx + side * w * 0.30, cy + h * 0.04),
+                   (cx + side * w * 0.06, cy + h * 0.08)], fill=255)                    # wing
+    d.polygon([(cx - w * 0.05, cy + h * 0.18), (cx + w * 0.05, cy + h * 0.18),
+               (cx + w * 0.02, cy + h * 0.44), (cx - w * 0.02, cy + h * 0.44)], fill=255)
+    a = np.asarray(img).astype(np.float32) / 255.0
+    return np.clip(blur(a, 1.1), 0, 1)
+
+
 def write_white_alpha_safe(alpha, path):
     write_white_alpha(alpha, path)
 
@@ -333,6 +388,19 @@ def main(out):
     write_base(rune_ring(512, 24, 9, 0.045), os.path.join(out, 'rune_ring_1.png'))
     write_base(rune_ring(256, 12, 13, 0.07), os.path.join(out, 'rune_ring_2.png'))
     write_base(fracture(256, 3), os.path.join(out, 'fracture.png'))
+    write_base(great_eye(256), os.path.join(out, 'great_eye.png'))
+    # Summon atlas, 256x256 in 128-pixel cells: crow, crow (mirrored), sigil, shockwave.
+    summon = np.zeros((256, 256), np.float32)
+    bird = crow(128, 128)
+    place(summon, bird, 0, 0)
+    place(summon, bird[:, ::-1], 128, 0)
+    place(summon, rune_ring(128, 8, 61, 0.10), 0, 128)
+    ring = np.zeros((128, 128), np.float32)
+    gx, gy, gr, _ = grid(128)
+    ring += np.exp(-((gr - 0.78) ** 2) / 0.0024) * 1.0
+    ring += np.exp(-((gr - 0.62) ** 2) / 0.012) * 0.35
+    place(summon, np.clip(ring, 0, 1), 128, 128)
+    write_base(summon, os.path.join(out, 'summon_atlas.png'))
     rgb, alpha = portal_core(256)
     write_rgba(rgb, alpha, os.path.join(out, 'portal_core.png'))
     # Tileable noise for the sky passes: soft cloud, fine grain and long streaks.

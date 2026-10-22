@@ -135,10 +135,28 @@ def feather(c, x, y, w, h, root, tip, seed, glow=0.0):
     rib = np.exp(-(around ** 2) / 0.004)
     rgb = (np.asarray(root, float)[None, None, :] * (1 - along)[..., None]
            + np.asarray(tip, float)[None, None, :] * along[..., None])
+    rgb = np.broadcast_to(rgb, (h, w, 3)).copy()
     rgb *= (0.62 + 0.45 * barbs * (0.4 + 0.6 * np.abs(around)))[..., None]
     rgb += rib[..., None] * 0.25
     rgb *= (1 - 0.5 * np.clip((np.abs(around) - 0.82) * 6, 0, 1))[..., None]
     c.put(x, y, np.clip(rgb, 0, 1), glow=np.full((h, w), glow, np.float32) if glow else None)
+
+
+def petal_tile(c, x, y, w, h, base, deep, seed, glow=0.0):
+    """A rose petal: velvety, darker at the root and at the rim, with veins running to the tip."""
+    around = np.linspace(-1, 1, w)[None, :]
+    along = np.linspace(0, 1, h)[:, None]
+    grain = _noise(w, h, 2.4, seed)
+    rgb = (np.asarray(deep, float)[None, None, :] * (1 - along)[..., None]
+           + np.asarray(base, float)[None, None, :] * along[..., None])
+    rgb = np.broadcast_to(rgb, (h, w, 3)).copy()
+    # Veins fan out from the root; the rim darkens where a petal curls back on itself.
+    veins = np.exp(-((np.abs(around) * 3.2 - along * 2.6) % 1.0 - 0.5) ** 2 / 0.004)
+    rgb *= (0.78 + 0.30 * grain + 0.18 * veins)[..., None]
+    rgb *= (1 - 0.45 * np.clip((np.abs(around) - 0.72) * 4, 0, 1))[..., None]
+    rgb *= (0.70 + 0.45 * along)[..., None]
+    c.put(x, y, np.clip(rgb, 0, 1),
+          glow=np.full((h, w), glow, np.float32) if glow else None)
 
 
 def energy(c, x, y, w, h, core, edge, seed, glow=1.0):
@@ -150,6 +168,7 @@ def energy(c, x, y, w, h, core, edge, seed, glow=1.0):
     body = np.clip(1 - np.abs(around) ** 1.3, 0, 1) * (0.55 + 0.45 * flame)
     rgb = (np.asarray(core, float)[None, None, :] * spine[..., None]
            + np.asarray(edge, float)[None, None, :] * body[..., None])
+    rgb = np.broadcast_to(rgb, (h, w, 3)).copy()
     rgb *= (1.15 - 0.35 * along)[..., None]
     c.put(x, y, np.clip(rgb, 0, 1),
           glow=np.clip((spine + body * 0.8) * glow, 0, 1).astype(np.float32))

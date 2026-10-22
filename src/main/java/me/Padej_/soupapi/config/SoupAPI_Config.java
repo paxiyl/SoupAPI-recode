@@ -1178,6 +1178,9 @@ public class SoupAPI_Config implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 0, max = 200)
     public int meleeTrailStrength = 65;
     @ConfigEntry.Category("melee")
+    @ConfigEntry.BoundedDiscrete(min = 0, max = 90)
+    public int meleeTrailReach = 28;
+    @ConfigEntry.Category("melee")
     @ConfigEntry.BoundedDiscrete(min = 10, max = 400)
     public int meleeTrailFade = 120;
     @ConfigEntry.Category("melee")

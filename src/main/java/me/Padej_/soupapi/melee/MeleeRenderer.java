@@ -96,7 +96,7 @@ public final class MeleeRenderer extends ConfigurableModule {
             hide(model, true);
 
             // The rift is behind the blade as it comes out.
-            MeleePortal.renderBack(Melee.state());
+            MeleeSummon.renderBack(Melee.state());
             model.computeGlobals(pose);
             lightmapForEye(mc, player);
             RenderHelper.enableStandardItemLighting();
@@ -125,7 +125,7 @@ public final class MeleeRenderer extends ConfigurableModule {
             MeleeEffects.render(weapon, partialTicks);
             GlStateManager.popMatrix();
 
-            MeleePortal.renderFront(Melee.state());
+            MeleeSummon.renderFront(Melee.state());
         } catch (Throwable t) {
             me.Padej_.soupapi.compat.SoupLog.error(
                     "[SoupAPI] drawing the melee weapon failed; it is now off", t);

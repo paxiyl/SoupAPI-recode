@@ -109,6 +109,13 @@ public final class MeleeWeapon {
         return profile.has("profile") ? profile.get("profile").getAsString() : "";
     }
 
+    /** A string out of the display profile, or {@code null}: how a pack names a behaviour. */
+    public String profileText(String name) {
+        return profile.has(name) && profile.get(name).isJsonPrimitive()
+                && profile.get(name).getAsJsonPrimitive().isString()
+                ? profile.get(name).getAsString() : null;
+    }
+
     public boolean flag(String name) {
         return profile.has(name) && profile.get(name).isJsonPrimitive()
                 && (profile.get(name).getAsJsonPrimitive().isBoolean() ? profile.get(name).getAsBoolean()

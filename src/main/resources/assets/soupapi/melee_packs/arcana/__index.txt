@@ -7,7 +7,9 @@ assets/arcana/display/melee/spectral_blade.json
 assets/arcana/geo_models/melee/fractured_eye_katana_geo.json
 assets/arcana/geo_models/melee/fractured_eye_katana_geo.mesh
 assets/arcana/geo_models/melee/raven_claw_geo.json
+assets/arcana/geo_models/melee/raven_claw_geo.mesh
 assets/arcana/geo_models/melee/spectral_blade_geo.json
+assets/arcana/geo_models/melee/spectral_blade_geo.mesh
 assets/arcana/lang/en_us.json
 assets/arcana/textures/melee/fractured_eye_katana.png
 assets/arcana/textures/melee/fractured_eye_katana_dark_metal.png

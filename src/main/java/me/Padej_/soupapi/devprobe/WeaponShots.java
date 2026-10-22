@@ -18,12 +18,29 @@ public final class WeaponShots {
     private WeaponShots() {
     }
 
-    private static final String[] IDS = {"fractured_eye_katana", "raven_claw", "spectral_blade"};
-    /** pitch, yaw, size, distance, x, y — camera and placement per shot. */
+    private static final String[] IDS = System.getProperty("soupapi.sweep") != null
+            ? new String[]{System.getProperty("soupapi.sweep")}
+            : new String[]{"fractured_eye_katana", "raven_claw", "spectral_blade"};
+
+    /** size, distance, offsetX, offsetY — one placement per shot, when sweeping. */
+    private static final int[][] PLACEMENTS = {
+            {16, 30, 14, -16}, {16, 60, 14, -16}, {16, 95, 14, -16},
+            {24, 30, 18, -22}, {24, 60, 18, -22}, {24, 95, 18, -22},
+            {34, 30, 24, -30}, {34, 60, 24, -30}, {34, 95, 24, -30},
+    };
+    private static final boolean SWEEP = System.getProperty("soupapi.sweep") != null
+            && System.getProperty("soupapi.summon") == null;
+    /** Summon mode: shoot the whole arrival, a frame every few ticks. */
+    private static final boolean SUMMON = System.getProperty("soupapi.summon") != null;
+    private static final int SUMMON_SHOTS = 8;
+    /** pitch, yaw — the camera per shot when not sweeping. */
     private static final float[][] VIEWS = {
             {0, 0, 0, 0, 0, 0},
             {-20, 0, 0, 0, 0, 0},
     };
+    private static int shots() {
+        return SWEEP ? PLACEMENTS.length : (SUMMON ? SUMMON_SHOTS : VIEWS.length);
+    }
     private static int ticks, phase, index, step, wait;
     private static net.minecraft.client.gui.GuiScreen wanted;
 
@@ -72,8 +89,8 @@ public final class WeaponShots {
                 }
                 SoupAPI_Config c = SoupAPI.configHolder.get();
                 c.meleeEnabled = true;
-                c.meleeSummonEnabled = false;
-                c.meleeSummonOnEquip = false;
+                c.meleeSummonEnabled = SUMMON;
+                c.meleeSummonOnEquip = SUMMON;
                 c.meleeWeapon = IDS[index];
                 c.meleeShowWhen = me.Padej_.soupapi.melee.MeleeTrigger.ALWAYS;
                 c.hudBetterHotbarEnabled = false;
@@ -97,18 +114,31 @@ public final class WeaponShots {
                     phase = 2;
                     return;
                 }
-                wait = 60;
+                wait = SUMMON ? 0 : 60;
                 phase = 3;
                 return;
             }
             case 3: {
                 if (wait-- > 0) return;
-                float[] view = VIEWS[Math.min(step, VIEWS.length - 1)];
-                mc.thePlayer.rotationPitch = view[0];
-                mc.thePlayer.prevRotationPitch = view[0];
-                mc.thePlayer.rotationYaw = view[1];
-                mc.thePlayer.prevRotationYaw = view[1];
-                String name = IDS[index] + "-" + step;
+                String name;
+                if (SUMMON) {
+                    name = IDS[index] + "-t" + step;
+                } else if (SWEEP) {
+                    int[] p = PLACEMENTS[Math.min(step, PLACEMENTS.length - 1)];
+                    SoupAPI_Config cfg = SoupAPI.configHolder.get();
+                    cfg.meleeSize = p[0];
+                    cfg.meleeDistance = p[1];
+                    cfg.meleeOffsetX = p[2];
+                    cfg.meleeOffsetY = p[3];
+                    name = IDS[index] + "-" + p[0] + "x" + p[1];
+                } else {
+                    float[] view = VIEWS[Math.min(step, VIEWS.length - 1)];
+                    mc.thePlayer.rotationPitch = view[0];
+                    mc.thePlayer.prevRotationPitch = view[0];
+                    mc.thePlayer.rotationYaw = view[1];
+                    mc.thePlayer.prevRotationYaw = view[1];
+                    name = IDS[index] + "-" + step;
+                }
                 try {
                     ScreenShotHelper.saveScreenshot(mc.mcDataDir, name + ".png",
                             mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
@@ -116,9 +146,9 @@ public final class WeaponShots {
                 } catch (Throwable t) {
                     log("could not save " + name + ": " + t);
                 }
-                if (step < VIEWS.length - 1) {
+                if (step < shots() - 1) {
                     step++;
-                    wait = 4;
+                    wait = SUMMON ? 5 : (SWEEP ? 3 : 4);
                     return;
                 }
                 index++;

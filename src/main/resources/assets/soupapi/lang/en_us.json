@@ -370,6 +370,7 @@
   "text.autoconfig.soupapi.option.meleeTrailLength": "Trail Length",
   "text.autoconfig.soupapi.option.meleeTrailWidth": "Trail Width",
   "text.autoconfig.soupapi.option.meleeTrailStrength": "Trail Strength",
+  "text.autoconfig.soupapi.option.meleeTrailReach": "Trail Reach",
   "text.autoconfig.soupapi.option.meleeTrailFade": "Trail Fade",
   "text.autoconfig.soupapi.option.meleeSparks": "Edge Sparks",
   "text.autoconfig.soupapi.option.meleeSparkCount": "Spark Count",

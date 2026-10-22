@@ -14,6 +14,8 @@ import org.lwjgl.opengl.GL11;
 import java.awt.Color;
 import java.util.Random;
 
+import static me.Padej_.soupapi.melee.SummonFx.*;
+
 /**
  * The rift the Fractured-Eye Katana is summoned through.
  *
@@ -45,11 +47,6 @@ public final class MeleePortal extends ConfigurableModule {
     private static final ResourceLocation RING_2 = SmokeFx.RUNE_RING_2;
     private static final ResourceLocation SMOKE = new ResourceLocation("soupapi", "textures/vfx/smoke_atlas.png");
 
-    /** Where the rift opens, in the hand pass's eye space; the summon clip draws the blade out of here. */
-    private static final float PX = -0.05f, PY = 0.12f, PZ = -1.35f;
-    /** Hard stop, whatever the clip says. */
-    private static final float END = 2.6f;
-
     private static long seed = 1L;
 
     private MeleePortal() {
@@ -61,26 +58,21 @@ public final class MeleePortal extends ConfigurableModule {
     }
 
     static boolean active(MeleeState state) {
-        return CONFIG.meleeSummonEnabled && state.summoning() && time(state) < END;
+        return MeleeSummon.active(state);
+    }
+
+    private static float time(MeleeState state) {
+        return MeleeSummon.time(state);
     }
 
     /**
-     * Where the rift is in its own sequence, in the katana's timing.
+     * The rift, rings, core and smoke: drawn before the weapon so the blade comes out in front.
      *
-     * <p>Every beat below was written against that weapon's {@value #END}-second summon. Weapons
-     * whose summon is shorter - the claw assembling in the hand, the spectral blade drawing itself
-     * out of its hilt - would otherwise leave the rift hanging open after they had finished, so the
-     * rift is run on the clip's own progress rather than on the clock.
+     * <p>With {@code eye} set, the thing in the tear is not a dark core but a great eye that opens
+     * as the rings come in, contracts its pupil onto the weapon, and shuts again behind it. That is
+     * the Weeping Eye's own arrival; every other weapon on this style gets the plain core.
      */
-    private static float time(MeleeState state) {
-        me.Padej_.soupapi.bedrock.GeoClip clip = state.mainClip();
-        float t = state.mainTime();
-        if (clip == null || clip.length <= 0.1f) return t;
-        return t / clip.length * END;
-    }
-
-    /** The rift, rings, core and smoke: drawn before the weapon so the blade comes out in front. */
-    static void renderBack(MeleeState state) {
+    static void renderBack(MeleeState state, boolean eye) {
         if (!active(state)) return;
         float t = time(state);
         float size = CONFIG.meleePortalSize / 100f;
@@ -185,6 +177,11 @@ public final class MeleePortal extends ConfigurableModule {
                 Tessellator.getInstance().draw();
             }
 
+            if (eye) {
+                greatEye(t, size, glow, intensity, a);
+                return;
+            }
+
             // The dark core: drawn normally, so it darkens.
             float core = smooth((t - 0.7f) / 0.35f) * (1f - smooth((t - 1.95f) / 0.35f));
             if (core > 0f) {
@@ -237,73 +234,52 @@ public final class MeleePortal extends ConfigurableModule {
         }
     }
 
-    // ---- helpers ---------------------------------------------------------------------------------
 
-    private static Color accent(float position) {
-        if (CONFIG.meleeGlowUseTheme) return Palette.getColor(position);
-        return position < 0.4f ? new Color(0x9b4dff) : new Color(0xff4fc3);
-    }
+    private static final ResourceLocation GREAT_EYE =
+            new ResourceLocation("soupapi", "textures/vfx/great_eye.png");
 
-    private static void begin3d() {
-        GlStateManager.disableLighting();
-        GlStateManager.disableCull();
-        GlStateManager.enableBlend();
-        GlStateManager.enableTexture2D();
-        GlStateManager.depthMask(false);
-        GlStateManager.disableAlpha();
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-        GlStateManager.color(1f, 1f, 1f, 1f);
-    }
+    /**
+     * The eye in the tear.
+     *
+     * <p>It opens the way an eye opens — the lid travels, so the quad is scaled on its height while
+     * its width stays — then the pupil narrows onto the point the staff is drawn out of, and the lid
+     * comes down again. Blood runs off the lower lid once it is open, which is the one thing on this
+     * weapon that is never not happening.
+     */
+    private static void greatEye(float t, float size, float glow, float intensity, Color accent) {
+        float open = smooth((t - 0.55f) / 0.4f) * (1f - smooth((t - 2.0f) / 0.35f));
+        if (open <= 0f) return;
+        // A blink just before the staff arrives: the lid dips and snaps back.
+        float blink = 1f - 0.75f * bump(t, 0.95f, 0.1f);
+        float lid = open * blink;
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        bind(GREAT_EYE);
+        WorldRenderer w = buffer();
+        float width = 2.3f * size;
+        quad(w, PX, PY, PZ + 0.02f, width, width * 0.62f * lid, 0f, 0f, 0f, 1f, 1f,
+                1f, 0.93f, 0.90f, open * glow * intensity);
+        // The iris, over the top, contracting onto the centre as the weapon comes through.
+        float iris = 1f - 0.55f * smooth((t - 0.95f) / 0.5f);
+        quad(w, PX, PY, PZ + 0.03f, width * 0.42f * iris, width * 0.42f * iris * lid, t * 22f,
+                0.30f, 0.30f, 0.70f, 0.70f, accent.getRed() / 255f, accent.getGreen() / 255f,
+                accent.getBlue() / 255f, open * glow * intensity * 0.9f);
+        draw();
 
-    private static void end3d() {
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager.depthMask(true);
-        GlStateManager.enableAlpha();
-        GlStateManager.disableBlend();
-        GlStateManager.enableCull();
-        GlStateManager.color(1f, 1f, 1f, 1f);
-    }
-
-    private static void bind(ResourceLocation texture) {
-        mc.getTextureManager().bindTexture(texture);
-    }
-
-    private static WorldRenderer buffer() {
-        WorldRenderer w = Tessellator.getInstance().getWorldRenderer();
-        w.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        return w;
-    }
-
-    private static void quad(WorldRenderer w, float x, float y, float z, float size, float rotDeg,
-                             float u0, float v0, float u1, float v1, Color c, float alpha) {
-        quad(w, x, y, z, size, rotDeg, u0, v0, u1, v1, c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, alpha);
-    }
-
-    /** A camera-facing square in the hand pass's eye space (which already faces the camera). */
-    private static void quad(WorldRenderer w, float x, float y, float z, float size, float rotDeg,
-                             float u0, float v0, float u1, float v1, float r, float g, float b, float alpha) {
-        if (alpha <= 0.003f) return;
-        alpha = Math.min(1f, alpha);
-        float h = size / 2f;
-        double rad = Math.toRadians(rotDeg);
-        float c = (float) Math.cos(rad) * h, s = (float) Math.sin(rad) * h;
-        w.pos(x - c + s, y - s - c, z).tex(u0, v1).color(r, g, b, alpha).endVertex();
-        w.pos(x + c + s, y + s - c, z).tex(u1, v1).color(r, g, b, alpha).endVertex();
-        w.pos(x + c - s, y + s + c, z).tex(u1, v0).color(r, g, b, alpha).endVertex();
-        w.pos(x - c - s, y - s + c, z).tex(u0, v0).color(r, g, b, alpha).endVertex();
-    }
-
-    private static float smooth(float t) {
-        t = clamp01(t);
-        return t * t * (3f - 2f * t);
-    }
-
-    private static float bump(float t, float centre, float width) {
-        float d = Math.abs(t - centre) / width;
-        return d >= 1f ? 0f : 1f - d * d;
-    }
-
-    private static float clamp01(float v) {
-        return v < 0f ? 0f : (v > 1f ? 1f : v);
+        // What it weeps.
+        if (t > 1.0f) {
+            bind(SmokeFx.FX_ATLAS);
+            w = buffer();
+            Random r = new Random(seed ^ 0x9E3779B9L);
+            for (int i = 0; i < 7; i++) {
+                float born = 1.0f + r.nextFloat() * 0.9f;
+                float age = (t - born) / 0.7f;
+                if (age <= 0f || age >= 1f) continue;
+                float x = PX + (r.nextFloat() - 0.5f) * width * 0.8f;
+                float y = PY - width * 0.18f - age * age * 1.1f * size;
+                quad(w, x, y, PZ + 0.04f, 0.05f * size, 0.13f * size * (0.6f + age), 0f,
+                        0.25f, 0f, 0.5f, 0.25f, 0.55f, 0.03f, 0.06f, (1f - age) * intensity);
+            }
+            draw();
+        }
     }
 }

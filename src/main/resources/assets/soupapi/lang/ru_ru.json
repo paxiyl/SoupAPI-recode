@@ -370,6 +370,7 @@
   "text.autoconfig.soupapi.option.meleeTrailLength": "Длина следа",
   "text.autoconfig.soupapi.option.meleeTrailWidth": "Ширина следа",
   "text.autoconfig.soupapi.option.meleeTrailStrength": "Сила следа",
+  "text.autoconfig.soupapi.option.meleeTrailReach": "Длина дуги следа",
   "text.autoconfig.soupapi.option.meleeTrailFade": "Затухание следа",
   "text.autoconfig.soupapi.option.meleeSparks": "Искры клинка",
   "text.autoconfig.soupapi.option.meleeSparkCount": "Количество искр",

@@ -369,11 +369,10 @@ def gem(radius, height, facets=8, material='gem', table=0.45):
     return m.flat()
 
 
-def petal(length, width, curl=0.6, samples=10, material='petal', thickness=0.06):
+def petal(length, width, curl=0.6, samples=10, material='petal', thickness=0.06, cols=7):
     """A curved shell: rose petals, feather vanes, the claw's leaves."""
     m = Mesh(material)
     rows = samples
-    cols = 7
     for i in range(rows):
         t = i / (rows - 1)
         y = t * length
@@ -390,6 +389,154 @@ def petal(length, width, curl=0.6, samples=10, material='petal', thickness=0.06)
         back.vert(p - v3(0, 0, thickness), m.uv[i][0], m.uv[i][1], v3(0, 0, -1))
     back.tris = [(c, b, a) for a, b, c in m.tris]
     return m.merge(back)
+
+
+def feather(length, width, material='feather', curve=0.30, cup=0.22, thickness=0.05,
+            rows=12, cols=7, rib='steel_dark', rib_radius=0.07):
+    """A feather: a cupped vane that tapers to a point, with a rib down the middle.
+
+    Grows along +Y from its quill. The vane is cupped about the rib and the whole thing sweeps in
+    +Z as it rises, which is what stops a row of them reading as a row of leaves. Returns the vane
+    and, when a rib material is given, the quill to go with it.
+    """
+    m = Mesh(material)
+    for i in range(rows):
+        t = i / (rows - 1)
+        y = t * length
+        # Narrow at the quill, widest a third of the way up, drawn to a point at the tip.
+        half = width * 0.5 * math.sin(math.pi * min(1.0, 0.12 + t * 0.92)) ** 0.75
+        sweep = curve * length * t * t
+        for j in range(cols):
+            sgn = j / (cols - 1) * 2 - 1
+            x = sgn * half
+            z = sweep + cup * half * (sgn * sgn) + (0.0 if abs(sgn) > 0.08 else rib_radius * 0.5)
+            m.vert(v3(x, y, z), (sgn + 1) * 0.5, t, v3(0, 0, 1))
+    m.grid(rows, cols)
+    back = Mesh(material)
+    for i, p in enumerate(m.pos):
+        back.vert(p - v3(0, 0, thickness), m.uv[i][0], m.uv[i][1], v3(0, 0, -1))
+    back.tris = [(c, b, a) for a, b, c in m.tris]
+    m.merge(back)
+    if rib is None:
+        return m
+    path = [v3(0, t / 7 * length, curve * length * (t / 7) ** 2) for t in range(8)]
+    quill = tube(path, [rib_radius * (1.6 - 1.4 * (k / 7)) for k in range(8)], 5, rib).smooth()
+    return m.merge(quill)
+
+
+def rose(radius, layers=4, per=5, material='petal', heart='petal_dark'):
+    """A rose: rings of petals, each ring smaller, tighter and more upright than the one outside."""
+    m = Mesh(material)
+    for ring in range(layers):
+        f = ring / max(1, layers - 1)
+        r = radius * (1.0 - 0.62 * f)
+        lean = 78 - 62 * f          # outer petals lie open, inner ones stand up
+        curl = 0.45 + 0.75 * f
+        for k in range(per + ring):
+            a = (k / (per + ring)) * 360 + ring * 37
+            leaf = petal(r, r * 1.25, curl, 6, material, thickness=0.045, cols=5)
+            leaf.rotate(v3(1, 0, 0), lean)
+            leaf.rotate(v3(0, 1, 0), a)
+            leaf.translate(0, f * radius * 0.30, 0)
+            m.merge(leaf)
+    bud = sphere(radius * 0.17, 8, 6, heart).smooth()
+    bud.translate(0, radius * 0.34, 0)
+    return m.merge(bud)
+
+
+def bird_skull(length, material='bone', socket='bone_dark'):
+    """A corvid skull: a domed cranium, a long tapering beak, and two deep sockets."""
+    m = ellipsoid(length * 0.26, length * 0.23, length * 0.30, 16, 12, material).smooth()
+    # The beak: a cone that flattens as it goes, with the curve of a crow's bill.
+    path = catmull([v3(0, 0.02 * length, -length * 0.22),
+                    v3(0, 0.00 * length, -length * 0.52),
+                    v3(0, -0.07 * length, -length * 0.82)], 14)
+    bill = tube(path, [length * 0.17, length * 0.10, length * 0.015], 8, material, squash=0.62)
+    m.merge(bill.smooth())
+    lower = tube(catmull([v3(0, -0.07 * length, -length * 0.20),
+                          v3(0, -0.09 * length, -length * 0.46),
+                          v3(0, -0.10 * length, -length * 0.70)], 12),
+                 [length * 0.10, length * 0.065, length * 0.012], 7, material, squash=0.55)
+    m.merge(lower.smooth())
+    for side in (1, -1):
+        socket_ring = torus(length * 0.115, length * 0.028, 16, 7, material)
+        socket_ring.rotate(v3(1, 0, 0), 90)
+        socket_ring.rotate(v3(0, 1, 0), side * 46)
+        socket_ring.translate(side * length * 0.17, length * 0.05, -length * 0.14)
+        m.merge(socket_ring.smooth())
+        hollow = ellipsoid(length * 0.10, length * 0.10, length * 0.07, 12, 9, socket).smooth()
+        hollow.rotate(v3(0, 1, 0), side * 46)
+        hollow.translate(side * length * 0.17, length * 0.05, -length * 0.13)
+        m.merge(hollow)
+    return m
+
+
+def chain(path, links=8, radius=0.42, thickness=0.11, material='steel_dark'):
+    """A run of links along a path, every other one turned a quarter so they interlock."""
+    pts = [np.asarray(p, dtype=float) for p in catmull(path, max(links * 2, 16))]
+    _, tan, nor, _ = frames(pts)
+    m = Mesh(material)
+    for k in range(links):
+        i = int(k / max(1, links - 1) * (len(pts) - 1))
+        link = torus(radius, thickness, 10, 5, material)
+        link.scale(1.0, 1.0, 0.62)              # links are ovals, not rings
+        link.rotate(v3(1, 0, 0), 90)
+        if k % 2:
+            link.rotate(v3(0, 0, 1), 90)
+        # Stand it up on the path's tangent.
+        axis = np.cross(v3(0, 0, 1), tan[i])
+        if np.linalg.norm(axis) > 1e-6:
+            angle = math.degrees(math.acos(max(-1.0, min(1.0, float(np.dot(v3(0, 0, 1), tan[i]))))))
+            link.rotate(axis, angle)
+        link.translate(pts[i])
+        m.merge(link.smooth())
+    return m
+
+
+def ribbon(path, width, material='cloth', thickness=0.03, twist=1.2, taper=0.35):
+    """A flat strip swept along a path, twisting as it goes: tassels, sashes, trailing cloth."""
+    pts, tan, nor, bin_ = frames(path)
+    n = len(pts)
+    cols = 5
+    m = Mesh(material)
+    for i in range(n):
+        t = i / (n - 1)
+        w = width * (1.0 - taper * t)
+        a = twist * t * math.tau
+        across = nor[i] * math.cos(a) + bin_[i] * math.sin(a)
+        for j in range(cols):
+            s = j / (cols - 1) * 2 - 1
+            m.vert(pts[i] + across * s * w * 0.5, (s + 1) * 0.5, t, bin_[i])
+    m.grid(n, cols)
+    back = Mesh(material)
+    for i, p in enumerate(m.pos):
+        back.vert(p, m.uv[i][0], m.uv[i][1], -m.nrm[i] if m.nrm[i] is not None else None)
+    back.tris = [(c, b, a) for a, b, c in m.tris]
+    for i in range(len(back.pos)):
+        back.pos[i] = back.pos[i] - (m.nrm[i] if m.nrm[i] is not None else v3(0, 0, 1)) * thickness
+    return m.merge(back)
+
+
+def spiral2d(turns, r0, r1, samples=40, plane=('x', 'y')):
+    """A flat spiral in one plane: the curl a piece of filigree is drawn as."""
+    out = []
+    for i in range(samples + 1):
+        t = i / samples
+        a = t * turns * math.tau
+        r = r0 + (r1 - r0) * t
+        c, s = math.cos(a) * r, math.sin(a) * r
+        p = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+        p[plane[0]] = c
+        p[plane[1]] = s
+        out.append(v3(p['x'], p['y'], p['z']))
+    return out
+
+
+def scroll(turns, r0, r1, thickness, material='steel', samples=36, plane=('x', 'y'), sides=6):
+    """A tapering curl of filigree: a spiral swept with a tube that thins as it winds in."""
+    path = spiral2d(turns, r0, r1, samples, plane)
+    radii = [thickness * (1.0 - 0.72 * (i / samples)) for i in range(samples + 1)]
+    return tube(path, radii, sides, material).smooth()
 
 
 def disc(radius, segments=18, material='steel', y=0.0):

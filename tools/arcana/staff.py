@@ -280,10 +280,11 @@ if __name__ == '__main__':
 PROFILE = {
     # Where the staff sits in the hand before the player moves anything. It is a long weapon, so
     # it is pushed further away and down than a blade would be.
-    'placement': [38, 26, 11, -13, 0, 0, 0, 0],
+    'placement': [40, 78, 26, -36, 0, 0, 0, 0],
     'profile': 'fractured_eye',
     'eyes': True,
     'summon': True,
+    'summon_style': 'eye',
     'trail': [0.85, 0.20, 0.30],
     'trail2': [0.35, 0.55, 0.95],
     'shards': True,

@@ -137,7 +137,15 @@ public final class MeleeEffects extends ConfigurableModule {
         float[] tip = model.furthestFrom(pose, centre, MeleeWeapon.ARM_MESH);
         if (tip == null) return;
 
-        TRAIL.add(0, new float[]{tip[0], tip[1], tip[2], 1f});
+        // Both ends of the edge, not just the point. A ribbon hung round the tip's path is a
+        // strip floating near the weapon; a ribbon stretched between the edge's inner and outer
+        // ends is the surface the edge actually swept, which is what a slash looks like.
+        float inner = Math.max(0f, Math.min(0.9f, CONFIG.meleeTrailReach / 100f));
+        TRAIL.add(0, new float[]{
+                centre[0] + (tip[0] - centre[0]) * inner,
+                centre[1] + (tip[1] - centre[1]) * inner,
+                centre[2] + (tip[2] - centre[2]) * inner,
+                tip[0], tip[1], tip[2], 1f});
         if (CONFIG.meleeSparks) spawnSparks(tip);
         int limit = Math.max(2, CONFIG.meleeTrailLength);
         while (TRAIL.size() > limit) {
@@ -171,8 +179,8 @@ public final class MeleeEffects extends ConfigurableModule {
         float delta = Math.max(0f, Math.min(0.1f, realDelta));
         for (Iterator<float[]> it = TRAIL.iterator(); it.hasNext(); ) {
             float[] point = it.next();
-            point[3] -= delta * (100f / Math.max(10, CONFIG.meleeTrailFade));
-            if (point[3] <= 0f) it.remove();
+            point[6] -= delta * (100f / Math.max(10, CONFIG.meleeTrailFade));
+            if (point[6] <= 0f) it.remove();
         }
         for (Iterator<Spark> it = SPARKS.iterator(); it.hasNext(); ) {
             Spark spark = it.next();
@@ -281,64 +289,106 @@ public final class MeleeEffects extends ConfigurableModule {
         }
     }
 
-    /** The smear the edge leaves: a camera-facing ribbon through the tip's recent path. */
+    /**
+     * The smear the edge leaves: the surface the blade swept, as a tapering ribbon.
+     *
+     * <p>Two paths are recorded each frame, the inner and outer ends of the edge, and the ribbon is
+     * the sheet between them. Both are smoothed through a Catmull-Rom spline before drawing, so a
+     * swing that lasted eight frames is still a curve rather than an eight-sided polygon, and the
+     * sheet is textured with the soft glow sprite across its width so the outer edge burns and the
+     * inner one falls away to nothing instead of ending at a hard line.
+     */
     private static void trail() {
         if (TRAIL.size() < 2) return;
-        float width = CONFIG.meleeTrailWidth / 100f * 2f;
+        int count = TRAIL.size();
+        int steps = count > 3 ? SMOOTHING : 1;      // a spline needs neighbours on both sides
 
-        GlStateManager.disableTexture2D();
+        mc.getTextureManager().bindTexture(me.Padej_.soupapi.render.SmokeFx.GLOW);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer buffer = tessellator.getWorldRenderer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        for (int i = 0; i + 1 < TRAIL.size(); i++) {
-            float[] a = TRAIL.get(i);
-            float[] b = TRAIL.get(i + 1);
-            float alphaA = a[3] * CONFIG.meleeTrailStrength / 100f;
-            float alphaB = b[3] * CONFIG.meleeTrailStrength / 100f;
-            float taperA = width * a[3];
-            float taperB = width * b[3];
-            quad(buffer, a, b, taperA, taperB, trailColour(i / (float) TRAIL.size()), alphaA, alphaB);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        float strength = CONFIG.meleeTrailStrength / 100f;
+        float widen = CONFIG.meleeTrailWidth / 100f;
+
+        float[] previous = null;
+        float previousAlong = 0f;
+        for (int i = 0; i + 1 < count; i++) {
+            for (int s = 0; s < steps; s++) {
+                float t = s / (float) steps;
+                float[] here = sample(i, t);
+                float along = (i + t) / (count - 1);
+                if (previous != null) ribbon(buffer, previous, here, previousAlong, along, strength, widen);
+                previous = here;
+                previousAlong = along;
+            }
         }
+        float[] last = sample(count - 2, 1f);
+        if (previous != null) ribbon(buffer, previous, last, previousAlong, 1f, strength, widen);
         tessellator.draw();
-        GlStateManager.enableTexture2D();
+    }
+
+    /** How many pieces each recorded step is drawn in. */
+    private static final int SMOOTHING = 4;
+
+    /**
+     * The edge, interpolated between recorded step {@code i} and the next.
+     *
+     * <p>Catmull-Rom through the four steps around it, on the inner and the outer path at once, so
+     * the two stay parallel and the sheet between them does not fold.
+     */
+    private static float[] sample(int i, float t) {
+        float[] p0 = TRAIL.get(Math.max(0, i - 1));
+        float[] p1 = TRAIL.get(i);
+        float[] p2 = TRAIL.get(Math.min(TRAIL.size() - 1, i + 1));
+        float[] p3 = TRAIL.get(Math.min(TRAIL.size() - 1, i + 2));
+        float[] out = new float[7];
+        for (int k = 0; k < 7; k++) {
+            out[k] = catmull(p0[k], p1[k], p2[k], p3[k], t);
+        }
+        return out;
+    }
+
+    private static float catmull(float p0, float p1, float p2, float p3, float t) {
+        float t2 = t * t;
+        return 0.5f * ((2f * p1) + (-p0 + p2) * t
+                + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2
+                + (-p0 + 3f * p1 - 3f * p2 + p3) * t2 * t);
     }
 
     /**
-     * One segment of the ribbon.
+     * One rung of the ribbon: a quad from the last pair of edge ends to this one.
      *
-     * <p>Widened across the segment's own direction rather than toward the camera: in the hand pass
-     * the camera is at the origin looking down -Z, so a ribbon built in the plane that holds the
-     * segment and the view direction always faces the player.
+     * <p>The outer rim carries the colour at full strength and the inner one falls to nothing, and
+     * the sheet is pushed a little past the edge's outer end so the brightest part of it sits where
+     * the blade actually was rather than behind it.
      */
-    private static void quad(WorldRenderer buffer, float[] a, float[] b, float widthA, float widthB,
-                             Color colour, float alphaA, float alphaB) {
-        float dx = b[0] - a[0];
-        float dy = b[1] - a[1];
-        float dz = b[2] - a[2];
-        // side = direction x view, with the view direction taken as the segment's midpoint.
-        float mx = (a[0] + b[0]) * 0.5f;
-        float my = (a[1] + b[1]) * 0.5f;
-        float mz = (a[2] + b[2]) * 0.5f;
-        float sx = dy * mz - dz * my;
-        float sy = dz * mx - dx * mz;
-        float sz = dx * my - dy * mx;
-        float length = (float) Math.sqrt(sx * sx + sy * sy + sz * sz);
-        if (length < 1.0E-5f) return;
-        sx /= length;
-        sy /= length;
-        sz /= length;
+    private static void ribbon(WorldRenderer buffer, float[] a, float[] b,
+                               float alongA, float alongB, float strength, float widen) {
+        float fadeA = a[6] * strength;
+        float fadeB = b[6] * strength;
+        if (fadeA <= 0f && fadeB <= 0f) return;
+        Color ca = trailColour(alongA);
+        Color cb = trailColour(alongB);
 
-        int r = colour.getRed();
-        int g = colour.getGreen();
-        int bl = colour.getBlue();
-        buffer.pos(a[0] + sx * widthA, a[1] + sy * widthA, a[2] + sz * widthA)
-                .color(r, g, bl, (int) (alphaA * 255)).endVertex();
-        buffer.pos(a[0] - sx * widthA, a[1] - sy * widthA, a[2] - sz * widthA)
-                .color(r, g, bl, (int) (alphaA * 255)).endVertex();
-        buffer.pos(b[0] - sx * widthB, b[1] - sy * widthB, b[2] - sz * widthB)
-                .color(r, g, bl, (int) (alphaB * 255)).endVertex();
-        buffer.pos(b[0] + sx * widthB, b[1] + sy * widthB, b[2] + sz * widthB)
-                .color(r, g, bl, (int) (alphaB * 255)).endVertex();
+        // The overshoot, which is what gives a swing its flare: the tip's end of the sheet reaches
+        // past the blade, further while the trail is young.
+        float overA = 1f + 0.25f * widen * a[6];
+        float overB = 1f + 0.25f * widen * b[6];
+        float[] outerA = {a[0] + (a[3] - a[0]) * overA, a[1] + (a[4] - a[1]) * overA, a[2] + (a[5] - a[2]) * overA};
+        float[] outerB = {b[0] + (b[3] - b[0]) * overB, b[1] + (b[4] - b[1]) * overB, b[2] + (b[5] - b[2]) * overB};
+
+        // v runs across the sheet through the middle of the glow sprite, so the inner rim is the
+        // sprite's dark rim and the outer is its hot centre.
+        vertex(buffer, a, 0.5f, 0.04f, ca, fadeA * 0.12f);
+        vertex(buffer, b, 0.5f, 0.04f, cb, fadeB * 0.12f);
+        vertex(buffer, outerB, 0.5f, 0.5f, cb, fadeB);
+        vertex(buffer, outerA, 0.5f, 0.5f, ca, fadeA);
+    }
+
+    private static void vertex(WorldRenderer buffer, float[] p, float u, float v, Color colour, float alpha) {
+        int a = (int) (Math.max(0f, Math.min(1f, alpha)) * 255);
+        buffer.pos(p[0], p[1], p[2]).tex(u, v)
+                .color(colour.getRed(), colour.getGreen(), colour.getBlue(), a).endVertex();
     }
 
     private static void sparks() {
