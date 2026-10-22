@@ -75,10 +75,14 @@ public final class MeleePlacement extends ConfigurableModule {
         if (stored == null) {
             // Nothing saved for this weapon: the pack's own placement, if it ships one. Only while
             // the sliders are untouched - the moment the player moves one, that is what they mean.
-            int[] packed = weapon.defaultPlacement();
-            if (packed != null && slidersAreDefault()) {
-                return new Values(packed[0], packed[1], packed[2], packed[3], packed[4],
-                        packed[5], packed[6], packed[7]);
+            if (slidersAreDefault()) {
+                int[] packed = weapon.defaultPlacement();
+                if (packed != null) {
+                    return new Values(packed[0], packed[1], packed[2], packed[3], packed[4],
+                            packed[5], packed[6], packed[7]);
+                }
+                Values fitted = fitted(weapon);
+                if (fitted != null) return fitted;
             }
             return current();
         }
@@ -93,6 +97,29 @@ public final class MeleePlacement extends ConfigurableModule {
         } catch (NumberFormatException e) {
             return current();
         }
+    }
+
+    /**
+     * A placement worked out from the weapon's own size, for a pack that ships none.
+     *
+     * <p>The sliders' defaults are a guess that only suits a weapon of one particular size: give
+     * them a greatsword and it is through your face, give them a dagger and it is a speck. Every
+     * weapon is measured at load, so a pack that does not say where its weapon goes can still be
+     * held properly - scaled so the thing is about two thirds of a block across in the hand, and
+     * pushed far enough forward that its own length clears the camera.
+     *
+     * <p>A pack's own placement still wins, and so does the player's: this only fills the gap.
+     */
+    private static Values fitted(MeleeWeapon weapon) {
+        float span = weapon.fit().span;
+        if (span <= 0.05f) return null;
+        // The size the weapon should read at, in blocks, and what that costs in scale.
+        float wanted = 0.62f;
+        int size = Math.max(10, Math.min(400, Math.round(wanted / span * 100f)));
+        // Far enough out that the grip is clear of the near plane once the weapon is shrunk, and
+        // further for a long weapon, which otherwise reaches past the camera at the other end.
+        int distance = Math.max(0, Math.min(200, Math.round(30f + span * 26f)));
+        return new Values(size, distance, 24, -28, 0, 0, 0, 0);
     }
 
     public static boolean isSaved(MeleeWeapon weapon) {

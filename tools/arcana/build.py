@@ -40,6 +40,15 @@ def weapons():
         out.append((spectral, clips_spectral))
     except ImportError:
         pass
+    # The newer weapons, which take their clips from `clips_common` and only write their own
+    # moving parts: the scepter's rings and the lotus's blades.
+    for name in ('orrery', 'lotus'):
+        try:
+            module = __import__(name)
+            clips = __import__('clips_' + name)
+            out.append((module, clips))
+        except ImportError:
+            pass
     return out
 
 
@@ -52,7 +61,7 @@ def main():
         writer(str(path))
         files.append(rel)
 
-    lang = {'pack.arcana.name': 'Arcana', 'pack.arcana.desc': 'Three original weapons built for SoupAPI.'}
+    lang = {'pack.arcana.name': 'Arcana', 'pack.arcana.desc': 'Original weapons built for SoupAPI.'}
     sounds_index = {}
     for module, clips in weapons():
         wid = module.ID

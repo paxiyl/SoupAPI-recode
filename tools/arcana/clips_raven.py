@@ -148,16 +148,41 @@ def build(rig):
     summon.sound(1.7, SND + 'draw')
     out.append(summon)
 
-    fl = Clip('flourish', 1.7)
-    fl.pose(0, {'swing': {'rot': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    for i in range(1, 5):
-        fl.pose(0.15 + 0.2 * i, {'weapon': {'rot': (0, 90 * i, 0)}})
-    fl.key('weapon', 'rotation', 1.0, (0, 0, 0), pre=(0, 360, 0))
-    fl.pose(1.7, {'swing': {'rot': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    for i in range(9):
-        spine(fl, i * 0.2, 4 if i % 2 else -4, wave=4, phase=i, ribs=-8 if i % 2 else 6)
-    spine(fl, 1.7, 0)
-    fl.sound(0.15, SND + 'flourish')
+    # Flourish: the creepy one. The claw is held up across the face and the crescent is let go -
+    # a wave travels the length of the spine, the ribs splay, the feathers flare - and then the
+    # whole thing snaps shut on nothing. The arm carries it: it lifts, turns the claw over, and
+    # recoils off the snap, because a spine writhing in a hand that is not moving reads as a
+    # loading animation rather than as something alive.
+    fl = Clip('flourish', 2.1)
+    fl.pose(0, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    spine(fl, 0, 0)
+    # Raised and turned over, the opening towards the player.
+    fl.pose(0.28, {'swing': {'rot': (-20, -14, 22), 'pos': (3.5, 5.0, -2.0)},
+                   'weapon': {'rot': (0, -40, 18)}})
+    spine(fl, 0.28, 10, ribs=-22, feathers=-16)
+    # The writhe: eight steps of a wave running down the chain, the arm rolling under it.
+    steps = 8
+    for i in range(steps + 1):
+        f = i / steps
+        t = 0.28 + 1.02 * f
+        ph = math.tau * f * 1.6
+        fl.pose(t, {'swing': {'rot': (-20 + 5 * math.sin(ph), -14 + 7 * math.cos(ph * 0.7), 22 + 6 * math.sin(ph * 1.3)),
+                              'pos': (3.5 + 1.2 * math.sin(ph), 5.0 + 0.9 * math.cos(ph), -2.0)},
+                    'weapon': {'rot': (6 * math.sin(ph * 1.1), -40 + 150 * f, 18 + 9 * math.cos(ph))}})
+        spine(fl, t, 9 + 3 * math.sin(ph), wave=13, phase=ph,
+              ribs=-20 - 8 * math.sin(ph * 1.2), feathers=-14 + 10 * math.sin(ph * 0.8))
+    # The snap: shut hard, nothing smoothed, and the arm takes the recoil.
+    fl.pose(1.36, {'swing': {'rot': (-6, 4, 4), 'pos': (1.0, 1.0, -3.0)}, 'weapon': {'rot': (0, 120, 4)}})
+    spine(fl, 1.36, -22, ribs=16, feathers=12, smooth=False)
+    fl.pose(1.52, {'swing': {'rot': (10, 8, -10), 'pos': (-1.5, -2.0, 2.0)}, 'weapon': {'rot': (0, 112, -8)}})
+    spine(fl, 1.52, -16, ribs=11, feathers=7)
+    fl.pose(1.76, {'swing': {'rot': (-4, -3, 4), 'pos': (0.6, 0.8, -0.8)}, 'weapon': {'rot': (0, 122, 3)}})
+    spine(fl, 1.76, 3, ribs=-3)
+    fl.pose(2.1, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 120, 0)}})
+    spine(fl, 2.1, 0)
+    fl.sound(0.2, SND + 'open')
+    fl.sound(1.36, SND + 'snap')
+    fl.sound(1.5, SND + 'flourish')
     out.append(fl)
 
     ins = Clip('inspect', 5.4)

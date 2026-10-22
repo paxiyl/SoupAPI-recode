@@ -154,7 +154,6 @@ public final class ForgeEventBridge {
         guard("WorldAmbience.tick", me.Padej_.soupapi.utils.Palette.Element.AMBIENCE, me.Padej_.soupapi.modules.WorldAmbience::onTick);
 
         guard("settingsShortcut", () -> SoupSettingsShortcut.tick(mc));
-        guard("devWeapons", () -> me.Padej_.soupapi.devprobe.WeaponShots.tick(mc));
         guard("endClientTick", () -> SoupEvents.fireEndClientTick(mc));
     }
 
@@ -223,7 +222,6 @@ public final class ForgeEventBridge {
         SoupEvents.HudRenderContext hud = SoupEvents.hudContext();
         hud.begin(event.partialTicks, context);
 
-        guard("devWeaponsFrame", () -> me.Padej_.soupapi.devprobe.WeaponShots.frame(Minecraft.getMinecraft()));
         guard("BetterHud", me.Padej_.soupapi.utils.Palette.Element.HUD, () -> me.Padej_.soupapi.render.BetterHudRenderer.render(context));
         guard("Crosshair", me.Padej_.soupapi.utils.Palette.Element.CROSSHAIR, () -> me.Padej_.soupapi.modules.Crosshair.render(context));
         guard("GradientColors", () -> me.Padej_.soupapi.render.GradientColors.tick());

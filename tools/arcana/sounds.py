@@ -123,6 +123,12 @@ def sets():
         'inspect': chime([880, 1320, 1760, 2349]),
         'put_away': mix(whoosh(0.35, 1800, 500, 0.25), delay(ring(980, 0.6, 0.15, amp=0.25), 0.3)),
     }
+    glassy = dict(blade,
+                  draw=mix(whoosh(0.45, 350, 2600, 0.28), delay(chime([1046, 1568, 2093], 1.3), 0.2)),
+                  swing_1=mix(whoosh(0.4, 700, 3200, 0.35), delay(ring(2100, 0.5, 0.18, amp=0.15), 0.1)),
+                  swing_2=mix(whoosh(0.38, 820, 3600, 0.35), delay(ring(2637, 0.45, 0.16, amp=0.14), 0.1)),
+                  inspect=chime([1046, 1568, 2093, 3136], 2.2),
+                  put_away=mix(whoosh(0.4, 3200, 420, 0.28), chime([2093, 1046], 0.9)))
     return {
         'fractured_eye_katana': dict(blade, summon=portal(),
                                      inspect=mix(chime([740, 1109, 1480, 1975]), delay(ring(311, 1.4, 0.6, amp=0.2), 0.2))),
@@ -133,6 +139,21 @@ def sets():
         'spectral_blade': dict(blade, draw=mix(whoosh(0.5, 300, 4000, 0.3), delay(chime([1318, 1760, 2637], 1.2), 0.25)),
                                inspect=chime([1318, 1975, 2637, 3520], 2.0),
                                put_away=mix(whoosh(0.4, 4000, 400, 0.3), chime([2637, 1760], 0.8))),
+        # The scepter: everything it does has a bell under it, because of the rings.
+        'orrery_scepter': dict(glassy, summon=portal(),
+                               flourish=mix(whoosh(0.35, 500, 2200, 0.28),
+                                            delay(chime([784, 1175, 1568, 2349], 1.6), 0.2)),
+                               thrust=mix(whoosh(0.3, 950, 3600, 0.32),
+                                          delay(ring(1568, 0.7, 0.22, amp=0.2), 0.1))),
+        # The lotus: softer, with the blades opening on a breath rather than a snap.
+        'lotus_glaive': dict(glassy, summon=portal(),
+                             draw=mix(whoosh(0.55, 250, 1500, 0.26),
+                                      delay(chime([659, 988, 1318, 1760], 1.6), 0.3)),
+                             swing_3=mix(whoosh(0.52, 420, 2100, 0.4),
+                                         delay(ring(880, 0.8, 0.3, amp=0.18), 0.12)),
+                             flourish=mix(whoosh(0.32, 480, 1900, 0.28),
+                                          delay(whoosh(0.3, 560, 2200, 0.26), 0.28),
+                                          delay(chime([523, 784, 1046], 1.8), 0.5))),
     }
 
 

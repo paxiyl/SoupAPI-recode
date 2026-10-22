@@ -938,5 +938,167 @@
         "stream": false
       }
     ]
+  },
+  "melee.orrery_scepter.draw": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/draw",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.swing_1": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/swing_1",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.swing_2": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/swing_2",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.swing_3": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/swing_3",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.thrust": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/thrust",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.flourish": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/flourish",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.inspect": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/inspect",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.put_away": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/put_away",
+        "stream": false
+      }
+    ]
+  },
+  "melee.orrery_scepter.summon": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/orrery_scepter/summon",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.draw": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/draw",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.swing_1": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/swing_1",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.swing_2": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/swing_2",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.swing_3": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/swing_3",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.thrust": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/thrust",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.flourish": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/flourish",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.inspect": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/inspect",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.put_away": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/put_away",
+        "stream": false
+      }
+    ]
+  },
+  "melee.lotus_glaive.summon": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "soupapi:melee/lotus_glaive/summon",
+        "stream": false
+      }
+    ]
   }
 }

@@ -114,15 +114,36 @@ def build(rig):
     summon.sound(1.0, SND + 'inspect')
     out.append(summon)
 
-    fl = Clip('flourish', 1.5)
-    fl.pose(0, {'weapon': {'rot': (0, 0, 0)}})
-    for i in range(1, 9):
-        fl.pose(0.1 + 0.1 * i, {'weapon': {'rot': (0, 0, -90 * i)}})
-    fl.key('weapon', 'rotation', 0.95, (0, 0, 0), pre=(0, 0, -720))
-    fl.pose(1.5, {'weapon': {'rot': (0, 0, 0)}})
-    for i in range(8):
-        ribbons(fl, i * 0.2, 30, i * 2)
+    # Flourish: a figure of eight carved with the whole arm, the blade turning twice flat inside
+    # it and the ribbons a beat behind. The old one spun the weapon bone on the spot, which is
+    # why it read as a turntable; the shoulder does the drawing here and the wrist only adds spin.
+    fl = Clip('flourish', 1.8)
+    fl.pose(0, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    ribbons(fl, 0, 6, 0)
+    steps = 14
+    for i in range(steps + 1):
+        f = i / steps
+        t = 0.1 + 1.15 * f
+        a = math.tau * f
+        # A lemniscate at the shoulder: across twice for every pass up and down.
+        fl.pose(t, {
+            'swing': {
+                'rot': (-12 * math.sin(a * 2), 26 * math.sin(a), -30 * math.sin(a) * math.cos(a)),
+                'pos': (7.0 * math.sin(a), 3.0 * math.sin(a * 2), -1.8 * math.cos(a)),
+            },
+            'weapon': {'rot': (0, 0, -720 * f)},
+        })
+        # The ribbons run the same wave a fifth of a cycle late, which is what makes them trail.
+        ribbons(fl, t, 26 + 12 * math.sin(a * 2), a * 2 - 1.3)
+    fl.key('weapon', 'rotation', 1.25, (0, 0, 0), pre=(0, 0, -720))
+    fl.pose(1.38, {'swing': {'rot': (-8, -10, 14), 'pos': (-2.0, 2.5, -1.0)}, 'weapon': {'rot': (0, 0, 16)}})
+    ribbons(fl, 1.38, 34, 5.0)
+    fl.pose(1.56, {'swing': {'rot': (5, 6, -8), 'pos': (1.2, -1.4, 0.6)}, 'weapon': {'rot': (0, 0, -8)}})
+    ribbons(fl, 1.56, 16, 6.2)
+    fl.pose(1.8, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    ribbons(fl, 1.8, 6, 7.0)
     fl.sound(0.1, SND + 'flourish')
+    fl.sound(1.25, SND + 'thrust')
     out.append(fl)
 
     ins = Clip('inspect', 4.8)

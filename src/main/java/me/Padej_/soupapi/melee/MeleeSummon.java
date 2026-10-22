@@ -28,6 +28,8 @@ import static me.Padej_.soupapi.melee.SummonFx.*;
  *       whirl, and the claw is left behind when the murder scatters.</li>
  *   <li>{@code forge} — the blade is written in light: a hairline draws itself upward, throws
  *       sparks like a weld, flares white as it is quenched, and sheds a shockwave.</li>
+ *   <li>{@code bloom} — a sigil is drawn flat in the air, rings of light rise off it one after
+ *       another, and petals of light spiral up and close into the weapon.</li>
  * </ul>
  *
  * <p>All three are pure functions of the summon clip's own playhead, so nothing outlives the clip
@@ -37,7 +39,7 @@ public final class MeleeSummon extends ConfigurableModule {
 
     /** The styles a pack can ask for by name. */
     public enum Style {
-        RIFT, EYE, WING, FORGE
+        RIFT, EYE, WING, FORGE, BLOOM
     }
 
     private static final ResourceLocation GREAT_EYE =
@@ -103,6 +105,8 @@ public final class MeleeSummon extends ConfigurableModule {
         try {
             if (style == Style.WING) {
                 wingBack(state);
+            } else if (style == Style.BLOOM) {
+                bloomBack(state);
             } else {
                 forgeBack(state);
             }
@@ -125,6 +129,8 @@ public final class MeleeSummon extends ConfigurableModule {
         try {
             if (style == Style.WING) {
                 wingFront(state);
+            } else if (style == Style.BLOOM) {
+                bloomFront(state);
             } else {
                 forgeFront(state);
             }
@@ -388,5 +394,127 @@ public final class MeleeSummon extends ConfigurableModule {
             }
             draw();
         }
+    }
+
+    // ---- bloom: the flower of light ----------------------------------------------------------
+
+    /**
+     * The scepter's and the lotus's summon.
+     *
+     * <p>A sigil is drawn flat in the air below the hand and rings of light climb off it, one after
+     * another, each turning the other way. Petals of light spiral up out of the sigil and close
+     * over the top, and the weapon is what is left standing in them. Nothing tears and nothing
+     * burns: it grows.
+     */
+    private static void bloomBack(MeleeState state) {
+        float t = time(state);
+        float size = CONFIG.meleePortalSize / 100f;
+        float glow = CONFIG.meleePortalGlow / 100f;
+        float intensity = CONFIG.meleePortalIntensity / 100f;
+        float density = CONFIG.meleePortalParticles / 100f;
+        MeleeWeapon weapon = state.weapon();
+        Color petal = weaponColour(weapon, "trail", 0.25f);
+        Color light = weaponColour(weapon, "trail2", 0.75f);
+        Random r = new Random(seed);
+
+        float floor = PY - 0.52f * size;
+
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+
+        // The sigil, lying flat: drawn edge-on so it reads as a plate the weapon stands on.
+        float sig = window(t, 0.05f, 0.45f, 1.7f, 2.3f);
+        if (sig > 0f) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(PX, floor, PZ);
+            GlStateManager.rotate(80f, 1f, 0f, 0f);
+            GlStateManager.rotate(-t * 46f, 0f, 0f, 1f);
+            bind(SUMMON_ATLAS);
+            WorldRenderer w = buffer();
+            quad(w, 0f, 0f, 0f, 2.2f * size * (0.35f + 0.65f * sig), 0f,
+                    SIGIL[0], SIGIL[1], SIGIL[2], SIGIL[3], light, sig * glow * intensity);
+            draw();
+            GlStateManager.popMatrix();
+        }
+
+        // Rings climbing off it, each one turning against the one before.
+        bind(SUMMON_ATLAS);
+        WorldRenderer w = buffer();
+        for (int i = 0; i < 4; i++) {
+            float born = 0.25f + i * 0.2f;
+            float climb = clamp01((t - born) / 0.95f);
+            if (climb <= 0f) continue;
+            float fade = smooth(climb / 0.2f) * (1f - smooth((climb - 0.65f) / 0.35f));
+            float y = floor + climb * 1.3f * size;
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(PX, y, PZ);
+            GlStateManager.rotate(80f, 1f, 0f, 0f);
+            GlStateManager.rotate(t * (i % 2 == 0 ? 90f : -90f), 0f, 0f, 1f);
+            quad(w, 0f, 0f, 0f, 2.0f * size * (1f - climb * 0.55f), 0f,
+                    SHOCK[0], SHOCK[1], SHOCK[2], SHOCK[3], i % 2 == 0 ? light : petal,
+                    fade * glow * intensity);
+            draw();
+            GlStateManager.popMatrix();
+            w = buffer();
+        }
+        draw();
+
+        // Petals of light: they spiral up out of the sigil and lean in over the top.
+        bind(SmokeFx.FX_ATLAS);
+        w = buffer();
+        int leaves = Math.round(26 * density);
+        for (int i = 0; i < leaves; i++) {
+            float born = 0.3f + r.nextFloat() * 0.6f;
+            float climb = clamp01((t - born) / 1.0f);
+            if (climb <= 0f) continue;
+            float fade = smooth(climb / 0.15f) * (1f - smooth((climb - 0.6f) / 0.4f));
+            float ang = r.nextFloat() * 6.283f + climb * 3.4f;
+            // Out, then in: the radius opens and closes, which is what makes it a flower.
+            float rad = (float) Math.sin(climb * Math.PI) * (0.55f + r.nextFloat() * 0.35f) * size;
+            float y = floor + climb * 1.45f * size;
+            sprite(w, PX + (float) Math.cos(ang) * rad, y, PZ + (float) Math.sin(ang) * rad * 0.35f,
+                    (0.16f + 0.08f * r.nextFloat()) * size,
+                    (float) Math.toDegrees(ang) + climb * 220f, 3,
+                    i % 3 == 0 ? light : petal, fade * intensity * glow);
+        }
+        draw();
+
+        // The close: everything gathers and there is one bright moment as the weapon takes its place.
+        float close = bump(t, 1.12f, 0.24f);
+        if (close > 0f) {
+            bind(SmokeFx.GLOW);
+            w = buffer();
+            quad(w, PX, PY, PZ + 0.04f, 1.9f * size * (0.5f + close), 0f, 0f, 0f, 1f, 1f,
+                    Color.WHITE, close * glow * intensity);
+            draw();
+        }
+    }
+
+    /** What the bloom sheds: seeds of light drifting up past the weapon. */
+    private static void bloomFront(MeleeState state) {
+        float t = time(state);
+        float shed = (t - 1.1f) / 1.2f;
+        if (shed <= 0f || shed >= 1f) return;
+        float size = CONFIG.meleePortalSize / 100f;
+        float intensity = CONFIG.meleePortalIntensity / 100f;
+        float density = CONFIG.meleePortalParticles / 100f;
+        Color light = weaponColour(state.weapon(), "trail2", 0.7f);
+        Random r = new Random(seed ^ 0x1234567L);
+
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        bind(SmokeFx.FX_ATLAS);
+        WorldRenderer w = buffer();
+        int seeds = Math.round(22 * density);
+        for (int i = 0; i < seeds; i++) {
+            float born = r.nextFloat() * 0.55f;
+            float age = clamp01((shed - born) / (1f - born));
+            if (age <= 0f) continue;
+            float ang = r.nextFloat() * 6.283f;
+            float rad = (0.2f + r.nextFloat() * 0.5f) * size;
+            float y = PY - 0.3f * size + age * 1.3f * size;
+            sprite(w, PX + (float) Math.cos(ang) * rad, y, PZ + 0.25f * age,
+                    0.055f * size * (1f - age * 0.4f), i * 29f + t * 120f, 0, light,
+                    (1f - age) * intensity);
+        }
+        draw();
     }
 }

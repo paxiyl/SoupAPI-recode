@@ -158,19 +158,57 @@ def build(rig):
     t4.sound(0.14, SND + 'thrust')
     out.append(t4)
 
-    # Flourish: a full turn about the grip, caught and settled.
-    fl = Clip('flourish', 1.6)
-    fl.pose(0, {'swing': {'rot': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    fl.pose(0.2, {'swing': {'rot': (-4, -4, 12)}, 'weapon': {'rot': (0, 0, 0)}})
-    for i, a in enumerate((90, 180, 270, 360)):
-        fl.pose(0.2 + 0.16 * (i + 1), {'weapon': {'rot': (a, 0, 0)}})
-    fl.key('weapon', 'rotation', 0.9, (0, 0, 0), pre=(360, 0, 0))
-    fl.pose(1.1, {'swing': {'rot': (6, 4, -5)}, 'weapon': {'rot': (0, -10, 0)}})
-    fl.pose(1.6, {'swing': {'rot': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
-    hand_off(fl, 0, 0.1, 1.2, 1.55)
-    eyes_dart(fl, 0.2, 1.4, 15, 0.45, 9)
-    fl.sound(0.2, SND + 'flourish')
+    # Flourish: a staff twirl. The old one turned the weapon bone and left the arm where it was,
+    # which is exactly what it looked like - a prop spinning in a hand that was not doing anything.
+    # Here the shoulder carries the whole move: it drops, drives up and across, and comes round in
+    # a circle while the staff turns twice end over end and three times about its own shaft. The
+    # left hand lets go for the spin and is back for the catch.
+    fl = Clip('flourish', 1.9)
+    fl.pose(0, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    # The dip the throw comes out of.
+    fl.pose(0.14, {'swing': {'rot': (16, 10, 18), 'pos': (1.5, -4.5, 1.5)},
+                   'weapon': {'rot': (-18, 0, 12)}})
+    spin = 12
+    for i in range(1, spin + 1):
+        f = i / spin
+        t = 0.14 + 1.06 * f
+        ring = math.tau * f
+        # The hand travels a circle of its own while the staff spins, a quarter-turn behind it.
+        fl.pose(t, {
+            'swing': {
+                'rot': (-14 * math.cos(ring) + 4, 16 * math.sin(ring), -22 * math.sin(ring - 0.8)),
+                'pos': (5.5 * math.sin(ring), 4.0 - 6.5 * math.cos(ring), -2.2 * math.sin(ring * 2)),
+            },
+            'weapon': {'rot': (720 * f, 1080 * f, 10 * math.sin(ring * 2))},
+        })
+    # The catch: a hard stop with the staff a touch past upright, then settled.
+    fl.key('weapon', 'rotation', 1.26, (0, 0, 0), pre=(720, 1080, 0))
+    fl.pose(1.34, {'swing': {'rot': (-10, -6, 14), 'pos': (-1.5, 3.0, -1.5)},
+                   'weapon': {'rot': (14, 0, -16)}})
+    fl.pose(1.52, {'swing': {'rot': (5, 3, -7), 'pos': (0.8, -1.2, 0.6)},
+                   'weapon': {'rot': (-6, 0, 7)}})
+    fl.pose(1.9, {'swing': {'rot': (0, 0, 0), 'pos': (0, 0, 0)}, 'weapon': {'rot': (0, 0, 0)}})
+    hand_off(fl, 0, 0.16, 1.24, 1.42)
+    eyes_dart(fl, 0.14, 1.5, 15, 0.55, 11)
+    kick(fl, 1.3, 2.2)
+    fl.sound(0.14, SND + 'flourish')
+    fl.sound(1.26, SND + 'thrust')
     out.append(fl)
+
+    # A spin attack: the staff is swung round the body as one piece, the hand leading it.
+    t5 = Clip('melee_5', 0.95)
+    arc(t5, [
+        (0.00, (0, 0, 0), (0, 0, 0), (0, 0, 0)),
+        (0.16, (-14, 34, 26), (0, -40, 18), (5, 2, 3)),
+        (0.34, (10, -46, -42), (0, 150, -26), (-7, -2, -5)),
+        (0.46, (16, -62, -54), (0, 250, -34), (-9, -3, -6)),
+        (0.62, (6, -28, -24), (0, 330, -14), (-3, 0, -2)),
+        (0.95, (0, 0, 0), (0, 360, 0), (0, 0, 0)),
+    ])
+    kick(t5, 0.36, 5.0)
+    eyes_dart(t5, 0, 0.95, 21, 0.5, 7)
+    t5.sound(0.16, SND + 'swing_3')
+    out.append(t5)
 
     # Inspect: brought across the view, turned to show both faces, sighted along, returned.
     ins = Clip('inspect', 5.2)
